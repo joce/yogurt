@@ -295,6 +295,10 @@ def main(
 
     parser = build_parser()
     output = stdout or sys.stdout
+    if stdout is None:
+        reconfigure = getattr(output, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8")
     error_output = stderr or sys.stderr
     namespace = parser.parse_args(argv)
     if not hasattr(namespace, "command"):

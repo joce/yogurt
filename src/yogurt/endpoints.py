@@ -355,10 +355,105 @@ QUOTE_SUMMARY_ENDPOINT = EndpointSpec(
     ),
 )
 
+PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
+    name="price-insights",
+    path="/ws/company-fundamentals/v1/finance/price-insights",
+    summary="Retrieve raw generated price insight data for one or more symbols.",
+    description=(
+        "Calls Yahoo Finance's price-insights endpoint and writes the response "
+        "body to stdout without formatting or response-model mapping."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="symbols",
+            cli_name="symbols",
+            kind=ParamKind.CSV,
+            positional=True,
+            required=True,
+            metavar="SYMBOL[,SYMBOL...]",
+            min_items=1,
+            help=(
+                "One or more comma-separated Yahoo symbols, such as AAPL or AAPL,MSFT."
+            ),
+        ),
+        ParamSpec(
+            name="modules",
+            cli_name="modules",
+            kind=ParamKind.CSV,
+            metavar="MODULE[,MODULE...]",
+            help=(
+                "Optional comma-separated Yahoo price-insights modules to request. "
+                "Observed useful value: ai. Yogurt does not validate module names."
+            ),
+        ),
+        ParamSpec(
+            name="aiModules",
+            cli_name="ai-modules",
+            kind=ParamKind.CSV,
+            metavar="AI_MODULE[,AI_MODULE...]",
+            help=(
+                "Optional comma-separated Yahoo AI submodules to request. "
+                "Observed values: news_summary,price_movement. Yogurt does not "
+                "validate names."
+            ),
+        ),
+        ParamSpec(
+            name="checkAnomaly",
+            cli_name="check-anomaly",
+            kind=ParamKind.BOOLEAN,
+            metavar="BOOL",
+            help=(
+                "Ask Yahoo to check only for a price anomaly. Observed true value "
+                "returns a tiny hasPriceAnomaly-only response."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt price-insights AAPL",
+        "yogurt price-insights AAPL,MSFT --modules ai",
+        ("yogurt price-insights AAPL --ai-modules news_summary,price_movement"),
+    ),
+    common_modules=("ai",),
+    notes=(
+        (
+            "Omitting modules returned news, aiAnalysis, analystRating, and "
+            "anomaly data in live AAPL probes."
+        ),
+        (
+            "modules=ai returned aiAnalysis and hasPriceAnomaly without the "
+            "surrounding news/rating sections."
+        ),
+        (
+            "aiModules=news_summary,price_movement did not change the live "
+            "AAPL response when modules was omitted."
+        ),
+        "checkAnomaly=false behaved like omission in live AAPL probes.",
+        "checkAnomaly=true returned only hasPriceAnomaly in live AAPL probes.",
+    ),
+)
+
 ENDPOINTS: tuple[EndpointSpec, ...] = (
     QUOTE_ENDPOINT,
     OPTIONS_ENDPOINT,
     QUOTE_SUMMARY_ENDPOINT,
+    PRICE_INSIGHTS_ENDPOINT,
 )
 ENDPOINTS_BY_NAME: dict[str, EndpointSpec] = {
     endpoint.name: endpoint for endpoint in ENDPOINTS

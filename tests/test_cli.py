@@ -55,6 +55,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "quote" in captured.out
     assert "options" in captured.out
     assert "quote-summary" in captured.out
+    assert "price-insights" in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
 
 
@@ -354,6 +355,103 @@ def test_quote_summary_command_uses_default_modules() -> None:
                 "enablePrivateCompany": True,
                 "enableQSPExpandedEarnings": True,
                 "overnightPrice": True,
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_price_insights_help_includes_params_and_probe_notes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Price insights help documents open params and live probe caveats."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["price-insights", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert (
+        "https://query1.finance.yahoo.com/ws/company-fundamentals/v1/finance/price-insights"
+        in captured.out
+    )
+    assert "SYMBOL[,SYMBOL...]" in captured.out
+    assert "--modules" in captured.out
+    assert "--ai-modules" in captured.out
+    assert "news_summary" in captured.out
+    assert "price_movement" in captured.out
+    assert "--check-anomaly" in captured.out
+    assert "hasPriceAnomaly-only" in captured.out
+    assert "Common --modules values" in captured.out
+    assert "modules=ai returned aiAnalysis" in captured.out
+
+
+def test_price_insights_command_passes_params_and_prints_raw_body() -> None:
+    """Price insights command sends Yahoo's open-ended query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "price-insights",
+            "AAPL,MSFT",
+            "--modules",
+            "ai",
+            "--ai-modules",
+            "news_summary,price_movement",
+            "--check-anomaly",
+            "false",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/ws/company-fundamentals/v1/finance/price-insights",
+            {
+                "symbols": "AAPL,MSFT",
+                "modules": "ai",
+                "aiModules": "news_summary,price_movement",
+                "checkAnomaly": False,
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_price_insights_command_defaults_to_full_response_params() -> None:
+    """Price insights omits optional filters by default."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "price-insights",
+            "AAPL",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/ws/company-fundamentals/v1/finance/price-insights",
+            {
+                "symbols": "AAPL",
                 "lang": "en-US",
                 "region": "US",
             },
