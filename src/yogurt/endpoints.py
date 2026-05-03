@@ -227,6 +227,56 @@ OPTIONS_ENDPOINT = EndpointSpec(
     ),
 )
 
+QUOTE_TYPE_ENDPOINT = EndpointSpec(
+    name="quote-type",
+    path="/v1/finance/quoteType/",
+    summary="Retrieve raw quote type data for a single symbol.",
+    description=(
+        "Calls Yahoo Finance's quoteType endpoint for one symbol and writes the "
+        "response body to stdout without formatting or response-model mapping."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="symbol",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+        ParamSpec(
+            name="enablePrivateCompany",
+            cli_name="enable-private-company",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Include private company data when Yahoo supports it.",
+        ),
+    ),
+    examples=(
+        "yogurt quote-type AAPL",
+        "yogurt quote-type AAPL --enable-private-company true",
+    ),
+)
+
 QUOTE_SUMMARY_ENDPOINT = EndpointSpec(
     name="quote-summary",
     path="/v10/finance/quoteSummary/{symbol}",
@@ -452,6 +502,7 @@ PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
 ENDPOINTS: tuple[EndpointSpec, ...] = (
     QUOTE_ENDPOINT,
     OPTIONS_ENDPOINT,
+    QUOTE_TYPE_ENDPOINT,
     QUOTE_SUMMARY_ENDPOINT,
     PRICE_INSIGHTS_ENDPOINT,
 )

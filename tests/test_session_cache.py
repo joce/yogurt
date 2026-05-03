@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import time
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import httpx
 
-from yogurt.session_cache import load_session_cache, save_session_cache
-
-if TYPE_CHECKING:
-    from pathlib import Path
+from yogurt.session_cache import (
+    default_cache_path,
+    load_session_cache,
+    save_session_cache,
+)
 
 
 def test_session_cache_round_trips_cookies_crumb_and_expiry(tmp_path: Path) -> None:
@@ -29,3 +30,11 @@ def test_session_cache_round_trips_cookies_crumb_and_expiry(tmp_path: Path) -> N
     assert loaded.expiry == expiry
     assert loaded.cookies.get("A3") == "token"
     assert loaded.is_valid
+
+
+def test_default_cache_path_uses_dot_cache() -> None:
+    """Default session cache path is stable across platforms."""
+
+    assert default_cache_path() == Path.home() / ".cache" / "yogurt" / (
+        "yahoo-session.json"
+    )

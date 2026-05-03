@@ -54,6 +54,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "endpoints" in captured.out
     assert "quote" in captured.out
     assert "options" in captured.out
+    assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
     assert "price-insights" in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
@@ -249,6 +250,59 @@ def test_options_command_defaults_date_to_negative_one() -> None:
                 "straddle": False,
                 "lang": "en-US",
                 "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_quote_type_help_includes_endpoint_params_and_examples(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Quote type help documents the symbol and query parameters."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["quote-type", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "https://query1.finance.yahoo.com/v1/finance/quoteType" in captured.out
+    assert "SYMBOL" in captured.out
+    assert "--lang" in captured.out
+    assert "--region" in captured.out
+    assert "--enable-private-company" in captured.out
+    assert "yogurt quote-type AAPL" in captured.out
+
+
+def test_quote_type_command_passes_symbol_and_common_params() -> None:
+    """Quote type command passes the symbol as a query parameter."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "quote-type",
+            "AAPL",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v1/finance/quoteType/",
+            {
+                "symbol": "AAPL",
+                "lang": "en-US",
+                "region": "US",
+                "enablePrivateCompany": True,
             },
             True,
         )
