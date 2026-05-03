@@ -58,7 +58,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
     assert "price-insights" in captured.out
-    assert "fundamentals-timeseries" in captured.out
+    assert "timeseries" in captured.out
     assert "insights" in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
 
@@ -523,7 +523,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     """Fundamentals timeseries help documents dates and observed type values."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["fundamentals-timeseries", "--help"])
+        main(["timeseries", "--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
@@ -554,7 +554,7 @@ def test_fundamentals_timeseries_command_passes_path_and_params() -> None:
 
     exit_code = main(
         [
-            "fundamentals-timeseries",
+            "timeseries",
             "AAPL",
             "--period1",
             "2025-11-03",
@@ -608,7 +608,7 @@ def test_fundamentals_timeseries_command_uses_observed_boolean_defaults() -> Non
 
     exit_code = main(
         [
-            "fundamentals-timeseries",
+            "timeseries",
             "AAPL",
             "--period1",
             "1762192800",

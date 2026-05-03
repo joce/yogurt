@@ -501,7 +501,7 @@ PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
 )
 
 FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
-    name="fundamentals-timeseries",
+    name="timeseries",
     path="/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}",
     summary="Retrieve raw fundamentals timeseries data for a single symbol.",
     description=(
@@ -591,11 +591,11 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
     ),
     examples=(
         (
-            "yogurt fundamentals-timeseries AAPL --period1 2025-11-03 "
+            "yogurt timeseries AAPL --period1 2025-11-03 "
             "--period2 2026-05-03 --type quarterlyMarketCap,trailingMarketCap"
         ),
         (
-            "yogurt fundamentals-timeseries AAPL --period1 1762192800 "
+            "yogurt timeseries AAPL --period1 1762192800 "
             "--period2 1777831199 --type quarterlyPeRatio,trailingPeRatio "
             "--merge false --pad-time-series true"
         ),
