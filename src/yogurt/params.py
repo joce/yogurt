@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import TYPE_CHECKING, Final
 
@@ -118,9 +118,9 @@ def parse_datetime(value: str) -> int:
         )
         raise ValueError(message) from exc
     if parsed.tzinfo is None:
-        parsed = parsed.replace(tzinfo=UTC)
+        parsed = parsed.replace(tzinfo=timezone.utc)
     else:
-        parsed = parsed.astimezone(UTC)
+        parsed = parsed.astimezone(timezone.utc)
     return int(parsed.timestamp())
 
 

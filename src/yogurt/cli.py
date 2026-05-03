@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import logging
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from string import Formatter
 from typing import TYPE_CHECKING, Protocol, TextIO
@@ -74,6 +75,11 @@ def _epilog_for_endpoint(endpoint: EndpointSpec) -> str:
         common_modules = "\n\nCommon --modules values:\n  " + ", ".join(
             endpoint.common_modules
         )
+    common_types = ""
+    if endpoint.common_types:
+        common_types = "\n\nCommon --type values:\n  " + ", ".join(
+            endpoint.common_types
+        )
     notes = ""
     if endpoint.notes:
         notes = "\n\nNotes:\n" + "\n".join(f"  {note}" for note in endpoint.notes)
@@ -86,6 +92,7 @@ def _epilog_for_endpoint(endpoint: EndpointSpec) -> str:
         f"Examples:\n{_examples_text(endpoint.examples)}"
         f"{common_fields}"
         f"{common_modules}"
+        f"{common_types}"
         f"{notes}"
     )
 
@@ -117,6 +124,12 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _default_for_param(param: ParamSpec) -> object:
+    if param.default == "today":
+        return datetime.now(timezone.utc).date().isoformat()
+    return param.default
+
+
 def _add_endpoint_param(parser: argparse.ArgumentParser, param: ParamSpec) -> None:
     if param.positional:
         parser.add_argument(
@@ -129,7 +142,7 @@ def _add_endpoint_param(parser: argparse.ArgumentParser, param: ParamSpec) -> No
         param.option,
         dest=param.name,
         required=param.required,
-        default=param.default,
+        default=_default_for_param(param),
         metavar=param.metavar,
         help=param.help,
     )

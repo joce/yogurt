@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from io import StringIO
 from typing import TYPE_CHECKING
 
@@ -57,6 +58,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
     assert "price-insights" in captured.out
+    assert "fundamentals-timeseries" in captured.out
     assert "insights" in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
 
@@ -507,6 +509,124 @@ def test_price_insights_command_defaults_to_full_response_params() -> None:
             "/ws/company-fundamentals/v1/finance/price-insights",
             {
                 "symbols": "AAPL",
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_fundamentals_timeseries_help_includes_params_and_type_values(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Fundamentals timeseries help documents dates and observed type values."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["fundamentals-timeseries", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert (
+        "https://query1.finance.yahoo.com/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}"
+        in captured.out
+    )
+    assert "SYMBOL" in captured.out
+    assert "--type" in captured.out
+    assert "--period1" in captured.out
+    assert "--period2" in captured.out
+    assert "to today's date" in captured.out
+    assert "YYYY-MM-DD" in captured.out
+    assert "--merge" in captured.out
+    assert "--pad-time-series" in captured.out
+    assert "Common --type values" in captured.out
+    assert "quarterlyMarketCap" in captured.out
+    assert "trailingEnterprisesValueEBITDARatio" in captured.out
+    assert "spEarningsReleaseEvents" in captured.out
+
+
+def test_fundamentals_timeseries_command_passes_path_and_params() -> None:
+    """Fundamentals timeseries command converts dates and sends query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "fundamentals-timeseries",
+            "AAPL",
+            "--period1",
+            "2025-11-03",
+            "--period2",
+            "1777831199",
+            "--type",
+            "quarterlyMarketCap,trailingMarketCap",
+            "--merge",
+            "false",
+            "--pad-time-series",
+            "true",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/ws/fundamentals-timeseries/v1/finance/timeseries/AAPL",
+            {
+                "type": "quarterlyMarketCap,trailingMarketCap",
+                "period1": 1762128000,
+                "period2": 1777831199,
+                "merge": False,
+                "padTimeSeries": True,
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_fundamentals_timeseries_command_uses_observed_boolean_defaults() -> None:
+    """Fundamentals timeseries command applies observed query defaults."""
+
+    client = StubClient()
+    stdout = StringIO()
+    today_timestamp = int(
+        datetime.combine(
+            datetime.now(timezone.utc).date(),
+            datetime.min.time(),
+            timezone.utc,
+        ).timestamp()
+    )
+
+    exit_code = main(
+        [
+            "fundamentals-timeseries",
+            "AAPL",
+            "--period1",
+            "1762192800",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/ws/fundamentals-timeseries/v1/finance/timeseries/AAPL",
+            {
+                "type": "spEarningsReleaseEvents,analystRatings,economicEvents",
+                "period1": 1762192800,
+                "period2": today_timestamp,
+                "merge": False,
+                "padTimeSeries": True,
                 "lang": "en-US",
                 "region": "US",
             },

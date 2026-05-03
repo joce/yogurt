@@ -19,6 +19,7 @@ class EndpointSpec:
     examples: tuple[str, ...]
     common_fields: tuple[str, ...] = ()
     common_modules: tuple[str, ...] = ()
+    common_types: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
     use_crumb: bool = True
 
@@ -499,6 +500,138 @@ PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
     ),
 )
 
+FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
+    name="fundamentals-timeseries",
+    path="/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}",
+    summary="Retrieve raw fundamentals timeseries data for a single symbol.",
+    description=(
+        "Calls Yahoo Finance's fundamentals timeseries endpoint for one symbol "
+        "and writes the response body to stdout without formatting or "
+        "response-model mapping."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="symbol",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            path_param=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+        ),
+        ParamSpec(
+            name="type",
+            cli_name="type",
+            kind=ParamKind.CSV,
+            default="spEarningsReleaseEvents,analystRatings,economicEvents",
+            metavar="TYPE[,TYPE...]",
+            min_items=1,
+            help=(
+                "One or more comma-separated Yahoo fundamentals timeseries "
+                "types to request. Yogurt does not validate type names."
+            ),
+        ),
+        ParamSpec(
+            name="period1",
+            cli_name="period1",
+            kind=ParamKind.DATETIME,
+            required=True,
+            metavar="DATE",
+            help=(
+                "Start date as a Unix timestamp, YYYY-MM-DD date, or ISO "
+                "datetime. Date-only values are converted at UTC midnight."
+            ),
+        ),
+        ParamSpec(
+            name="period2",
+            cli_name="period2",
+            kind=ParamKind.DATETIME,
+            default="today",
+            metavar="DATE",
+            help=(
+                "End date as a Unix timestamp, YYYY-MM-DD date, or ISO "
+                "datetime. Defaults to today's date. Date-only values are "
+                "converted at UTC midnight."
+            ),
+        ),
+        ParamSpec(
+            name="merge",
+            cli_name="merge",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            metavar="BOOL",
+            help="Ask Yahoo to merge timeseries results when supported.",
+        ),
+        ParamSpec(
+            name="padTimeSeries",
+            cli_name="pad-time-series",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Ask Yahoo to pad missing timeseries values when supported.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        (
+            "yogurt fundamentals-timeseries AAPL --period1 2025-11-03 "
+            "--period2 2026-05-03 --type quarterlyMarketCap,trailingMarketCap"
+        ),
+        (
+            "yogurt fundamentals-timeseries AAPL --period1 1762192800 "
+            "--period2 1777831199 --type quarterlyPeRatio,trailingPeRatio "
+            "--merge false --pad-time-series true"
+        ),
+    ),
+    common_types=(
+        "spEarningsReleaseEvents",
+        "analystRatings",
+        "economicEvents",
+        "quarterlyMarketCap",
+        "trailingMarketCap",
+        "quarterlyEnterpriseValue",
+        "trailingEnterpriseValue",
+        "quarterlyPeRatio",
+        "trailingPeRatio",
+        "quarterlyForwardPeRatio",
+        "trailingForwardPeRatio",
+        "quarterlyPegRatio",
+        "trailingPegRatio",
+        "quarterlyPsRatio",
+        "trailingPsRatio",
+        "quarterlyPbRatio",
+        "trailingPbRatio",
+        "quarterlyEnterprisesValueRevenueRatio",
+        "trailingEnterprisesValueRevenueRatio",
+        "quarterlyEnterprisesValueEBITDARatio",
+        "trailingEnterprisesValueEBITDARatio",
+    ),
+    notes=(
+        "The --type parameter is open-ended; availability depends on symbol.",
+        (
+            "period1 and period2 accept Unix timestamps, YYYY-MM-DD dates, "
+            "or ISO datetimes."
+        ),
+    ),
+)
+
 INSIGHTS_ENDPOINT = EndpointSpec(
     name="insights",
     path="/ws/insights/v3/finance/insights",
@@ -595,6 +728,7 @@ ENDPOINTS: tuple[EndpointSpec, ...] = (
     QUOTE_TYPE_ENDPOINT,
     QUOTE_SUMMARY_ENDPOINT,
     PRICE_INSIGHTS_ENDPOINT,
+    FUNDAMENTALS_TIMESERIES_ENDPOINT,
     INSIGHTS_ENDPOINT,
 )
 ENDPOINTS_BY_NAME: dict[str, EndpointSpec] = {
