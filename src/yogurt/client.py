@@ -102,6 +102,13 @@ class YahooClient:
         except OSError:
             self._logger.warning("Could not save Yahoo session cache")
 
+    @staticmethod
+    def _redact_url(url: httpx.URL) -> str:
+        params = [
+            (name, value) for name, value in url.params.multi_items() if name != "crumb"
+        ]
+        return str(url.copy_with(params=params))
+
     async def _request_or_raise(
         self,
         method: Literal["GET", "POST"],
@@ -127,7 +134,7 @@ class YahooClient:
                     await asyncio.sleep(self._RETRY_DELAY_SECONDS * attempt)
                     attempt += 1
                     continue
-                url_str = str(exc.request.url)
+                url_str = self._redact_url(exc.request.url)
                 raise YahooRequestError(status_code, url_str) from exc
             except httpx.TransportError as exc:
                 if method == "GET" and attempt < self._REQUEST_ATTEMPTS:
