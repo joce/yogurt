@@ -57,6 +57,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
     assert "price-insights" in captured.out
+    assert "insights" in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
 
 
@@ -506,6 +507,107 @@ def test_price_insights_command_defaults_to_full_response_params() -> None:
             "/ws/company-fundamentals/v1/finance/price-insights",
             {
                 "symbols": "AAPL",
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_insights_help_includes_params_and_probe_notes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Insights help documents params and multi-symbol behavior."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["insights", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert (
+        "https://query1.finance.yahoo.com/ws/insights/v3/finance/insights"
+        in captured.out
+    )
+    assert "SYMBOL[,SYMBOL...]" in captured.out
+    assert "--disable-related-reports" in captured.out
+    assert "--formatted" in captured.out
+    assert "--get-all-research-reports" in captured.out
+    assert "--reports-count" in captured.out
+    assert "--ssl" in captured.out
+    assert "one finance.result item per requested symbol" in captured.out
+    assert "AAPL,MSFT,NVDA" in captured.out
+
+
+def test_insights_command_passes_params_and_prints_raw_body() -> None:
+    """Insights command sends the observed Yahoo query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "insights",
+            "AAPL,MSFT",
+            "--reports-count",
+            "8",
+            "--disable-related-reports",
+            "false",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/ws/insights/v3/finance/insights",
+            {
+                "symbols": "AAPL,MSFT",
+                "disableRelatedReports": False,
+                "formatted": True,
+                "getAllResearchReports": True,
+                "reportsCount": 8,
+                "ssl": True,
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_insights_command_uses_observed_defaults() -> None:
+    """Insights command applies the observed defaults."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "insights",
+            "AAPL",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/ws/insights/v3/finance/insights",
+            {
+                "symbols": "AAPL",
+                "disableRelatedReports": True,
+                "formatted": True,
+                "getAllResearchReports": True,
+                "reportsCount": 4,
+                "ssl": True,
                 "lang": "en-US",
                 "region": "US",
             },

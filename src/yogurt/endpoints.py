@@ -499,12 +499,103 @@ PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
     ),
 )
 
+INSIGHTS_ENDPOINT = EndpointSpec(
+    name="insights",
+    path="/ws/insights/v3/finance/insights",
+    summary="Retrieve raw insight data for one or more symbols.",
+    description=(
+        "Calls Yahoo Finance's insights endpoint and writes the response body "
+        "to stdout without formatting or response-model mapping."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="symbols",
+            cli_name="symbols",
+            kind=ParamKind.CSV,
+            positional=True,
+            required=True,
+            metavar="SYMBOL[,SYMBOL...]",
+            min_items=1,
+            help=(
+                "One or more comma-separated Yahoo symbols, such as AAPL or AAPL,MSFT."
+            ),
+        ),
+        ParamSpec(
+            name="disableRelatedReports",
+            cli_name="disable-related-reports",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Ask Yahoo not to include related research reports.",
+        ),
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="getAllResearchReports",
+            cli_name="get-all-research-reports",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Request all available research reports when Yahoo supports them.",
+        ),
+        ParamSpec(
+            name="reportsCount",
+            cli_name="reports-count",
+            kind=ParamKind.INTEGER,
+            default=4,
+            metavar="COUNT",
+            help="Number of research reports to request.",
+        ),
+        ParamSpec(
+            name="ssl",
+            cli_name="ssl",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Request SSL URLs in Yahoo response fields when available.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt insights AAPL",
+        "yogurt insights AAPL,MSFT",
+        "yogurt insights AAPL --reports-count 4",
+    ),
+    notes=(
+        "Live probes returned one finance.result item per requested symbol.",
+        "AAPL,MSFT,NVDA returned three result objects in live probing.",
+    ),
+)
+
 ENDPOINTS: tuple[EndpointSpec, ...] = (
     QUOTE_ENDPOINT,
     OPTIONS_ENDPOINT,
     QUOTE_TYPE_ENDPOINT,
     QUOTE_SUMMARY_ENDPOINT,
     PRICE_INSIGHTS_ENDPOINT,
+    INSIGHTS_ENDPOINT,
 )
 ENDPOINTS_BY_NAME: dict[str, EndpointSpec] = {
     endpoint.name: endpoint for endpoint in ENDPOINTS
