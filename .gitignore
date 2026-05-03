@@ -1,0 +1,24 @@
+# Byte-compiled / optimized files
+__pycache__/
+
+# Test and coverage output
+.pytest_cache/
+.coverage
+coverage.xml
+junit*.xml
+htmlcov/
+
+# Virtual environments and uv cache
+.venv/
+.uv-cache/
+
+# Tool caches
+.ruff_cache/
+.tox/
+.mypy_cache/
+
+# Editors
+.vscode/
+
+# Local session/cache material
+yahoo-session.json
