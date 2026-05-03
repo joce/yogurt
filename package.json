@@ -1,0 +1,13 @@
+{
+  "name": "yogurt",
+  "version": "0.1.0",
+  "private": true,
+  "description": "LLM-friendly CLI for raw Yahoo Finance endpoint JSON.",
+  "scripts": {
+    "spell": "cspell .",
+    "spell:changed": "node tools/spell-changed.mjs"
+  },
+  "devDependencies": {
+    "cspell": "^9.2.2"
+  }
+}

@@ -14,6 +14,8 @@ Python 3.10+, uv, httpx, argparse, pytest, pytest-httpx, ruff, pyright, tox, hat
 - Lint: `uv run ruff check .`
 - Format: `uv run ruff format .`
 - Type check: `uv run pyright`
+- Spell check: `npm run spell` or `make spell`
+- Spell changed files: `npm run spell:changed` or `make spell-changed`
 - Full check: `uv run tox`
 
 ## Architecture

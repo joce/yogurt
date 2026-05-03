@@ -16,6 +16,7 @@ htmlcov/
 .ruff_cache/
 .tox/
 .mypy_cache/
+node_modules/
 
 # Editors
 .vscode/
