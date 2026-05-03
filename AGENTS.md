@@ -41,7 +41,14 @@ Python 3.10+, uv, httpx, argparse, pytest, pytest-httpx, ruff, pyright, tox, hat
 - Make minimal changes and avoid unrelated refactors.
 - When adding an endpoint or parameter, update validation, adaptive help, and tests in the same change.
 - Prefer focused unit tests with mocked HTTP; mark live Yahoo tests as integration.
-- Run `uv run ruff check .`, `uv run pyright`, and relevant pytest tests before considering code changes done.
+- Before considering code changes done, run `uv run tox`. It is the expected bundled verification for formatting, lint, type check, tests, and spelling.
+- For endpoint or parameter changes, also run the app against Yahoo after `tox`:
+  - `uv run yogurt <endpoint> --help`
+  - `uv run yogurt <endpoint> <minimal required parameters>`
+  - `uv run yogurt <endpoint> <parameters with each supported date/time format when dates are involved>`
+  - `uv run yogurt <endpoint> <parameters with meaningful modules, types, field lists, booleans, or other values that could affect Yahoo's raw output>`
+- When an endpoint has open-ended value lists such as `modules`, `types`, or `fields`, test representative variations and an all-known-values request when practical.
+- When a parameter has a default, test both omission and explicit override if the default affects the request sent to Yahoo.
 - Ask before making architectural changes that affect the CLI grammar or session-cache behavior.
 
 ## Out of scope
