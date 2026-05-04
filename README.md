@@ -1,0 +1,189 @@
+# Yogurt
+
+[![CI](https://github.com/joce/yogurt/actions/workflows/ci.yml/badge.svg)](https://github.com/joce/yogurt/actions/workflows/ci.yml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![GitHub License](https://img.shields.io/github/license/joce/yogurt)](https://github.com/joce/yogurt/blob/main/LICENSE)
+
+Yahoo!-Originated Graphs, Updates, Returns & Tickers.
+
+Yogurt is an LLM-friendly command-line wrapper around Yahoo Finance HTTP
+endpoints. It handles Yahoo's cookie and crumb flow, exposes endpoint-specific
+parameters through generated `--help` output, and prints the raw JSON response
+body Yahoo returns.
+
+Yogurt is intentionally small: it does not reshape Yahoo responses, define
+finance domain models, or add a discovery API beyond CLI help.
+
+## Features
+
+- Raw Yahoo Finance JSON on stdout, with no pretty-printing or interpretation.
+- Endpoint-specific commands for common Yahoo Finance data.
+- Generated help that includes examples, parameters, common fields, modules, or
+  types when Yogurt knows them.
+- Reusable Yahoo session cache for faster one-shot CLI calls.
+- A `raw` command for Yahoo query paths that do not have dedicated metadata yet.
+
+## Installation
+
+Yogurt is a Python 3.10+ project managed with
+[uv](https://docs.astral.sh/uv/).
+
+```powershell
+uv sync --all-groups
+```
+
+Run the CLI from the repository:
+
+```powershell
+uv run yogurt --help
+```
+
+Or install it as a package from a local checkout:
+
+```powershell
+uv tool install .
+yogurt --help
+```
+
+## Quick Start
+
+Fetch quotes for a few symbols:
+
+```powershell
+uv run yogurt quote AAPL,MSFT,NVDA
+```
+
+Request specific quote fields:
+
+```powershell
+uv run yogurt quote AAPL,MSFT --fields symbol,longName,regularMarketPrice,regularMarketChangePercent
+```
+
+Fetch selected quote summary modules:
+
+```powershell
+uv run yogurt quote-summary AAPL --modules price,quoteType,summaryDetail
+```
+
+Fetch an option chain using Yahoo's default expiration:
+
+```powershell
+uv run yogurt options AAPL
+```
+
+Pass through a Yahoo query path directly:
+
+```powershell
+uv run yogurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted=true
+```
+
+## Commands
+
+Use root help to see the command list:
+
+```powershell
+uv run yogurt --help
+```
+
+Current commands:
+
+| Command | Yahoo data |
+| --- | --- |
+| `quote` | Quote data for one or more symbols. |
+| `options` | Option chain data for a single symbol. |
+| `quote-type` | Quote type data for a single symbol. |
+| `quote-summary` | Quote summary modules for a single symbol. |
+| `price-insights` | Generated price insight data for one or more symbols. |
+| `timeseries` | Fundamentals timeseries data for a single symbol. |
+| `insights` | Insight data for one or more symbols. |
+| `ratings-top` | Top analyst rating scores for a single symbol. |
+| `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
+
+Each endpoint has its own adaptive help:
+
+```powershell
+uv run yogurt quote --help
+uv run yogurt quote-summary --help
+uv run yogurt timeseries --help
+```
+
+Endpoint help is the primary documentation surface. It shows Yahoo's target
+endpoint, accepted parameters, defaults, examples, and common open-ended values
+where available.
+
+## Dates and Booleans
+
+Date and datetime parameters accept:
+
+- Unix timestamps, such as `1510876800`.
+- Date-only values, such as `2017-11-17`.
+- ISO datetime values.
+
+Date-only values are converted at UTC midnight before they are sent to Yahoo.
+
+Boolean parameters accept common true and false forms such as `true`, `false`,
+`1`, `0`, `yes`, and `no`.
+
+## Session Cache
+
+Most Yahoo endpoints require a cookie and crumb. Yogurt establishes that session
+state automatically and caches it for reuse across CLI calls.
+
+Useful global options:
+
+```powershell
+uv run yogurt --refresh-session quote AAPL
+uv run yogurt --no-session-cache quote AAPL
+uv run yogurt --session-cache C:\tmp\yogurt-session.json quote AAPL
+```
+
+Yogurt never prints cookies, crumbs, or full session-cache contents.
+
+## Output Contract
+
+Yogurt writes the Yahoo response body to stdout exactly as returned. This makes
+it easy to pipe into tools that expect JSON:
+
+```powershell
+uv run yogurt quote AAPL | jq .
+```
+
+Diagnostics and errors are written to stderr.
+
+## Development
+
+Install development dependencies:
+
+```powershell
+uv sync --all-groups
+```
+
+Run the test suite:
+
+```powershell
+uv run pytest
+```
+
+Run linting and formatting checks:
+
+```powershell
+uv run black --check .
+uv run ruff check .
+uv run ruff format .
+uv run pyright
+```
+
+Run the full project check:
+
+```powershell
+uv run tox
+```
+
+When adding or changing endpoint metadata, update validation, adaptive help, and
+tests together. Then verify the relevant endpoint against Yahoo with its help,
+minimal required parameters, and representative optional parameters.
+
+## License
+
+Yogurt is released under the MIT License. See [LICENSE](LICENSE).
