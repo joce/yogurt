@@ -45,14 +45,14 @@ class StubClient:
 def test_top_level_help_lists_quote_endpoint(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Top-level help is the endpoint discovery surface."""
+    """Top-level help is the command discovery surface."""
 
     with pytest.raises(SystemExit) as exc_info:
         main(["--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "endpoints" in captured.out
+    assert "commands" in captured.out
     assert "quote" in captured.out
     assert "options" in captured.out
     assert "quote-type" in captured.out
@@ -61,19 +61,68 @@ def test_top_level_help_lists_quote_endpoint(
     assert "timeseries" in captured.out
     assert "insights" in captured.out
     assert "ratings-top" in captured.out
+    assert "raw" in captured.out
+    assert "Retrieve raw" not in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
 
 
-def test_quote_help_includes_endpoint_params_and_examples(
+def test_help_action_text_is_capitalized(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Endpoint help includes URL, parameters, crumb policy, and examples."""
+    """Help and version option descriptions start with capital letters."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "Show this help message and exit." in captured.out
+    assert "Show the program version and exit." in captured.out
+    assert "show this help message and exit" not in captured.out
+    assert "show the program's version number and exit" not in captured.out
+
+
+def test_endpoint_help_action_text_is_capitalized(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Endpoint help uses the same capitalized help action text."""
 
     with pytest.raises(SystemExit) as exc_info:
         main(["quote", "--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
+    assert "Show this help message and exit." in captured.out
+    assert "show this help message and exit" not in captured.out
+
+
+def test_version_output_is_capitalized(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Version output starts with Yogurt's capitalized product name."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--version"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert captured.out.startswith("Yogurt ")
+
+
+def test_quote_help_includes_endpoint_params_and_examples(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Endpoint help includes dense result context, params, and examples."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["quote", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "Prices, trading state, identity, market data" in captured.out
+    assert "Calls Yahoo Finance" not in captured.out
+    assert "response-model mapping" not in captured.out
+    assert "Output:" not in captured.out
     assert "https://query1.finance.yahoo.com/v7/finance/quote" in captured.out
     assert "SYMBOL[,SYMBOL...]" in captured.out
     assert "1 to 10 comma-separated Yahoo symbols" in captured.out
@@ -81,7 +130,7 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "--enable-private-company" in captured.out
     assert "Common --fields values" in captured.out
     assert "regularMarketPrice" in captured.out
-    assert "Uses Yahoo crumb/session" in captured.out
+    assert "Uses Yahoo crumb/session" not in captured.out
     assert "yogurt quote SMR,OKLO,LEU,VST,CEG" in captured.out
 
 

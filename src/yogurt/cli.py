@@ -59,12 +59,21 @@ class _HelpFormatter(
         return f"{help_text} (default: %(default)s)"
 
 
+def _add_help_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "-h",
+        "--help",
+        action="help",
+        default=argparse.SUPPRESS,
+        help="Show this help message and exit.",
+    )
+
+
 def _examples_text(examples: tuple[str, ...]) -> str:
     return "\n".join(f"  {example}" for example in examples)
 
 
 def _epilog_for_endpoint(endpoint: EndpointSpec) -> str:
-    crumb = "yes" if endpoint.use_crumb else "no"
     common_fields = ""
     if endpoint.common_fields:
         common_fields = "\n\nCommon --fields values:\n  " + ", ".join(
@@ -85,10 +94,6 @@ def _epilog_for_endpoint(endpoint: EndpointSpec) -> str:
         notes = "\n\nNotes:\n" + "\n".join(f"  {note}" for note in endpoint.notes)
     return (
         f"Yahoo endpoint:\n  {endpoint.yahoo_url}\n\n"
-        f"Uses Yahoo crumb/session:\n  {crumb}\n\n"
-        "Output:\n"
-        "  Writes Yahoo's raw response body to stdout without formatting or "
-        "response mapping.\n\n"
         f"Examples:\n{_examples_text(endpoint.examples)}"
         f"{common_fields}"
         f"{common_modules}"
@@ -99,7 +104,10 @@ def _epilog_for_endpoint(endpoint: EndpointSpec) -> str:
 
 def _add_global_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
-        "--version", action="version", version=f"%(prog)s {__version__}"
+        "--version",
+        action="version",
+        version=f"Yogurt {__version__}",
+        help="Show the program version and exit.",
     )
     parser.add_argument(
         "--verbose",
@@ -171,11 +179,13 @@ def build_parser() -> argparse.ArgumentParser:
         ),
         epilog="Run `yogurt <endpoint> --help` for endpoint-specific parameters.",
         formatter_class=_HelpFormatter,
+        add_help=False,
     )
+    _add_help_option(parser)
     _add_global_options(parser)
     subparsers = parser.add_subparsers(
-        title="endpoints",
-        metavar="ENDPOINT",
+        title="commands",
+        metavar="COMMAND",
         dest="subcommand",
     )
     for endpoint in ENDPOINTS:
@@ -185,15 +195,17 @@ def build_parser() -> argparse.ArgumentParser:
             description=endpoint.description,
             epilog=_epilog_for_endpoint(endpoint),
             formatter_class=_HelpFormatter,
+            add_help=False,
         )
+        _add_help_option(endpoint_parser)
         _set_endpoint_command(endpoint_parser, endpoint)
 
     raw_parser = subparsers.add_parser(
         "raw",
-        help="Call a Yahoo query1.finance.yahoo.com path not yet modeled by Yogurt.",
+        help="Custom Yahoo query path for data Yogurt does not model yet.",
         description=(
-            "Call a Yahoo Finance query endpoint by path and write the raw response "
-            "body to stdout."
+            "Pass through a query path and NAME=VALUE parameters for ad hoc Yahoo "
+            "Finance requests."
         ),
         epilog=(
             "Example:\n"
@@ -201,7 +213,9 @@ def build_parser() -> argparse.ArgumentParser:
             "--param formatted=true"
         ),
         formatter_class=_HelpFormatter,
+        add_help=False,
     )
+    _add_help_option(raw_parser)
     raw_parser.add_argument("path", help="Yahoo query path, such as /v7/finance/quote.")
     raw_parser.add_argument(
         "--param",

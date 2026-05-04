@@ -33,10 +33,10 @@ class EndpointSpec:
 QUOTE_ENDPOINT = EndpointSpec(
     name="quote",
     path="/v7/finance/quote",
-    summary="Retrieve raw quote data for one or more symbols.",
+    summary="Quote data for one or more symbols.",
     description=(
-        "Calls Yahoo Finance's quote endpoint and writes the response body to "
-        "stdout without formatting or response-model mapping."
+        "Prices, trading state, identity, market data, and optional quote fields "
+        "for one or more symbols."
     ),
     use_crumb=True,
     params=(
@@ -159,10 +159,10 @@ QUOTE_ENDPOINT = EndpointSpec(
 OPTIONS_ENDPOINT = EndpointSpec(
     name="options",
     path="/v7/finance/options/{symbol}",
-    summary="Retrieve raw option chain data for a single symbol.",
+    summary="Option chain data for a single symbol.",
     description=(
-        "Calls Yahoo Finance's options endpoint for one symbol and writes the "
-        "response body to stdout without formatting or response-model mapping."
+        "Expiration chains, contract lists, strikes, implied volatility, and quote "
+        "data for one symbol."
     ),
     use_crumb=True,
     params=(
@@ -231,10 +231,10 @@ OPTIONS_ENDPOINT = EndpointSpec(
 QUOTE_TYPE_ENDPOINT = EndpointSpec(
     name="quote-type",
     path="/v1/finance/quoteType/",
-    summary="Retrieve raw quote type data for a single symbol.",
+    summary="Quote type data for a single symbol.",
     description=(
-        "Calls Yahoo Finance's quoteType endpoint for one symbol and writes the "
-        "response body to stdout without formatting or response-model mapping."
+        "Instrument classification, exchange, market, and quote-type metadata for "
+        "one symbol."
     ),
     use_crumb=True,
     params=(
@@ -281,10 +281,10 @@ QUOTE_TYPE_ENDPOINT = EndpointSpec(
 QUOTE_SUMMARY_ENDPOINT = EndpointSpec(
     name="quote-summary",
     path="/v10/finance/quoteSummary/{symbol}",
-    summary="Retrieve raw quote summary modules for a single symbol.",
+    summary="Quote summary modules for a single symbol.",
     description=(
-        "Calls Yahoo Finance's quoteSummary endpoint for one symbol and writes "
-        "the response body to stdout without formatting or response-model mapping."
+        "Selected modules such as price, profile, financial data, earnings, "
+        "statistics, and holder details for one symbol."
     ),
     use_crumb=True,
     params=(
@@ -409,10 +409,10 @@ QUOTE_SUMMARY_ENDPOINT = EndpointSpec(
 PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
     name="price-insights",
     path="/ws/company-fundamentals/v1/finance/price-insights",
-    summary="Retrieve raw generated price insight data for one or more symbols.",
+    summary="Generated price insight data for one or more symbols.",
     description=(
-        "Calls Yahoo Finance's price-insights endpoint and writes the response "
-        "body to stdout without formatting or response-model mapping."
+        "News, AI analysis, anomaly checks, and analyst-rating context for one or "
+        "more symbols when available."
     ),
     use_crumb=True,
     params=(
@@ -503,11 +503,10 @@ PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
 FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
     name="timeseries",
     path="/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}",
-    summary="Retrieve raw fundamentals timeseries data for a single symbol.",
+    summary="Fundamentals timeseries data for a single symbol.",
     description=(
-        "Calls Yahoo Finance's fundamentals timeseries endpoint for one symbol "
-        "and writes the response body to stdout without formatting or "
-        "response-model mapping."
+        "Timestamped fundamentals, valuation ratios, earnings events, analyst "
+        "ratings, and economic events for one symbol."
     ),
     use_crumb=True,
     params=(
@@ -635,10 +634,10 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
 INSIGHTS_ENDPOINT = EndpointSpec(
     name="insights",
     path="/ws/insights/v3/finance/insights",
-    summary="Retrieve raw insight data for one or more symbols.",
+    summary="Insight data for one or more symbols.",
     description=(
-        "Calls Yahoo Finance's insights endpoint and writes the response body "
-        "to stdout without formatting or response-model mapping."
+        "Research report metadata, company snapshots, and instrument insights for "
+        "one or more symbols when available."
     ),
     use_crumb=True,
     params=(
@@ -725,11 +724,8 @@ INSIGHTS_ENDPOINT = EndpointSpec(
 RATINGS_TOP_ENDPOINT = EndpointSpec(
     name="ratings-top",
     path="/v2/ratings/top/{symbol}",
-    summary="Retrieve raw top analyst rating scores for a single symbol.",
-    description=(
-        "Calls Yahoo Finance's top ratings endpoint for one symbol and writes "
-        "the response body to stdout without formatting or response-model mapping."
-    ),
+    summary="Top analyst rating scores for a single symbol.",
+    description=("Top analyst rating buckets and score components for one symbol."),
     use_crumb=False,
     params=(
         ParamSpec(
