@@ -23,3 +23,5 @@ node_modules/
 
 # Local session/cache material
 yahoo-session.json
+.playwright-cli
+.playwright-mcp
