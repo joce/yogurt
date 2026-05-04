@@ -722,6 +722,70 @@ INSIGHTS_ENDPOINT = EndpointSpec(
     ),
 )
 
+RATINGS_TOP_ENDPOINT = EndpointSpec(
+    name="ratings-top",
+    path="/v2/ratings/top/{symbol}",
+    summary="Retrieve raw top analyst rating scores for a single symbol.",
+    description=(
+        "Calls Yahoo Finance's top ratings endpoint for one symbol and writes "
+        "the response body to stdout without formatting or response-model mapping."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="symbol",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            path_param=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+        ),
+        ParamSpec(
+            name="exclude_noncurrent",
+            cli_name="exclude-noncurrent",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help=(
+                "Exclude non-current analyst records from Yahoo's top scored "
+                "rating buckets."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt ratings-top AAPL",
+        "yogurt ratings-top AAPL --exclude-noncurrent false",
+    ),
+    notes=(
+        (
+            "Observed Yahoo quote pages request exclude_noncurrent=true and "
+            "return dir, mm, pt, and fin_score top analyst buckets."
+        ),
+        (
+            "exclude_noncurrent=false can return older scored analyst records "
+            "with null current rating and price-target fields."
+        ),
+    ),
+)
+
 ENDPOINTS: tuple[EndpointSpec, ...] = (
     QUOTE_ENDPOINT,
     OPTIONS_ENDPOINT,
@@ -730,6 +794,7 @@ ENDPOINTS: tuple[EndpointSpec, ...] = (
     PRICE_INSIGHTS_ENDPOINT,
     FUNDAMENTALS_TIMESERIES_ENDPOINT,
     INSIGHTS_ENDPOINT,
+    RATINGS_TOP_ENDPOINT,
 )
 ENDPOINTS_BY_NAME: dict[str, EndpointSpec] = {
     endpoint.name: endpoint for endpoint in ENDPOINTS

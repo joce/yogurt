@@ -60,6 +60,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "price-insights" in captured.out
     assert "timeseries" in captured.out
     assert "insights" in captured.out
+    assert "ratings-top" in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
 
 
@@ -732,6 +733,90 @@ def test_insights_command_uses_observed_defaults() -> None:
                 "region": "US",
             },
             True,
+        )
+    ]
+
+
+def test_ratings_top_help_includes_params_and_probe_notes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Ratings top help documents symbol, filters, and observed score buckets."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["ratings-top", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "https://query1.finance.yahoo.com/v2/ratings/top/{symbol}" in captured.out
+    assert "SYMBOL" in captured.out
+    assert "--exclude-noncurrent" in captured.out
+    assert "--lang" in captured.out
+    assert "--region" in captured.out
+    assert "dir, mm, pt, and fin_score" in captured.out
+    assert "yogurt ratings-top AAPL" in captured.out
+
+
+def test_ratings_top_command_passes_params_and_prints_raw_body() -> None:
+    """Ratings top command sends the observed Yahoo query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "ratings-top",
+            "AAPL",
+            "--exclude-noncurrent",
+            "false",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v2/ratings/top/AAPL",
+            {
+                "exclude_noncurrent": False,
+                "lang": "en-US",
+                "region": "US",
+            },
+            False,
+        )
+    ]
+
+
+def test_ratings_top_command_uses_observed_defaults() -> None:
+    """Ratings top command defaults to Yahoo's current-rating page request."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "ratings-top",
+            "AAPL",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/v2/ratings/top/AAPL",
+            {
+                "exclude_noncurrent": True,
+                "lang": "en-US",
+                "region": "US",
+            },
+            False,
         )
     ]
 
