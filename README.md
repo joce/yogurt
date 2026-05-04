@@ -7,13 +7,13 @@
 
 Yahoo!-Originated Graphs, Updates, Returns & Tickers.
 
-Yogurt is an LLM-friendly command-line wrapper around Yahoo Finance HTTP
-endpoints. It handles Yahoo's cookie and crumb flow, exposes endpoint-specific
-parameters through generated `--help` output, and prints the raw JSON response
-body Yahoo returns.
+Yogurt brings Yahoo Finance's HTTP endpoints to the command line. It is built
+for scripts, agents, and quick terminal work that needs the JSON returned by
+Yahoo's finance endpoints.
 
-Yogurt is intentionally small: it does not reshape Yahoo responses, define
-finance domain models, or add a discovery API beyond CLI help.
+The project stays deliberately close to the source. It does not reshape Yahoo
+responses, define finance domain models, or add a discovery API beyond CLI
+help.
 
 ## Features
 
@@ -24,10 +24,10 @@ finance domain models, or add a discovery API beyond CLI help.
 - Reusable Yahoo session cache for faster one-shot CLI calls.
 - A `raw` command for Yahoo query paths that do not have dedicated metadata yet.
 
-## Installation
+## Install From Source
 
-Yogurt is a Python 3.10+ project managed with
-[uv](https://docs.astral.sh/uv/).
+Yogurt is currently intended to run from a local checkout. It is a Python 3.10+
+project managed with [uv](https://docs.astral.sh/uv/).
 
 ```powershell
 uv sync --all-groups
@@ -86,7 +86,7 @@ Use root help to see the command list:
 uv run yogurt --help
 ```
 
-Current commands:
+Current commands include:
 
 | Command | Yahoo data |
 | --- | --- |
@@ -165,16 +165,17 @@ Run the test suite:
 uv run pytest
 ```
 
-Run linting and formatting checks:
+Run checks locally:
 
 ```powershell
 uv run black --check .
+uv run ruff format --check --diff .
 uv run ruff check .
-uv run ruff format .
 uv run pyright
+uv run pytest -n auto
 ```
 
-Run the full project check:
+Run the full project check, including Python checks and spelling:
 
 ```powershell
 uv run tox
