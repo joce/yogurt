@@ -17,7 +17,7 @@ from typing_extensions import override
 
 from yogurt import __version__
 from yogurt.client import YahooClient
-from yogurt.endpoints import ENDPOINTS, ENDPOINTS_BY_NAME, EndpointSpec
+from yogurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec
 from yogurt.exceptions import YogurtError
 from yogurt.params import ParamSpec, coerce_param
 
@@ -76,28 +76,26 @@ def _examples_text(examples: tuple[str, ...]) -> str:
     return "\n".join(f"  {example}" for example in examples)
 
 
-def _epilog_for_endpoint(endpoint: EndpointSpec) -> str:
+def _epilog_for_command(command: CommandSpec) -> str:
     common_fields = ""
-    if endpoint.common_fields:
+    if command.common_fields:
         common_fields = "\n\nCommon --fields values:\n  " + ", ".join(
-            endpoint.common_fields
+            command.common_fields
         )
     common_modules = ""
-    if endpoint.common_modules:
+    if command.common_modules:
         common_modules = "\n\nCommon --modules values:\n  " + ", ".join(
-            endpoint.common_modules
+            command.common_modules
         )
     common_types = ""
-    if endpoint.common_types:
-        common_types = "\n\nCommon --type values:\n  " + ", ".join(
-            endpoint.common_types
-        )
+    if command.common_types:
+        common_types = "\n\nCommon --type values:\n  " + ", ".join(command.common_types)
     notes = ""
-    if endpoint.notes:
-        notes = "\n\nNotes:\n" + "\n".join(f"  {note}" for note in endpoint.notes)
+    if command.notes:
+        notes = "\n\nNotes:\n" + "\n".join(f"  {note}" for note in command.notes)
     return (
-        f"Yahoo endpoint:\n  {endpoint.yahoo_url}\n\n"
-        f"Examples:\n{_examples_text(endpoint.examples)}"
+        f"Yahoo endpoint:\n  {command.yahoo_url}\n\n"
+        f"Examples:\n{_examples_text(command.examples)}"
         f"{common_fields}"
         f"{common_modules}"
         f"{common_types}"
@@ -153,7 +151,7 @@ def _dynamic_default_for_param(
     return None
 
 
-def _add_endpoint_param(parser: argparse.ArgumentParser, param: ParamSpec) -> None:
+def _add_command_param(parser: argparse.ArgumentParser, param: ParamSpec) -> None:
     if param.positional:
         parser.add_argument(
             param.name,
@@ -171,12 +169,10 @@ def _add_endpoint_param(parser: argparse.ArgumentParser, param: ParamSpec) -> No
     )
 
 
-def _set_endpoint_command(
-    parser: argparse.ArgumentParser, endpoint: EndpointSpec
-) -> None:
-    for param in endpoint.params:
-        _add_endpoint_param(parser, param)
-    parser.set_defaults(command="endpoint", endpoint_name=endpoint.name)
+def _set_command_parser(parser: argparse.ArgumentParser, command: CommandSpec) -> None:
+    for param in command.params:
+        _add_command_param(parser, param)
+    parser.set_defaults(command_kind="modeled", command_name=command.name)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -203,17 +199,17 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="COMMAND",
         dest="subcommand",
     )
-    for endpoint in ENDPOINTS:
-        endpoint_parser = subparsers.add_parser(
-            endpoint.name,
-            help=endpoint.summary,
-            description=endpoint.description,
-            epilog=_epilog_for_endpoint(endpoint),
+    for command in COMMANDS:
+        command_parser = subparsers.add_parser(
+            command.name,
+            help=command.summary,
+            description=command.description,
+            epilog=_epilog_for_command(command),
             formatter_class=_HelpFormatter,
             add_help=False,
         )
-        _add_help_option(endpoint_parser)
-        _set_endpoint_command(endpoint_parser, endpoint)
+        _add_help_option(command_parser)
+        _set_command_parser(command_parser, command)
 
     raw_parser = subparsers.add_parser(
         "raw",
@@ -244,7 +240,7 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Do not add Yahoo's crumb parameter to the request.",
     )
-    raw_parser.set_defaults(command="raw")
+    raw_parser.set_defaults(command_kind="raw")
     return parser
 
 
@@ -253,8 +249,8 @@ def _configure_logging(*, verbose: bool) -> None:
     logging.basicConfig(level=level, format="%(levelname)s:%(name)s:%(message)s")
 
 
-def _params_for_endpoint(
-    endpoint: EndpointSpec, namespace: argparse.Namespace
+def _params_for_command(
+    command: CommandSpec, namespace: argparse.Namespace
 ) -> dict[str, ParamValue]:
     params: dict[str, ParamValue] = {}
     explicit_period1 = hasattr(namespace, "period1")
@@ -263,7 +259,7 @@ def _params_for_endpoint(
         message = "--period2 cannot be provided without --period1"
         raise ValueError(message)
     current_timestamp = int(time.time())
-    for spec in endpoint.params:
+    for spec in command.params:
         if not hasattr(namespace, spec.name):
             dynamic_default = _dynamic_default_for_param(spec, current_timestamp)
             if dynamic_default is not None:
@@ -281,8 +277,8 @@ def _params_for_endpoint(
     return params
 
 
-def _validate_endpoint_params(
-    endpoint: EndpointSpec, params: dict[str, ParamValue]
+def _validate_command_params(
+    command: CommandSpec, params: dict[str, ParamValue]
 ) -> None:
     if "period1" in params and "period2" in params:
         period1 = params["period1"]
@@ -294,7 +290,7 @@ def _validate_endpoint_params(
             message = "--period2 must be greater than --period1"
             raise ValueError(message)
 
-    if endpoint.name == "chart":
+    if command.name == "chart":
         interval = params.get("interval")
         allowed_intervals = {"1m", "5m", "15m", "1d", "1wk", "1mo"}
         if interval not in allowed_intervals:
@@ -306,16 +302,16 @@ def _validate_endpoint_params(
             raise ValueError(message)
 
 
-def _path_for_endpoint(endpoint: EndpointSpec, namespace: argparse.Namespace) -> str:
+def _path_for_command(command: CommandSpec, namespace: argparse.Namespace) -> str:
     path_values: dict[str, str] = {}
-    for _, field_name, _, _ in Formatter().parse(endpoint.path):
+    for _, field_name, _, _ in Formatter().parse(command.path):
         if field_name is None:
             continue
-        spec = next(param for param in endpoint.params if param.name == field_name)
+        spec = next(param for param in command.params if param.name == field_name)
         raw_value = getattr(namespace, spec.name)
         coerced_value = coerce_param(spec, raw_value)
         path_values[field_name] = quote(str(coerced_value), safe="")
-    return endpoint.path.format(**path_values)
+    return command.path.format(**path_values)
 
 
 def _params_for_raw(raw_params: Sequence[str]) -> dict[str, ParamValue]:
@@ -335,16 +331,16 @@ async def _run_async(
     client: _YahooClientProtocol,
 ) -> int:
     try:
-        if namespace.command == "endpoint":
-            endpoint = ENDPOINTS_BY_NAME[namespace.endpoint_name]
-            params = _params_for_endpoint(endpoint, namespace)
-            _validate_endpoint_params(endpoint, params)
+        if namespace.command_kind == "modeled":
+            command = COMMANDS_BY_NAME[namespace.command_name]
+            params = _params_for_command(command, namespace)
+            _validate_command_params(command, params)
             body = await client.get(
-                _path_for_endpoint(endpoint, namespace),
+                _path_for_command(command, namespace),
                 params,
-                use_crumb=endpoint.use_crumb,
+                use_crumb=command.use_crumb,
             )
-        elif namespace.command == "raw":
+        elif namespace.command_kind == "raw":
             body = await client.get(
                 namespace.path,
                 _params_for_raw(namespace.param),
@@ -381,7 +377,7 @@ def main(
             reconfigure(encoding="utf-8")
     error_output = stderr or sys.stderr
     namespace = parser.parse_args(argv)
-    if not hasattr(namespace, "command"):
+    if not hasattr(namespace, "command_kind"):
         parser.print_help(error_output)
         return 2
 

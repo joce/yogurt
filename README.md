@@ -222,8 +222,8 @@ Run the full project check, including Python checks and spelling:
 uv run tox
 ```
 
-When adding or changing endpoint metadata, update validation, adaptive help, and
-tests together. Then verify the relevant endpoint against Yahoo with its help,
+When adding or changing command metadata, update validation, adaptive help, and
+tests together. Then verify the relevant command against Yahoo with its help,
 minimal required parameters, and representative optional parameters.
 
 ## License

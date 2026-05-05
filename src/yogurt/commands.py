@@ -1,4 +1,4 @@
-"""Yahoo Finance endpoint metadata."""
+"""Yahoo Finance command metadata."""
 
 from __future__ import annotations
 
@@ -8,8 +8,8 @@ from yogurt.params import ParamKind, ParamSpec
 
 
 @dataclass(frozen=True, slots=True)
-class EndpointSpec:
-    """Describe a Yahoo Finance endpoint command."""
+class CommandSpec:
+    """Describe one Yogurt command backed by a Yahoo Finance endpoint."""
 
     name: str
     path: str
@@ -30,7 +30,7 @@ class EndpointSpec:
         return f"https://query1.finance.yahoo.com{self.path}"
 
 
-QUOTE_ENDPOINT = EndpointSpec(
+QUOTE_COMMAND = CommandSpec(
     name="quote",
     path="/v7/finance/quote",
     summary="Quote data for one or more symbols.",
@@ -156,7 +156,7 @@ QUOTE_ENDPOINT = EndpointSpec(
     ),
 )
 
-OPTIONS_ENDPOINT = EndpointSpec(
+OPTIONS_COMMAND = CommandSpec(
     name="options",
     path="/v7/finance/options/{symbol}",
     summary="Option chain data for a single symbol.",
@@ -228,7 +228,7 @@ OPTIONS_ENDPOINT = EndpointSpec(
     ),
 )
 
-QUOTE_TYPE_ENDPOINT = EndpointSpec(
+QUOTE_TYPE_COMMAND = CommandSpec(
     name="quote-type",
     path="/v1/finance/quoteType/",
     summary="Quote type data for a single symbol.",
@@ -278,7 +278,7 @@ QUOTE_TYPE_ENDPOINT = EndpointSpec(
     ),
 )
 
-QUOTE_SUMMARY_ENDPOINT = EndpointSpec(
+QUOTE_SUMMARY_COMMAND = CommandSpec(
     name="quote-summary",
     path="/v10/finance/quoteSummary/{symbol}",
     summary="Quote summary modules for a single symbol.",
@@ -406,7 +406,7 @@ QUOTE_SUMMARY_ENDPOINT = EndpointSpec(
     ),
 )
 
-PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
+PRICE_INSIGHTS_COMMAND = CommandSpec(
     name="price-insights",
     path="/ws/company-fundamentals/v1/finance/price-insights",
     summary="Generated price insight data for one or more symbols.",
@@ -500,7 +500,7 @@ PRICE_INSIGHTS_ENDPOINT = EndpointSpec(
     ),
 )
 
-FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
+FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
     name="timeseries",
     path="/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}",
     summary="Fundamentals timeseries data for a single symbol.",
@@ -636,7 +636,7 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
     ),
 )
 
-INSIGHTS_ENDPOINT = EndpointSpec(
+INSIGHTS_COMMAND = CommandSpec(
     name="insights",
     path="/ws/insights/v3/finance/insights",
     summary="Insight data for one or more symbols.",
@@ -726,7 +726,7 @@ INSIGHTS_ENDPOINT = EndpointSpec(
     ),
 )
 
-CHART_ENDPOINT = EndpointSpec(
+CHART_COMMAND = CommandSpec(
     name="chart",
     path="/v8/finance/chart/{symbol}",
     summary="Chart price data for a single symbol.",
@@ -839,7 +839,7 @@ CHART_ENDPOINT = EndpointSpec(
     ),
 )
 
-RATINGS_TOP_ENDPOINT = EndpointSpec(
+RATINGS_TOP_COMMAND = CommandSpec(
     name="ratings-top",
     path="/v2/ratings/top/{symbol}",
     summary="Top analyst rating scores for a single symbol.",
@@ -900,17 +900,17 @@ RATINGS_TOP_ENDPOINT = EndpointSpec(
     ),
 )
 
-ENDPOINTS: tuple[EndpointSpec, ...] = (
-    QUOTE_ENDPOINT,
-    OPTIONS_ENDPOINT,
-    QUOTE_TYPE_ENDPOINT,
-    QUOTE_SUMMARY_ENDPOINT,
-    PRICE_INSIGHTS_ENDPOINT,
-    FUNDAMENTALS_TIMESERIES_ENDPOINT,
-    INSIGHTS_ENDPOINT,
-    CHART_ENDPOINT,
-    RATINGS_TOP_ENDPOINT,
+COMMANDS: tuple[CommandSpec, ...] = (
+    QUOTE_COMMAND,
+    OPTIONS_COMMAND,
+    QUOTE_TYPE_COMMAND,
+    QUOTE_SUMMARY_COMMAND,
+    PRICE_INSIGHTS_COMMAND,
+    FUNDAMENTALS_TIMESERIES_COMMAND,
+    INSIGHTS_COMMAND,
+    CHART_COMMAND,
+    RATINGS_TOP_COMMAND,
 )
-ENDPOINTS_BY_NAME: dict[str, EndpointSpec] = {
-    endpoint.name: endpoint for endpoint in ENDPOINTS
+COMMANDS_BY_NAME: dict[str, CommandSpec] = {
+    command.name: command for command in COMMANDS
 }
