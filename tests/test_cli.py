@@ -12,8 +12,6 @@ from yogurt.cli import main
 if TYPE_CHECKING:
     from yogurt.types import ParamValue
 
-PARSE_ERROR = 2
-
 
 class StubClient:
     """Capture CLI calls without touching Yahoo."""
@@ -587,6 +585,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     assert "--type" in captured.out
     assert "--period1" in captured.out
     assert "--period2" in captured.out
+    assert "recent quote-page window" in captured.out
     assert "current Unix timestamp" in captured.out
     assert "YYYY-MM-DD" in captured.out
     assert "--merge" in captured.out
@@ -595,6 +594,39 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     assert "quarterlyMarketCap" in captured.out
     assert "trailingEnterprisesValueEBITDARatio" in captured.out
     assert "spEarningsReleaseEvents" in captured.out
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["quote", "AAPL"],
+        ["options", "AAPL"],
+        ["quote-type", "AAPL"],
+        ["quote-summary", "AAPL"],
+        ["price-insights", "AAPL"],
+        ["timeseries", "AAPL"],
+        ["insights", "AAPL"],
+        ["chart", "AAPL"],
+        ["ratings-top", "AAPL"],
+    ],
+)
+def test_endpoint_commands_accept_ticker_only(
+    argv: list[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Every modeled endpoint can run with only the command and ticker symbol."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+
+    exit_code = main(argv, stdout=stdout, stderr=stderr, client=client)
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert len(client.calls) == 1
 
 
 def test_fundamentals_timeseries_command_passes_path_and_params() -> None:
@@ -645,7 +677,7 @@ def test_fundamentals_timeseries_command_passes_path_and_params() -> None:
     ]
 
 
-def test_fundamentals_timeseries_command_uses_observed_boolean_defaults(
+def test_fundamentals_timeseries_command_uses_observed_defaults(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Fundamentals timeseries command applies observed query defaults."""
@@ -673,7 +705,34 @@ def test_fundamentals_timeseries_command_uses_observed_boolean_defaults(
                 "type": "spEarningsReleaseEvents,analystRatings,economicEvents",
                 "period1": 1762192800,
                 "period2": 1777903200,
-                "merge": False,
+                "padTimeSeries": True,
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_fundamentals_timeseries_command_defaults_period_window(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Timeseries command defaults to a recent quote-page-style window."""
+
+    client = StubClient()
+    stdout = StringIO()
+    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+
+    exit_code = main(["timeseries", "AAPL"], stdout=stdout, client=client)
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/ws/fundamentals-timeseries/v1/finance/timeseries/AAPL",
+            {
+                "type": "spEarningsReleaseEvents,analystRatings,economicEvents",
+                "period1": 1777644000,
+                "period2": 1777903200,
                 "padTimeSeries": True,
                 "lang": "en-US",
                 "region": "US",
@@ -708,13 +767,22 @@ def test_period_pair_validation_rejects_period2_before_period1() -> None:
     assert not client.calls
 
 
-def test_period2_without_period1_is_a_parse_error() -> None:
+def test_period2_without_period1_is_an_error() -> None:
     """Commands with a period window require period1 when period2 is provided."""
 
-    with pytest.raises(SystemExit) as exc_info:
-        main(["timeseries", "AAPL", "--period2", "1777593600"])
+    client = StubClient()
+    stderr = StringIO()
 
-    assert exc_info.value.code == PARSE_ERROR
+    exit_code = main(
+        ["timeseries", "AAPL", "--period2", "1777593600"],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--period2 cannot be provided without --period1" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
 
 
 def test_insights_help_includes_params_and_probe_notes(

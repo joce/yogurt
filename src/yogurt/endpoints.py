@@ -536,11 +536,12 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
             name="period1",
             cli_name="period1",
             kind=ParamKind.DATETIME,
-            required=True,
+            default="now-3d",
             metavar="DATE",
             help=(
                 "Start date as a Unix timestamp, YYYY-MM-DD date, or ISO "
-                "datetime. Date-only values are converted at UTC midnight."
+                "datetime. Defaults to a recent quote-page window when omitted. "
+                "Date-only values are converted at UTC midnight."
             ),
         ),
         ParamSpec(
@@ -559,7 +560,6 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
             name="merge",
             cli_name="merge",
             kind=ParamKind.BOOLEAN,
-            default=False,
             metavar="BOOL",
             help="Ask Yahoo to merge timeseries results when supported.",
         ),
@@ -589,6 +589,7 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
         ),
     ),
     examples=(
+        "yogurt timeseries AAPL",
         (
             "yogurt timeseries AAPL --period1 2025-11-03 "
             "--period2 2026-05-03 --type quarterlyMarketCap,trailingMarketCap"
@@ -627,6 +628,10 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
         (
             "period1 and period2 accept Unix timestamps, YYYY-MM-DD dates, "
             "or ISO datetimes."
+        ),
+        (
+            "When period arguments are omitted, Yogurt requests a recent "
+            "quote-page-style window ending at the current Unix timestamp."
         ),
     ),
 )

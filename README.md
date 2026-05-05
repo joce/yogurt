@@ -135,6 +135,20 @@ defaults to `div,split,earn`. User-provided events are comma-separated; Yogurt
 packs them for Yahoo internally. Extended-hours data is opt-in with
 `--include-pre-post true`.
 
+### Timeseries
+
+The `timeseries` command can also run with only a ticker:
+
+```powershell
+uv run yogurt timeseries AAPL
+```
+
+Its default type list matches the Yahoo quote/analysis page request for
+earnings-release, analyst-rating, and economic-event timeseries data. When
+period arguments are omitted, Yogurt uses a recent quote-page-style window:
+`period1` defaults to three days before execution time and `period2` defaults
+to execution time.
+
 ## Dates and Booleans
 
 Date and datetime parameters accept:
@@ -144,9 +158,10 @@ Date and datetime parameters accept:
 - ISO datetime values.
 
 Date-only values are converted at UTC midnight before they are sent to Yahoo.
-For endpoints with `period1` and `period2`, `period2` defaults to the current
-Unix timestamp when omitted, and Yogurt rejects windows where `period2` is not
-greater than `period1`.
+For endpoints with `period1` and `period2`, documented defaults let ticker-only
+requests run, `period2` defaults to the current Unix timestamp when omitted, and
+Yogurt rejects windows where `period2` is not greater than `period1`. Supplying
+`period2` without `period1` is also rejected.
 
 Boolean parameters accept common true and false forms such as `true`, `false`,
 `1`, `0`, `yes`, and `no`.

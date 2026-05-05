@@ -259,7 +259,7 @@ def _params_for_endpoint(
     params: dict[str, ParamValue] = {}
     explicit_period1 = hasattr(namespace, "period1")
     explicit_period2 = hasattr(namespace, "period2")
-    if endpoint.name == "chart" and explicit_period2 and not explicit_period1:
+    if explicit_period2 and not explicit_period1:
         message = "--period2 cannot be provided without --period1"
         raise ValueError(message)
     current_timestamp = int(time.time())
