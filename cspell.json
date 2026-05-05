@@ -74,6 +74,7 @@
     "specstory",
     "testpaths",
     "tox",
+    "triggerable",
     "uv",
     "venv",
     "xdist",

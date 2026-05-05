@@ -8,6 +8,14 @@ from yogurt.params import ParamKind, ParamSpec
 
 
 @dataclass(frozen=True, slots=True)
+class FieldReference:
+    """Describe a known open-ended Yahoo field value."""
+
+    name: str
+    description: str
+
+
+@dataclass(frozen=True, slots=True)
 class CommandSpec:
     """Describe one Yogurt command backed by a Yahoo Finance endpoint."""
 
@@ -17,7 +25,7 @@ class CommandSpec:
     description: str
     params: tuple[ParamSpec, ...]
     examples: tuple[str, ...]
-    common_fields: tuple[str, ...] = ()
+    field_reference: tuple[FieldReference, ...] = ()
     common_modules: tuple[str, ...] = ()
     common_types: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
@@ -28,6 +36,275 @@ class CommandSpec:
         """Return the full Yahoo query URL for this endpoint."""
 
         return f"https://query1.finance.yahoo.com{self.path}"
+
+
+QUOTE_FIELDS: tuple[FieldReference, ...] = (
+    FieldReference(
+        "ask", "Lowest price a seller is willing to accept for the security."
+    ),
+    FieldReference("askSize", "Number of units available at current ask price."),
+    FieldReference(
+        "averageAnalystRating",
+        "Consensus rating from financial analysts for the quote.",
+    ),
+    FieldReference(
+        "averageDailyVolume10Day",
+        "Average number of shares traded each day over the last 10 days.",
+    ),
+    FieldReference(
+        "averageDailyVolume3Month",
+        "Average number of shares traded each day over the last 3 months.",
+    ),
+    FieldReference("bid", "Highest price a buyer is willing to pay for the security."),
+    FieldReference(
+        "bidSize", "Total number of shares that buyers want to buy at the bid price."
+    ),
+    FieldReference("bookValue", "Net accounting value of a company's assets."),
+    FieldReference(
+        "circulatingSupply",
+        "Number of cryptocurrency units currently in public circulation.",
+    ),
+    FieldReference("coinImageUrl", "URL of the image representing the cryptocurrency."),
+    FieldReference(
+        "coinMarketCapLink", "URL of the MarketCap site for the cryptocurrency."
+    ),
+    FieldReference("contractSymbol", "Ticker symbol for a futures contract."),
+    FieldReference("cryptoTradeable", "Whether the cryptocurrency can be traded."),
+    FieldReference(
+        "customPriceAlertConfidence", "Undocumented Yahoo price alert confidence value."
+    ),
+    FieldReference("currency", "Currency in which the security is traded."),
+    FieldReference("displayName", "User-friendly name of the quote or security."),
+    FieldReference(
+        "dividendDate", "Date when the company is expected to pay its next dividend."
+    ),
+    FieldReference("dividendRate", "Amount of dividends expected over the next year."),
+    FieldReference(
+        "dividendYield",
+        "Annual dividend as a percentage of the security's current price.",
+    ),
+    FieldReference(
+        "earningsTimestamp", "Raw timestamp for the company's earnings announcement."
+    ),
+    FieldReference(
+        "earningsTimestampEnd",
+        "Raw timestamp for the end of the earnings announcement window.",
+    ),
+    FieldReference(
+        "earningsTimestampStart",
+        "Raw timestamp for the start of the earnings announcement window.",
+    ),
+    FieldReference(
+        "epsCurrentYear", "Company's earnings per share for the current year."
+    ),
+    FieldReference(
+        "epsForward", "Company's projected earnings per share for the next fiscal year."
+    ),
+    FieldReference(
+        "epsTrailingTwelveMonths",
+        "Company's earnings per share for the past 12 months.",
+    ),
+    FieldReference("esgPopulated", "Availability status of ESG ratings data."),
+    FieldReference("exchange", "Securities exchange on which the security is traded."),
+    FieldReference(
+        "exchangeDataDelayedBy",
+        "Delay in data from the exchange, typically in minutes.",
+    ),
+    FieldReference("exchangeTimezoneName", "Name of the exchange timezone."),
+    FieldReference("exchangeTimezoneShortName", "Short name of the exchange timezone."),
+    FieldReference("expireDate", "Date on which the option contract expires."),
+    FieldReference("expireIsoDate", "Option expiration date in ISO 8601 format."),
+    FieldReference(
+        "fiftyDayAverage", "Average closing price over the past 50 trading days."
+    ),
+    FieldReference(
+        "fiftyDayAverageChange",
+        "Change in the 50-day average price from the previous trading day.",
+    ),
+    FieldReference(
+        "fiftyDayAverageChangePercent",
+        "Percent change in the 50-day average price from the previous trading day.",
+    ),
+    FieldReference(
+        "fiftyTwoWeekChangePercent",
+        "Percentage change in price over the past 52 weeks.",
+    ),
+    FieldReference("fiftyTwoWeekHigh", "Highest price traded over the past 52 weeks."),
+    FieldReference(
+        "fiftyTwoWeekHighChange",
+        "Change in the 52-week high price from the previous trading day.",
+    ),
+    FieldReference(
+        "fiftyTwoWeekHighChangePercent",
+        "Percent change in the 52-week high price from the previous trading day.",
+    ),
+    FieldReference("fiftyTwoWeekLow", "Lowest price traded over the past 52 weeks."),
+    FieldReference(
+        "fiftyTwoWeekLowChange",
+        "Change in the 52-week low price from the previous trading day.",
+    ),
+    FieldReference(
+        "fiftyTwoWeekLowChangePercent",
+        "Percent change in the 52-week low price from the previous trading day.",
+    ),
+    FieldReference("fiftyTwoWeekRange", "Trading price range over the past 52 weeks."),
+    FieldReference(
+        "financialCurrency", "Currency in which the company reports financial results."
+    ),
+    FieldReference(
+        "firstTradeDateMilliseconds", "Raw first-trade timestamp in milliseconds."
+    ),
+    FieldReference(
+        "forwardPe", "Projected price-to-earnings ratio for the next 12 months."
+    ),
+    FieldReference("fromCurrency", "Base currency in an exchange pair."),
+    FieldReference("fullExchangeName", "Full name of the securities exchange."),
+    FieldReference(
+        "gmtOffSetMilliseconds", "Exchange offset from GMT in milliseconds."
+    ),
+    FieldReference(
+        "headSymbolAsString", "Symbol of the contract's underlying security."
+    ),
+    FieldReference("ipoExpectedDate", "Expected date of the initial public offering."),
+    FieldReference("language", "Language in which financial results are reported."),
+    FieldReference("lastMarket", "Last market in which the security was traded."),
+    FieldReference("logoUrl", "URL of the company's logo."),
+    FieldReference("longName", "Official name of the company or security."),
+    FieldReference("market", "Primary market for the security."),
+    FieldReference(
+        "marketCap", "Total market value of the security in trading currency."
+    ),
+    FieldReference("marketState", "Current state of the market for the security."),
+    FieldReference("messageBoardId", "Identifier for the Yahoo Finance message board."),
+    FieldReference(
+        "morningstarIndustry",
+        "Morningstar industry classification when Yahoo returns it.",
+    ),
+    FieldReference(
+        "nameChangeDate", "Date on which the company last changed its name."
+    ),
+    FieldReference("netAssets", "Total net assets of the fund or company."),
+    FieldReference("netExpenseRatio", "Ratio of total expenses to total net assets."),
+    FieldReference(
+        "openInterest", "Total number of open futures or options contracts."
+    ),
+    FieldReference("optionType", "Type of option."),
+    FieldReference("postMarketChange", "Change in the security's post-market price."),
+    FieldReference(
+        "postMarketChangePercent", "Percent change in the security's post-market price."
+    ),
+    FieldReference("postMarketPrice", "Price of the security in post-market trading."),
+    FieldReference(
+        "postMarketTime", "Raw timestamp of the most recent post-market trade."
+    ),
+    FieldReference("preMarketChange", "Change in the security's pre-market price."),
+    FieldReference(
+        "preMarketChangePercent", "Percent change in the security's pre-market price."
+    ),
+    FieldReference("preMarketPrice", "Price of the security in pre-market trading."),
+    FieldReference(
+        "preMarketTime", "Raw timestamp of the most recent pre-market trade."
+    ),
+    FieldReference("prevName", "Company name before its most recent name change."),
+    FieldReference("priceEpsCurrentYear", "Current-year price-to-earnings ratio."),
+    FieldReference("priceHint", "Decimal precision indicator for price values."),
+    FieldReference("priceToBook", "Market value relative to book value per share."),
+    FieldReference("quoteSourceName", "Name of the source providing the quote."),
+    FieldReference("quoteType", "Type of quote."),
+    FieldReference("region", "Region in which the company or security is located."),
+    FieldReference(
+        "regularMarketChange", "Change in the security's regular-market price."
+    ),
+    FieldReference(
+        "regularMarketChangePercent",
+        "Percent change in the security's regular-market price.",
+    ),
+    FieldReference(
+        "regularMarketDayHigh", "Highest price during the regular trading session."
+    ),
+    FieldReference(
+        "regularMarketDayLow", "Lowest price during the regular trading session."
+    ),
+    FieldReference(
+        "regularMarketDayRange", "Price range during the regular trading session."
+    ),
+    FieldReference(
+        "regularMarketOpen", "Opening price for the regular trading session."
+    ),
+    FieldReference(
+        "regularMarketPreviousClose", "Previous regular-session closing price."
+    ),
+    FieldReference(
+        "regularMarketPrice", "Latest price from the regular trading session."
+    ),
+    FieldReference(
+        "regularMarketTime", "Raw timestamp of the most recent regular-session trade."
+    ),
+    FieldReference(
+        "regularMarketVolume", "Number of units traded in the regular session."
+    ),
+    FieldReference(
+        "sharesOutstanding", "Number of shares currently held by shareholders."
+    ),
+    FieldReference("shortName", "Short user-friendly name for the quote or security."),
+    FieldReference(
+        "sourceInterval",
+        "Interval at which the data source provides updates, in seconds.",
+    ),
+    FieldReference("startDate", "Date on which the coin started trading."),
+    FieldReference("strike", "Contractually specified price for options exercise."),
+    FieldReference("symbol", "Ticker symbol of the security."),
+    FieldReference("toCurrency", "Counter currency in an exchange pair."),
+    FieldReference("tradeable", "Whether the security is currently tradeable."),
+    FieldReference(
+        "trailingAnnualDividendRate",
+        "Dividend payment per share over the past 12 months.",
+    ),
+    FieldReference(
+        "trailingAnnualDividendYield", "Dividend yield over the past 12 months."
+    ),
+    FieldReference(
+        "trailingPE",
+        "Trailing price-to-earnings ratio based on past twelve-month results.",
+    ),
+    FieldReference(
+        "trailingThreeMonthNavReturns", "Trailing three-month net asset value returns."
+    ),
+    FieldReference("trailingThreeMonthReturns", "Trailing three-month returns."),
+    FieldReference(
+        "triggerable", "Internal Yahoo Finance flag with undocumented purpose."
+    ),
+    FieldReference(
+        "twoHundredDayAverage", "Average closing price over the past 200 trading days."
+    ),
+    FieldReference(
+        "twoHundredDayAverageChange",
+        "Change in the 200-day average price from the previous trading day.",
+    ),
+    FieldReference(
+        "twoHundredDayAverageChangePercent",
+        "Percent change in the 200-day average price from the previous trading day.",
+    ),
+    FieldReference("typeDisp", "User-friendly representation of the quote type."),
+    FieldReference(
+        "underlyingExchangeSymbol",
+        "Exchange symbol for the underlying asset's trading venue.",
+    ),
+    FieldReference(
+        "underlyingShortName", "Short name of the underlying derivative security."
+    ),
+    FieldReference(
+        "underlyingSymbol", "Ticker symbol of the underlying derivative security."
+    ),
+    FieldReference(
+        "volume24Hr", "Total cryptocurrency trading volume in the past 24 hours."
+    ),
+    FieldReference(
+        "volumeAllCurrencies",
+        "Aggregate 24-hour cryptocurrency volume across currency pairs.",
+    ),
+    FieldReference("ytdReturn", "Year-to-date return on the security."),
+)
 
 
 QUOTE_COMMAND = CommandSpec(
@@ -135,25 +412,7 @@ QUOTE_COMMAND = CommandSpec(
             "--img-heights 50 --img-labels logoUrl --img-widths 50"
         ),
     ),
-    common_fields=(
-        "symbol",
-        "shortName",
-        "longName",
-        "displayName",
-        "quoteType",
-        "marketCap",
-        "morningstarIndustry",
-        "logoUrl",
-        "regularMarketPrice",
-        "regularMarketChange",
-        "regularMarketChangePercent",
-        "regularMarketTime",
-        "regularMarketVolume",
-        "marketState",
-        "fiftyTwoWeekLow",
-        "fiftyTwoWeekHigh",
-        "averageAnalystRating",
-    ),
+    field_reference=QUOTE_FIELDS,
 )
 
 OPTIONS_COMMAND = CommandSpec(

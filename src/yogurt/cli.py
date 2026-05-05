@@ -77,10 +77,10 @@ def _examples_text(examples: tuple[str, ...]) -> str:
 
 
 def _epilog_for_command(command: CommandSpec) -> str:
-    common_fields = ""
-    if command.common_fields:
-        common_fields = "\n\nCommon --fields values:\n  " + ", ".join(
-            command.common_fields
+    field_reference = ""
+    if command.field_reference:
+        field_reference = "\n\nQuote --fields reference:\n" + "\n".join(
+            f"  {field.name}: {field.description}" for field in command.field_reference
         )
     common_modules = ""
     if command.common_modules:
@@ -96,7 +96,7 @@ def _epilog_for_command(command: CommandSpec) -> str:
     return (
         f"Yahoo endpoint:\n  {command.yahoo_url}\n\n"
         f"Examples:\n{_examples_text(command.examples)}"
-        f"{common_fields}"
+        f"{field_reference}"
         f"{common_modules}"
         f"{common_types}"
         f"{notes}"

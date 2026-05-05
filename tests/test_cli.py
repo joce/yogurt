@@ -128,8 +128,11 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "1 to 10 comma-separated Yahoo symbols" in captured.out
     assert "--fields" in captured.out
     assert "--enable-private-company" in captured.out
-    assert "Common --fields values" in captured.out
+    assert "Common --fields values" not in captured.out
+    assert "Quote --fields reference" in captured.out
+    assert "ask: Lowest price a seller is willing to accept" in captured.out
     assert "regularMarketPrice" in captured.out
+    assert "customPriceAlertConfidence" in captured.out
     assert "Uses Yahoo crumb/session" not in captured.out
     assert "yogurt quote SMR,OKLO,LEU,VST,CEG" in captured.out
 

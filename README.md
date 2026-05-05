@@ -19,8 +19,8 @@ help.
 
 - Raw Yahoo Finance JSON on stdout, with no pretty-printing or interpretation.
 - Endpoint-specific commands for common Yahoo Finance data.
-- Generated help that includes examples, parameters, common fields, modules, or
-  types when Yogurt knows them.
+- Generated help that includes examples, parameters, field references, modules,
+  or types when Yogurt knows them.
 - Reusable Yahoo session cache for faster one-shot CLI calls.
 - A `raw` command for Yahoo query paths that do not have dedicated metadata yet.
 
@@ -59,6 +59,9 @@ Request specific quote fields:
 ```powershell
 uv run yogurt quote AAPL,MSFT --fields symbol,longName,regularMarketPrice,regularMarketChangePercent
 ```
+
+See [QUOTE_FIELDS.md](QUOTE_FIELDS.md) for the full quote field reference and
+best-effort meanings.
 
 Fetch selected quote summary modules:
 
