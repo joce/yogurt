@@ -547,12 +547,12 @@ FUNDAMENTALS_TIMESERIES_ENDPOINT = EndpointSpec(
             name="period2",
             cli_name="period2",
             kind=ParamKind.DATETIME,
-            default="today",
+            default="now",
             metavar="DATE",
             help=(
                 "End date as a Unix timestamp, YYYY-MM-DD date, or ISO "
-                "datetime. Defaults to today's date. Date-only values are "
-                "converted at UTC midnight."
+                "datetime. Defaults to the current Unix timestamp when omitted. "
+                "Date-only values are converted at UTC midnight."
             ),
         ),
         ParamSpec(
@@ -721,6 +721,119 @@ INSIGHTS_ENDPOINT = EndpointSpec(
     ),
 )
 
+CHART_ENDPOINT = EndpointSpec(
+    name="chart",
+    path="/v8/finance/chart/{symbol}",
+    summary="Chart price data for a single symbol.",
+    description=(
+        "Calls Yahoo Finance's chart endpoint for one symbol and writes the "
+        "response body to stdout without formatting or response-model mapping."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="symbol",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            path_param=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo symbol, such as AAPL, GC=F, SPY, or BTC-USD.",
+        ),
+        ParamSpec(
+            name="period1",
+            cli_name="period1",
+            kind=ParamKind.DATETIME,
+            default="now-3d",
+            metavar="DATE",
+            help=(
+                "Start date as a Unix timestamp, YYYY-MM-DD date, or ISO "
+                "datetime. Defaults to a recent quote-page window when omitted. "
+                "Date-only values are converted at UTC midnight."
+            ),
+        ),
+        ParamSpec(
+            name="period2",
+            cli_name="period2",
+            kind=ParamKind.DATETIME,
+            default="now",
+            metavar="DATE",
+            help=(
+                "End date as a Unix timestamp, YYYY-MM-DD date, or ISO "
+                "datetime. Defaults to the current Unix timestamp when omitted. "
+                "Date-only values are converted at UTC midnight."
+            ),
+        ),
+        ParamSpec(
+            name="interval",
+            cli_name="interval",
+            kind=ParamKind.STRING,
+            default="1m",
+            metavar="INTERVAL",
+            help=("Chart interval. Supported values: 1m, 5m, 15m, 1d, 1wk, 1mo."),
+        ),
+        ParamSpec(
+            name="includePrePost",
+            cli_name="include-pre-post",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            metavar="BOOL",
+            help="Include pre-market and post-market data when Yahoo supports it.",
+        ),
+        ParamSpec(
+            name="events",
+            cli_name="events",
+            kind=ParamKind.CSV,
+            default="div,split,earn",
+            metavar="EVENT[,EVENT...]",
+            allowed_values=("div", "split", "earn"),
+            csv_separator="|",
+            help=(
+                "Comma-separated chart events to request. Supported values: "
+                "div, split, earn."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt chart AAPL",
+        "yogurt chart AAPL --period1 2026-04-30",
+        "yogurt chart AAPL --period1 1777507200 --period2 1777593600 --interval 1m",
+        "yogurt chart SPY --period1 2026-01-01 --interval 1d --events div,split",
+    ),
+    notes=(
+        "period2 must be greater than period1.",
+        (
+            "When period2 is omitted, Yogurt sends the current Unix timestamp; "
+            "now is not accepted as a user-provided value."
+        ),
+        (
+            "Yahoo can reject overlong short-interval windows for 1m, 5m, and 15m "
+            "intervals."
+        ),
+        (
+            "Live probes across several symbol types returned the observed chart "
+            "payload without additional query parameters."
+        ),
+    ),
+)
+
 RATINGS_TOP_ENDPOINT = EndpointSpec(
     name="ratings-top",
     path="/v2/ratings/top/{symbol}",
@@ -790,6 +903,7 @@ ENDPOINTS: tuple[EndpointSpec, ...] = (
     PRICE_INSIGHTS_ENDPOINT,
     FUNDAMENTALS_TIMESERIES_ENDPOINT,
     INSIGHTS_ENDPOINT,
+    CHART_ENDPOINT,
     RATINGS_TOP_ENDPOINT,
 )
 ENDPOINTS_BY_NAME: dict[str, EndpointSpec] = {

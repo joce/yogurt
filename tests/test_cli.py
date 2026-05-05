@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from io import StringIO
 from typing import TYPE_CHECKING
 
@@ -12,6 +11,8 @@ from yogurt.cli import main
 
 if TYPE_CHECKING:
     from yogurt.types import ParamValue
+
+PARSE_ERROR = 2
 
 
 class StubClient:
@@ -61,6 +62,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "timeseries" in captured.out
     assert "insights" in captured.out
     assert "ratings-top" in captured.out
+    assert "chart" in captured.out
     assert "raw" in captured.out
     assert "Retrieve raw" not in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
@@ -585,7 +587,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     assert "--type" in captured.out
     assert "--period1" in captured.out
     assert "--period2" in captured.out
-    assert "to today's date" in captured.out
+    assert "current Unix timestamp" in captured.out
     assert "YYYY-MM-DD" in captured.out
     assert "--merge" in captured.out
     assert "--pad-time-series" in captured.out
@@ -643,18 +645,14 @@ def test_fundamentals_timeseries_command_passes_path_and_params() -> None:
     ]
 
 
-def test_fundamentals_timeseries_command_uses_observed_boolean_defaults() -> None:
+def test_fundamentals_timeseries_command_uses_observed_boolean_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Fundamentals timeseries command applies observed query defaults."""
 
     client = StubClient()
     stdout = StringIO()
-    today_timestamp = int(
-        datetime.combine(
-            datetime.now(timezone.utc).date(),
-            datetime.min.time(),
-            timezone.utc,
-        ).timestamp()
-    )
+    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
 
     exit_code = main(
         [
@@ -674,7 +672,7 @@ def test_fundamentals_timeseries_command_uses_observed_boolean_defaults() -> Non
             {
                 "type": "spEarningsReleaseEvents,analystRatings,economicEvents",
                 "period1": 1762192800,
-                "period2": today_timestamp,
+                "period2": 1777903200,
                 "merge": False,
                 "padTimeSeries": True,
                 "lang": "en-US",
@@ -683,6 +681,40 @@ def test_fundamentals_timeseries_command_uses_observed_boolean_defaults() -> Non
             True,
         )
     ]
+
+
+def test_period_pair_validation_rejects_period2_before_period1() -> None:
+    """Commands with period1/period2 reject reversed windows."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "timeseries",
+            "AAPL",
+            "--period1",
+            "1777903200",
+            "--period2",
+            "1777593600",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--period2 must be greater than --period1" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_period2_without_period1_is_a_parse_error() -> None:
+    """Commands with a period window require period1 when period2 is provided."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["timeseries", "AAPL", "--period2", "1777593600"])
+
+    assert exc_info.value.code == PARSE_ERROR
 
 
 def test_insights_help_includes_params_and_probe_notes(
@@ -868,6 +900,250 @@ def test_ratings_top_command_uses_observed_defaults() -> None:
             False,
         )
     ]
+
+
+def test_chart_help_includes_params_and_examples(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Chart help documents dates, events, and observed chart behavior."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["chart", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "https://query1.finance.yahoo.com/v8/finance/chart/{symbol}" in captured.out
+    assert "SYMBOL" in captured.out
+    assert "--period1" in captured.out
+    assert "--period2" in captured.out
+    assert "recent quote-page window" in captured.out
+    assert "--interval" in captured.out
+    assert "--include-pre-post" in captured.out
+    assert "--events" in captured.out
+    assert "Supported values: div, split" in captured.out
+    assert "earn" in captured.out
+    assert "source" not in captured.out
+    assert "range" not in captured.out
+
+
+def test_chart_command_passes_params_and_packs_events() -> None:
+    """Chart command sends Yahoo's observed query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+            "--period1",
+            "2026-04-30",
+            "--period2",
+            "1777593600",
+            "--interval",
+            "1m",
+            "--include-pre-post",
+            "false",
+            "--events",
+            "div,earn",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v8/finance/chart/AAPL",
+            {
+                "period1": 1777507200,
+                "period2": 1777593600,
+                "interval": "1m",
+                "includePrePost": False,
+                "events": "div|earn",
+                "lang": "en-US",
+                "region": "US",
+            },
+            False,
+        )
+    ]
+
+
+def test_chart_command_defaults_period2_to_execution_time(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Chart command fills omitted period2 with current Unix time."""
+
+    client = StubClient()
+    stdout = StringIO()
+    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+            "--period1",
+            "1777593600",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/v8/finance/chart/AAPL",
+            {
+                "period1": 1777593600,
+                "period2": 1777903200,
+                "interval": "1m",
+                "includePrePost": False,
+                "events": "div|split|earn",
+                "lang": "en-US",
+                "region": "US",
+            },
+            False,
+        )
+    ]
+
+
+def test_chart_command_defaults_period_window_to_quote_page_shape(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Chart command fills omitted period1 and period2 with a recent 3-day window."""
+
+    client = StubClient()
+    stdout = StringIO()
+    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/v8/finance/chart/AAPL",
+            {
+                "period1": 1777644000,
+                "period2": 1777903200,
+                "interval": "1m",
+                "includePrePost": False,
+                "events": "div|split|earn",
+                "lang": "en-US",
+                "region": "US",
+            },
+            False,
+        )
+    ]
+
+
+def test_chart_command_rejects_period2_without_period1() -> None:
+    """Chart requires explicit period1 when period2 is explicitly provided."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+            "--period2",
+            "1777903200",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--period2 cannot be provided without --period1" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_chart_command_rejects_now_as_user_period2() -> None:
+    """The current-time default is internal, not a user-facing value."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+            "--period1",
+            "1777593600",
+            "--period2",
+            "now",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--period2 expected Unix timestamp" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_chart_command_rejects_unknown_interval() -> None:
+    """Chart command rejects intervals outside the observed set."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+            "--period1",
+            "1777593600",
+            "--interval",
+            "2m",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--interval unsupported value '2m'" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_chart_command_rejects_unknown_event() -> None:
+    """Chart command validates events because Yahoo silently ignores unknown values."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "chart",
+            "AAPL",
+            "--period1",
+            "1777593600",
+            "--events",
+            "div,foo",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--events unsupported value 'foo'" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
 
 
 def test_raw_command_passes_path_and_name_value_params() -> None:

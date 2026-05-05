@@ -83,3 +83,32 @@ def test_coerce_param_parses_datetime_kind() -> None:
     spec = ParamSpec("date", "date", ParamKind.DATETIME, "Expiration date")
 
     assert coerce_param(spec, "2017-11-17") == NOV_17_2017
+
+
+def test_coerce_csv_param_validates_allowed_values() -> None:
+    """CSV params can constrain each requested value."""
+
+    spec = ParamSpec(
+        "events",
+        "events",
+        ParamKind.CSV,
+        "Chart events",
+        allowed_values=("div", "split", "earn"),
+    )
+
+    with pytest.raises(ValueError, match="unsupported value 'foo'"):
+        coerce_param(spec, "div,foo")
+
+
+def test_coerce_csv_param_can_pack_with_custom_separator() -> None:
+    """CSV params can be packed for Yahoo without exposing the wire separator."""
+
+    spec = ParamSpec(
+        "events",
+        "events",
+        ParamKind.CSV,
+        "Chart events",
+        csv_separator="|",
+    )
+
+    assert coerce_param(spec, "div, split,earn") == "div|split|earn"

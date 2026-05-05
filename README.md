@@ -66,6 +66,12 @@ Fetch selected quote summary modules:
 uv run yogurt quote-summary AAPL --modules price,quoteType,summaryDetail
 ```
 
+Fetch chart data for a recent window:
+
+```powershell
+uv run yogurt chart AAPL
+```
+
 Fetch an option chain using Yahoo's default expiration:
 
 ```powershell
@@ -97,6 +103,7 @@ Current commands include:
 | `price-insights` | Generated price insight data for one or more symbols. |
 | `timeseries` | Fundamentals timeseries data for a single symbol. |
 | `insights` | Insight data for one or more symbols. |
+| `chart` | Chart price data for a single symbol. |
 | `ratings-top` | Top analyst rating scores for a single symbol. |
 | `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
 
@@ -112,6 +119,22 @@ Endpoint help is the primary documentation surface. It shows Yahoo's target
 endpoint, accepted parameters, defaults, examples, and common open-ended values
 where available.
 
+### Chart
+
+The `chart` command calls Yahoo's `/v8/finance/chart/{symbol}` endpoint without
+requesting a crumb:
+
+```powershell
+uv run yogurt chart AAPL
+```
+
+When period arguments are omitted, Yogurt uses a recent quote-page-shaped
+window: `period1` defaults to three days before execution time, `period2`
+defaults to execution time, `--interval` defaults to `1m`, and `--events`
+defaults to `div,split,earn`. User-provided events are comma-separated; Yogurt
+packs them for Yahoo internally. Extended-hours data is opt-in with
+`--include-pre-post true`.
+
 ## Dates and Booleans
 
 Date and datetime parameters accept:
@@ -121,6 +144,9 @@ Date and datetime parameters accept:
 - ISO datetime values.
 
 Date-only values are converted at UTC midnight before they are sent to Yahoo.
+For endpoints with `period1` and `period2`, `period2` defaults to the current
+Unix timestamp when omitted, and Yogurt rejects windows where `period2` is not
+greater than `period1`.
 
 Boolean parameters accept common true and false forms such as `true`, `false`,
 `1`, `0`, `yes`, and `no`.

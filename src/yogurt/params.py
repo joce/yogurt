@@ -36,6 +36,8 @@ class ParamSpec:
     metavar: str | None = None
     min_items: int | None = None
     max_items: int | None = None
+    allowed_values: tuple[str, ...] = ()
+    csv_separator: str = ","
 
     @property
     def option(self) -> str:
@@ -71,7 +73,17 @@ def _coerce_csv_param(spec: ParamSpec, value: str) -> str:
             f"comma-separated values; got {len(items)}"
         )
         raise ValueError(message)
-    return ",".join(items)
+    if spec.allowed_values:
+        allowed_values = set(spec.allowed_values)
+        for item in items:
+            if item not in allowed_values:
+                allowed_text = ", ".join(spec.allowed_values)
+                message = (
+                    f"{spec.option} unsupported value {item!r}; "
+                    f"expected one of: {allowed_text}"
+                )
+                raise ValueError(message)
+    return spec.csv_separator.join(items)
 
 
 def parse_boolean(value: str) -> bool:

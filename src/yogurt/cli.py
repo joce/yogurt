@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import logging
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from string import Formatter
@@ -24,6 +25,8 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from yogurt.types import ParamValue
+
+_THREE_DAYS_SECONDS = 3 * 24 * 60 * 60
 
 
 class _YahooClientProtocol(Protocol):
@@ -133,9 +136,21 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
 
 
 def _default_for_param(param: ParamSpec) -> object:
+    if param.default in {"now", "now-3d"}:
+        return argparse.SUPPRESS
     if param.default == "today":
         return datetime.now(timezone.utc).date().isoformat()
     return param.default
+
+
+def _dynamic_default_for_param(
+    spec: ParamSpec, current_timestamp: int
+) -> ParamValue | None:
+    if spec.default == "now":
+        return current_timestamp
+    if spec.default == "now-3d":
+        return current_timestamp - _THREE_DAYS_SECONDS
+    return None
 
 
 def _add_endpoint_param(parser: argparse.ArgumentParser, param: ParamSpec) -> None:
@@ -242,7 +257,18 @@ def _params_for_endpoint(
     endpoint: EndpointSpec, namespace: argparse.Namespace
 ) -> dict[str, ParamValue]:
     params: dict[str, ParamValue] = {}
+    explicit_period1 = hasattr(namespace, "period1")
+    explicit_period2 = hasattr(namespace, "period2")
+    if endpoint.name == "chart" and explicit_period2 and not explicit_period1:
+        message = "--period2 cannot be provided without --period1"
+        raise ValueError(message)
+    current_timestamp = int(time.time())
     for spec in endpoint.params:
+        if not hasattr(namespace, spec.name):
+            dynamic_default = _dynamic_default_for_param(spec, current_timestamp)
+            if dynamic_default is not None:
+                params[spec.name] = dynamic_default
+            continue
         value = getattr(namespace, spec.name)
         if value is None:
             continue
@@ -253,6 +279,31 @@ def _params_for_endpoint(
             continue
         params[spec.name] = coerce_param(spec, value)
     return params
+
+
+def _validate_endpoint_params(
+    endpoint: EndpointSpec, params: dict[str, ParamValue]
+) -> None:
+    if "period1" in params and "period2" in params:
+        period1 = params["period1"]
+        period2 = params["period2"]
+        if not isinstance(period1, int) or not isinstance(period2, int):
+            message = "--period1 and --period2 must be datetime values"
+            raise ValueError(message)
+        if period2 <= period1:
+            message = "--period2 must be greater than --period1"
+            raise ValueError(message)
+
+    if endpoint.name == "chart":
+        interval = params.get("interval")
+        allowed_intervals = {"1m", "5m", "15m", "1d", "1wk", "1mo"}
+        if interval not in allowed_intervals:
+            allowed_text = ", ".join(sorted(allowed_intervals))
+            message = (
+                f"--interval unsupported value {interval!r}; "
+                f"expected one of: {allowed_text}"
+            )
+            raise ValueError(message)
 
 
 def _path_for_endpoint(endpoint: EndpointSpec, namespace: argparse.Namespace) -> str:
@@ -286,9 +337,11 @@ async def _run_async(
     try:
         if namespace.command == "endpoint":
             endpoint = ENDPOINTS_BY_NAME[namespace.endpoint_name]
+            params = _params_for_endpoint(endpoint, namespace)
+            _validate_endpoint_params(endpoint, params)
             body = await client.get(
                 _path_for_endpoint(endpoint, namespace),
-                _params_for_endpoint(endpoint, namespace),
+                params,
                 use_crumb=endpoint.use_crumb,
             )
         elif namespace.command == "raw":
