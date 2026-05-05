@@ -69,6 +69,9 @@ Fetch selected quote summary modules:
 uv run yogurt quote-summary AAPL --modules price,quoteType,summaryDetail
 ```
 
+See [QUOTE_SUMMARY_MODULES.md](QUOTE_SUMMARY_MODULES.md) for the researched
+quote-summary module list and descriptions.
+
 Fetch chart data for a recent window:
 
 ```powershell
@@ -151,6 +154,9 @@ earnings-release, analyst-rating, and economic-event timeseries data. When
 period arguments are omitted, Yogurt uses a recent quote-page-style window:
 `period1` defaults to three days before execution time and `period2` defaults
 to execution time.
+
+See [TIMESERIES_TYPES.md](TIMESERIES_TYPES.md) for the observed `--type`
+reference with descriptions.
 
 ## Dates and Booleans
 

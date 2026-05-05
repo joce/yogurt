@@ -9,7 +9,7 @@ from yogurt.params import ParamKind, ParamSpec
 
 @dataclass(frozen=True, slots=True)
 class FieldReference:
-    """Describe a known open-ended Yahoo field value."""
+    """Describe a known open-ended Yahoo parameter value."""
 
     name: str
     description: str
@@ -26,6 +26,7 @@ class CommandSpec:
     params: tuple[ParamSpec, ...]
     examples: tuple[str, ...]
     field_reference: tuple[FieldReference, ...] = ()
+    field_reference_title: str = "Quote --fields reference"
     common_modules: tuple[str, ...] = ()
     common_types: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
@@ -36,6 +37,193 @@ class CommandSpec:
         """Return the full Yahoo query URL for this endpoint."""
 
         return f"https://query1.finance.yahoo.com{self.path}"
+
+
+def _prefixed_field_references(
+    prefixes: tuple[FieldReference, ...],
+    metrics: tuple[FieldReference, ...],
+) -> tuple[FieldReference, ...]:
+    """Return Yahoo timeseries type references with generated prefixes."""
+
+    return tuple(
+        FieldReference(
+            f"{prefix.name}{metric.name}",
+            f"{prefix.description} {metric.description}",
+        )
+        for prefix in prefixes
+        for metric in metrics
+    )
+
+
+_TIMESERIES_EVENTS: tuple[FieldReference, ...] = (
+    FieldReference("spEarningsReleaseEvents", "S&P earnings release events"),
+    FieldReference("analystRatings", "analyst ratings"),
+    FieldReference("economicEvents", "economic events"),
+)
+
+_TIMESERIES_ANNUAL_PREFIXES: tuple[FieldReference, ...] = (
+    FieldReference("annual", "Annual"),
+)
+
+_TIMESERIES_QUARTERLY_TRAILING_PREFIXES: tuple[FieldReference, ...] = (
+    FieldReference("quarterly", "Quarterly"),
+    FieldReference("trailing", "Trailing"),
+)
+
+_TIMESERIES_VALUATION_METRICS: tuple[FieldReference, ...] = (
+    FieldReference("MarketCap", "market capitalization"),
+    FieldReference("EnterpriseValue", "enterprise value"),
+    FieldReference("PeRatio", "P/E ratio"),
+    FieldReference("ForwardPeRatio", "forward P/E ratio"),
+    FieldReference("PegRatio", "PEG ratio"),
+    FieldReference("PsRatio", "price to sales ratio"),
+    FieldReference("PbRatio", "price to book ratio"),
+    FieldReference("EnterprisesValueRevenueRatio", "enterprise value to revenue"),
+    FieldReference("EnterprisesValueEBITDARatio", "enterprise value to EBITDA"),
+)
+
+_TIMESERIES_ANNUAL_METRICS: tuple[FieldReference, ...] = (
+    FieldReference("InterestExpense", "interest expense"),
+    FieldReference("OtherIncomeExpense", "other income or expense"),
+    FieldReference("OperatingCashFlow", "operating cash flow"),
+    FieldReference("PurchaseOfInvestment", "investment purchases"),
+    FieldReference("EndCashPosition", "ending cash position"),
+    FieldReference("BeginningCashPosition", "beginning cash position"),
+    FieldReference("NetOtherFinancingCharges", "net other financing charges"),
+    FieldReference("RepurchaseOfCapitalStock", "capital stock repurchases"),
+    FieldReference("RepaymentOfDebt", "debt repayments"),
+    FieldReference("SaleOfInvestment", "investment sales"),
+    FieldReference("PurchaseOfBusiness", "business purchases"),
+    FieldReference("OtherNonCashItems", "other non-cash items"),
+    FieldReference("FreeCashFlow", "free cash flow"),
+    FieldReference("AccountsPayable", "accounts payable"),
+    FieldReference("StockBasedCompensation", "stock-based compensation"),
+    FieldReference("DeferredIncomeTax", "deferred income tax"),
+    FieldReference("ChangeInWorkingCapital", "change in working capital"),
+    FieldReference("CostOfRevenue", "cost of revenue"),
+    FieldReference("EBITDA", "EBITDA"),
+    FieldReference("NormalizedEBITDA", "normalized EBITDA"),
+    FieldReference("OperatingIncome", "operating income"),
+    FieldReference("StockholdersEquity", "stockholders' equity"),
+    FieldReference("CurrentLiabilities", "current liabilities"),
+    FieldReference(
+        "TotalLiabilitiesNetMinorityInterest",
+        "total liabilities net minority interest",
+    ),
+    FieldReference("CurrentAssets", "current assets"),
+    FieldReference("TotalAssets", "total assets"),
+    FieldReference("ChangesInAccountReceivables", "changes in account receivables"),
+    FieldReference("CapitalExpenditure", "capital expenditure"),
+    FieldReference("NetOtherInvestingChanges", "net other investing changes"),
+    FieldReference(
+        "CashFlowFromContinuingFinancingActivities",
+        "cash flow from continuing financing activities",
+    ),
+    FieldReference(
+        "ChangeInCashSupplementalAsReported",
+        "supplemental change in cash as reported",
+    ),
+    FieldReference("DepreciationAndAmortization", "depreciation and amortization"),
+    FieldReference("ChangeInInventory", "change in inventory"),
+    FieldReference("InvestingCashFlow", "investing cash flow"),
+    FieldReference("CommonStockIssuance", "common stock issuance"),
+    FieldReference("CashDividendsPaid", "cash dividends paid"),
+    FieldReference("ChangeInAccountPayable", "change in account payable"),
+    FieldReference("SpecialIncomeCharges", "special income charges"),
+    FieldReference("OtherSpecialCharges", "other special charges"),
+    FieldReference(
+        "RestructuringAndMergernAcquisition",
+        "restructuring and merger or acquisition charges",
+    ),
+    FieldReference("ImpairmentOfCapitalAssets", "impairment of capital assets"),
+    FieldReference("WriteOff", "write-off charges"),
+    FieldReference("SellingAndMarketingExpense", "selling and marketing expense"),
+    FieldReference("NetIncome", "net income"),
+    FieldReference("TotalRevenue", "total revenue"),
+    FieldReference("GrossProfit", "gross profit"),
+    FieldReference("OperatingExpense", "operating expense"),
+    FieldReference("ResearchAndDevelopment", "research and development expense"),
+    FieldReference(
+        "SellingGeneralAndAdministration",
+        "selling, general, and administrative expense",
+    ),
+    FieldReference("PretaxIncome", "pretax income"),
+    FieldReference("TaxProvision", "tax provision"),
+    FieldReference("BasicEPS", "basic EPS"),
+    FieldReference("DilutedEPS", "diluted EPS"),
+    FieldReference("BasicAverageShares", "basic average shares"),
+    FieldReference("DilutedAverageShares", "diluted average shares"),
+    FieldReference(
+        "NetIncomeContinuousOperations", "net income from continuing operations"
+    ),
+    FieldReference("CapitalLeaseObligations", "capital lease obligations"),
+    FieldReference("TotalDebt", "total debt"),
+    FieldReference("NetDebt", "net debt"),
+    FieldReference(
+        "GoodwillAndOtherIntangibleAssets",
+        "goodwill and other intangible assets",
+    ),
+    FieldReference("Goodwill", "goodwill"),
+    FieldReference("AccountsReceivable", "accounts receivable"),
+    FieldReference("Inventory", "inventory"),
+    FieldReference(
+        "CashCashEquivalentsAndShortTermInvestments",
+        "cash, cash equivalents, and short-term investments",
+    ),
+    FieldReference("LongTermDebt", "long-term debt"),
+    FieldReference("NetPPE", "net property, plant, and equipment"),
+    FieldReference("TotalNonCurrentAssets", "total non-current assets"),
+    FieldReference(
+        "TotalNonCurrentLiabilitiesNetMinorityInterest",
+        "total non-current liabilities net minority interest",
+    ),
+    FieldReference("InvestedCapital", "invested capital"),
+    FieldReference("WorkingCapital", "working capital"),
+    FieldReference("TangibleBookValue", "tangible book value"),
+)
+
+_TIMESERIES_QUARTERLY_TRAILING_METRICS: tuple[FieldReference, ...] = (
+    FieldReference("TotalRevenue", "total revenue"),
+    FieldReference("NetIncome", "net income"),
+    FieldReference("CostOfRevenue", "cost of revenue"),
+    FieldReference("GrossProfit", "gross profit"),
+    FieldReference("OperatingIncome", "operating income"),
+    FieldReference("InterestExpense", "interest expense"),
+    FieldReference("BasicEPS", "basic EPS"),
+    FieldReference("DilutedEPS", "diluted EPS"),
+    FieldReference("EBITDA", "EBITDA"),
+    FieldReference("OperatingExpense", "operating expense"),
+    FieldReference("PretaxIncome", "pretax income"),
+    FieldReference("TaxProvision", "tax provision"),
+    FieldReference("BasicAverageShares", "basic average shares"),
+    FieldReference("DilutedAverageShares", "diluted average shares"),
+    FieldReference("OtherIncomeExpense", "other income or expense"),
+    FieldReference(
+        "NetIncomeContinuousOperations", "net income from continuing operations"
+    ),
+    FieldReference("NormalizedEBITDA", "normalized EBITDA"),
+    FieldReference("SellingAndMarketingExpense", "selling and marketing expense"),
+    FieldReference(
+        "SellingGeneralAndAdministration",
+        "selling, general, and administrative expense",
+    ),
+    FieldReference("ResearchAndDevelopment", "research and development expense"),
+)
+
+TIMESERIES_TYPE_REFERENCES: tuple[FieldReference, ...] = (
+    *_TIMESERIES_EVENTS,
+    *_prefixed_field_references(
+        _TIMESERIES_QUARTERLY_TRAILING_PREFIXES,
+        _TIMESERIES_VALUATION_METRICS,
+    ),
+    *_prefixed_field_references(
+        _TIMESERIES_ANNUAL_PREFIXES, _TIMESERIES_ANNUAL_METRICS
+    ),
+    *_prefixed_field_references(
+        _TIMESERIES_QUARTERLY_TRAILING_PREFIXES,
+        _TIMESERIES_QUARTERLY_TRAILING_METRICS,
+    ),
+)
 
 
 QUOTE_FIELDS: tuple[FieldReference, ...] = (
@@ -537,6 +725,79 @@ QUOTE_TYPE_COMMAND = CommandSpec(
     ),
 )
 
+QUOTE_SUMMARY_MODULES: tuple[FieldReference, ...] = (
+    FieldReference(
+        "assetProfile",
+        "Company address, industry, officers, governance, and business summary.",
+    ),
+    FieldReference("balanceSheetHistory", "Annual balance sheet statements."),
+    FieldReference(
+        "balanceSheetHistoryQuarterly", "Quarterly balance sheet statements."
+    ),
+    FieldReference(
+        "calendarEvents",
+        "Earnings dates, ex-dividend date, and related calendar data.",
+    ),
+    FieldReference("cashflowStatementHistory", "Annual cash flow statements."),
+    FieldReference(
+        "cashflowStatementHistoryQuarterly", "Quarterly cash flow statements."
+    ),
+    FieldReference(
+        "defaultKeyStatistics",
+        "Valuation, share-count, short-interest, and per-share statistics.",
+    ),
+    FieldReference("earnings", "Earnings charts and annual financial summaries."),
+    FieldReference("earningsHistory", "Historical EPS estimate and surprise data."),
+    FieldReference("earningsTrend", "Analyst earnings and revenue estimate trends."),
+    FieldReference(
+        "equityPerformance", "Equity performance overview and peer context."
+    ),
+    FieldReference(
+        "financialData",
+        "Analyst targets, recommendation data, margins, cash, debt, and growth fields.",
+    ),
+    FieldReference("fundOwnership", "Institutional fund ownership records."),
+    FieldReference(
+        "fundPerformance",
+        "Fund returns, risk statistics, and performance category comparisons.",
+    ),
+    FieldReference(
+        "fundProfile", "Fund family, category, fees, expenses, and management details."
+    ),
+    FieldReference("incomeStatementHistory", "Annual income statements."),
+    FieldReference("incomeStatementHistoryQuarterly", "Quarterly income statements."),
+    FieldReference("indexTrend", "Index-level earnings trend context."),
+    FieldReference("industryTrend", "Industry-level earnings trend context."),
+    FieldReference("insiderHolders", "Current insider holder records."),
+    FieldReference("insiderTransactions", "Insider purchase and sale transactions."),
+    FieldReference("institutionOwnership", "Institutional ownership records."),
+    FieldReference("majorDirectHolders", "Major direct holder records."),
+    FieldReference(
+        "majorHoldersBreakdown",
+        "Insider, institution, and float ownership percentages.",
+    ),
+    FieldReference("netSharePurchaseActivity", "Insider net share purchase activity."),
+    FieldReference(
+        "price",
+        "Current price, exchange, currency, market state, and quote source data.",
+    ),
+    FieldReference(
+        "quoteType", "Instrument type, exchange, timezone, and symbol identity."
+    ),
+    FieldReference("recommendationTrend", "Analyst recommendation trend counts."),
+    FieldReference("secFilings", "Recent SEC filing metadata."),
+    FieldReference("sectorTrend", "Sector-level earnings trend context."),
+    FieldReference(
+        "summaryDetail", "Market summary, dividend, volume, beta, and valuation fields."
+    ),
+    FieldReference(
+        "summaryProfile",
+        "Business summary, sector, industry, employees, and website.",
+    ),
+    FieldReference("topHoldings", "Fund holdings, sector weights, and bond ratings."),
+    FieldReference("upgradeDowngradeHistory", "Analyst upgrade and downgrade history."),
+)
+
 QUOTE_SUMMARY_COMMAND = CommandSpec(
     name="quote-summary",
     path="/v10/finance/quoteSummary/{symbol}",
@@ -624,44 +885,12 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
         "yogurt quote-summary AAPL",
         "yogurt quote-summary AAPL --modules price,quoteType,summaryDetail",
     ),
-    common_modules=(
-        "summaryDetail",
-        "assetProfile",
-        "fundProfile",
-        "financialData",
-        "defaultKeyStatistics",
-        "calendarEvents",
-        "incomeStatementHistory",
-        "incomeStatementHistoryQuarterly",
-        "cashflowStatementHistory",
-        "cashflowStatementHistoryQuarterly",
-        "balanceSheetHistory",
-        "balanceSheetHistoryQuarterly",
-        "earnings",
-        "earningsHistory",
-        "insiderHolders",
-        "insiderTransactions",
-        "secFilings",
-        "indexTrend",
-        "sectorTrend",
-        "earningsTrend",
-        "netSharePurchaseActivity",
-        "upgradeDowngradeHistory",
-        "institutionOwnership",
-        "recommendationTrend",
-        "fundOwnership",
-        "majorDirectHolders",
-        "majorHoldersBreakdown",
-        "price",
-        "quoteType",
-        "summaryProfile",
-        "equityPerformance",
-    ),
+    field_reference=QUOTE_SUMMARY_MODULES,
+    field_reference_title="Quote summary --modules reference",
     notes=(
         "Module availability depends on instrument type.",
-        "Live AAPL probe populated all listed common modules except fundProfile.",
-        "Live VT probe populated fundProfile.",
-        "Live AAPL and MSFT probes returned HTTP 404 for esgScores.",
+        "Live AAPL probe populated the equity-focused modules.",
+        "Live VT probe populated fundProfile, fundPerformance, and topHoldings.",
     ),
 )
 
@@ -859,29 +1088,8 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
             "--merge false --pad-time-series true"
         ),
     ),
-    common_types=(
-        "spEarningsReleaseEvents",
-        "analystRatings",
-        "economicEvents",
-        "quarterlyMarketCap",
-        "trailingMarketCap",
-        "quarterlyEnterpriseValue",
-        "trailingEnterpriseValue",
-        "quarterlyPeRatio",
-        "trailingPeRatio",
-        "quarterlyForwardPeRatio",
-        "trailingForwardPeRatio",
-        "quarterlyPegRatio",
-        "trailingPegRatio",
-        "quarterlyPsRatio",
-        "trailingPsRatio",
-        "quarterlyPbRatio",
-        "trailingPbRatio",
-        "quarterlyEnterprisesValueRevenueRatio",
-        "trailingEnterprisesValueRevenueRatio",
-        "quarterlyEnterprisesValueEBITDARatio",
-        "trailingEnterprisesValueEBITDARatio",
-    ),
+    field_reference=TIMESERIES_TYPE_REFERENCES,
+    field_reference_title="Timeseries --type reference",
     notes=(
         "The --type parameter is open-ended; availability depends on symbol.",
         (

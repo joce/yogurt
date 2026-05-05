@@ -6,6 +6,7 @@ import argparse
 import asyncio
 import logging
 import sys
+import textwrap
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,6 +28,10 @@ if TYPE_CHECKING:
     from yogurt.types import ParamValue
 
 _THREE_DAYS_SECONDS = 3 * 24 * 60 * 60
+_HELP_WIDTH = 100
+_HELP_MAX_POSITION = 32
+_REFERENCE_INDENT = "  "
+_REFERENCE_LABEL_WIDTH = _HELP_MAX_POSITION - len(_REFERENCE_INDENT) - 2
 
 
 class _YahooClientProtocol(Protocol):
@@ -48,7 +53,7 @@ class _HelpFormatter(
     def __init__(self, prog: str) -> None:
         """Initialize a stable-width formatter for LLM-readable help."""
 
-        super().__init__(prog, max_help_position=32, width=100)
+        super().__init__(prog, max_help_position=_HELP_MAX_POSITION, width=_HELP_WIDTH)
 
     @override
     def _get_help_string(self, action: argparse.Action) -> str:
@@ -76,11 +81,39 @@ def _examples_text(examples: tuple[str, ...]) -> str:
     return "\n".join(f"  {example}" for example in examples)
 
 
+def _reference_text(command: CommandSpec) -> str:
+    lines: list[str] = []
+    description_indent = " " * _HELP_MAX_POSITION
+    for field in command.field_reference:
+        label = f"{field.name}:"
+        if len(label) <= _REFERENCE_LABEL_WIDTH:
+            first_prefix = f"{_REFERENCE_INDENT}{label:<{_REFERENCE_LABEL_WIDTH}}  "
+            lines.extend(
+                textwrap.wrap(
+                    field.description,
+                    width=_HELP_WIDTH,
+                    initial_indent=first_prefix,
+                    subsequent_indent=description_indent,
+                )
+            )
+            continue
+        lines.append(f"{_REFERENCE_INDENT}{label}")
+        lines.extend(
+            textwrap.wrap(
+                field.description,
+                width=_HELP_WIDTH,
+                initial_indent=description_indent,
+                subsequent_indent=description_indent,
+            )
+        )
+    return "\n".join(lines)
+
+
 def _epilog_for_command(command: CommandSpec) -> str:
     field_reference = ""
     if command.field_reference:
-        field_reference = "\n\nQuote --fields reference:\n" + "\n".join(
-            f"  {field.name}: {field.description}" for field in command.field_reference
+        field_reference = (
+            f"\n\n{command.field_reference_title}:\n{_reference_text(command)}"
         )
     common_modules = ""
     if command.common_modules:

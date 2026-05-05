@@ -130,7 +130,10 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "--enable-private-company" in captured.out
     assert "Common --fields values" not in captured.out
     assert "Quote --fields reference" in captured.out
-    assert "ask: Lowest price a seller is willing to accept" in captured.out
+    assert (
+        "  ask:                          Lowest price a seller is willing to accept"
+        in captured.out
+    )
     assert "regularMarketPrice" in captured.out
     assert "customPriceAlertConfidence" in captured.out
     assert "Uses Yahoo crumb/session" not in captured.out
@@ -385,10 +388,20 @@ def test_quote_summary_help_includes_modules_and_probe_notes(
     assert "equityPerformance" in captured.out
     assert "Yogurt does" in captured.out
     assert "not validate module names" in captured.out
-    assert "Common --modules values" in captured.out
+    assert "Common --modules values" not in captured.out
+    assert "Quote summary --modules reference" in captured.out
     assert "summaryProfile" in captured.out
     assert "fundProfile" in captured.out
-    assert "esgScores" in captured.out
+    assert (
+        "  fundPerformance:              Fund returns, risk statistics" in captured.out
+    )
+    assert (
+        "  industryTrend:                Industry-level earnings trend" in captured.out
+    )
+    assert (
+        "  topHoldings:                  Fund holdings, sector weights" in captured.out
+    )
+    assert "esgScores" not in captured.out
     assert "Module availability depends on instrument type" in captured.out
 
 
@@ -593,10 +606,19 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     assert "YYYY-MM-DD" in captured.out
     assert "--merge" in captured.out
     assert "--pad-time-series" in captured.out
-    assert "Common --type values" in captured.out
-    assert "quarterlyMarketCap" in captured.out
-    assert "trailingEnterprisesValueEBITDARatio" in captured.out
-    assert "spEarningsReleaseEvents" in captured.out
+    assert "Common --type values" not in captured.out
+    assert "Timeseries --type reference" in captured.out
+    assert (
+        "  quarterlyMarketCap:           Quarterly market capitalization"
+        in captured.out
+    )
+    assert (
+        "  trailingEnterprisesValueEBITDARatio:\n"
+        "                                Trailing enterprise value to EBITDA"
+        in captured.out
+    )
+    assert "  annualTotalRevenue:           Annual total revenue" in captured.out
+    assert "  spEarningsReleaseEvents:      S&P earnings release events" in captured.out
 
 
 @pytest.mark.parametrize(
