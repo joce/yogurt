@@ -15,8 +15,17 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v5
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install npm dependencies
+        run: npm ci
+
       - name: Check spelling
-        uses: streetsidesoftware/cspell-action@v7
+        run: npm run spell
 
   ci-checks:
     needs: spell-check
