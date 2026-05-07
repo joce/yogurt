@@ -1313,6 +1313,137 @@ INSIGHTS_COMMAND = CommandSpec(
     ),
 )
 
+PREDEFINED_SCREENER_COMMAND = CommandSpec(
+    name="predefined-screener",
+    path="/v1/finance/screener/predefined/saved",
+    summary="Predefined Yahoo screener results.",
+    description=(
+        "Records from Yahoo's predefined saved screeners, such as most-active "
+        "symbols, with caller-selected quote fields."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="scrIds",
+            cli_name="scr-ids",
+            kind=ParamKind.CSV,
+            positional=True,
+            required=True,
+            metavar="SCR_ID[,SCR_ID...]",
+            min_items=1,
+            help=(
+                "One or more comma-separated Yahoo predefined screener IDs, "
+                "such as MOST_ACTIVES."
+            ),
+        ),
+        ParamSpec(
+            name="count",
+            cli_name="count",
+            kind=ParamKind.INTEGER,
+            default=200,
+            metavar="COUNT",
+            help="Number of screener records to request.",
+        ),
+        ParamSpec(
+            name="start",
+            cli_name="start",
+            kind=ParamKind.INTEGER,
+            default=0,
+            metavar="OFFSET",
+            help="Zero-based record offset for paging through screener results.",
+        ),
+        ParamSpec(
+            name="fields",
+            cli_name="fields",
+            kind=ParamKind.CSV,
+            default="symbol,shortName",
+            metavar="FIELD[,FIELD...]",
+            help=(
+                "Comma-separated Yahoo quote fields to include in screener "
+                "records. Yogurt does not validate field names."
+            ),
+        ),
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="useRecordsResponse",
+            cli_name="use-records-response",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Request Yahoo's records-style screener response shape.",
+        ),
+        ParamSpec(
+            name="sortField",
+            cli_name="sort-field",
+            kind=ParamKind.STRING,
+            default="",
+            allow_empty_default=True,
+            metavar="FIELD",
+            help=(
+                "Optional Yahoo sort field. Omit it for Yahoo's observed empty "
+                "sortField."
+            ),
+        ),
+        ParamSpec(
+            name="sortType",
+            cli_name="sort-type",
+            kind=ParamKind.STRING,
+            default="",
+            allow_empty_default=True,
+            metavar="TYPE",
+            help=(
+                "Optional Yahoo sort direction/type. Omit it for Yahoo's "
+                "observed empty sortType."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt predefined-screener MOST_ACTIVES",
+        "yogurt predefined-screener MOST_ACTIVES --count 25 --start 25",
+        (
+            "yogurt predefined-screener MOST_ACTIVES "
+            "--fields symbol,shortName,regularMarketPrice,regularMarketVolume"
+        ),
+    ),
+    field_reference=QUOTE_FIELDS,
+    field_reference_title="Predefined screener --fields reference",
+    notes=(
+        "Screener IDs are Yahoo-defined and open-ended; Yogurt does not validate them.",
+        (
+            "Observed Yahoo quote pages request MOST_ACTIVES with count=200, "
+            "start=0, fields=symbol,shortName, formatted=true, and "
+            "useRecordsResponse=true."
+        ),
+        (
+            "Observed browser requests include empty sortField and sortType; "
+            "Yogurt sends those empty values when the options are omitted."
+        ),
+    ),
+)
+
 CHART_COMMAND = CommandSpec(
     name="chart",
     path="/v8/finance/chart/{symbol}",
@@ -1496,6 +1627,7 @@ COMMANDS: tuple[CommandSpec, ...] = (
     CALENDAR_EVENTS_COMMAND,
     FUNDAMENTALS_TIMESERIES_COMMAND,
     INSIGHTS_COMMAND,
+    PREDEFINED_SCREENER_COMMAND,
     CHART_COMMAND,
     RATINGS_TOP_COMMAND,
 )

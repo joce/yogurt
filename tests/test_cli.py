@@ -60,6 +60,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "calendar-events" in captured.out
     assert "timeseries" in captured.out
     assert "insights" in captured.out
+    assert "predefined-screener" in captured.out
     assert "ratings-top" in captured.out
     assert "chart" in captured.out
     assert "raw" in captured.out
@@ -847,6 +848,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
         ["calendar-events", "AAPL"],
         ["timeseries", "AAPL"],
         ["insights", "AAPL"],
+        ["predefined-screener", "MOST_ACTIVES"],
         ["chart", "AAPL"],
         ["ratings-top", "AAPL"],
     ],
@@ -1125,6 +1127,185 @@ def test_insights_command_uses_observed_defaults() -> None:
             True,
         )
     ]
+
+
+def test_predefined_screener_help_includes_params_and_probe_notes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Predefined screener help documents screener IDs, paging, fields, and notes."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["predefined-screener", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert (
+        "https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved"
+        in captured.out
+    )
+    assert "SCR_ID[,SCR_ID...]" in captured.out
+    assert "--count" in captured.out
+    assert "--start" in captured.out
+    assert "--fields" in captured.out
+    assert "--formatted" in captured.out
+    assert "--use-records-response" in captured.out
+    assert "--sort-field" in captured.out
+    assert "--sort-type" in captured.out
+    assert "--lang" in captured.out
+    assert "--region" in captured.out
+    assert "MOST_ACTIVES" in captured.out
+    assert "Screener IDs are Yahoo-defined and open-ended" in captured.out
+    assert "Predefined screener --fields reference" in captured.out
+    assert "regularMarketPrice" in captured.out
+    assert "customPriceAlertConfidence" in captured.out
+    assert "count=200" in captured.out
+    assert "useRecordsResponse=true" in captured.out
+    assert "Output:" not in captured.out
+    assert "response-model mapping" not in captured.out
+
+
+def test_predefined_screener_command_uses_observed_defaults() -> None:
+    """Predefined screener command sends Yahoo's observed default query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "predefined-screener",
+            "MOST_ACTIVES",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v1/finance/screener/predefined/saved",
+            {
+                "scrIds": "MOST_ACTIVES",
+                "count": 200,
+                "start": 0,
+                "fields": "symbol,shortName",
+                "formatted": True,
+                "useRecordsResponse": True,
+                "sortField": "",
+                "sortType": "",
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_predefined_screener_command_passes_overrides_and_prints_raw_body() -> None:
+    """Predefined screener command coerces CLI overrides into Yahoo query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "predefined-screener",
+            "MOST_ACTIVES,DAY_GAINERS",
+            "--count",
+            "25",
+            "--start",
+            "25",
+            "--fields",
+            "symbol, shortName, regularMarketPrice",
+            "--formatted",
+            "false",
+            "--use-records-response",
+            "false",
+            "--sort-field",
+            "regularMarketVolume",
+            "--sort-type",
+            "DESC",
+            "--lang",
+            "en-CA",
+            "--region",
+            "CA",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v1/finance/screener/predefined/saved",
+            {
+                "scrIds": "MOST_ACTIVES,DAY_GAINERS",
+                "count": 25,
+                "start": 25,
+                "fields": "symbol,shortName,regularMarketPrice",
+                "formatted": False,
+                "useRecordsResponse": False,
+                "sortField": "regularMarketVolume",
+                "sortType": "DESC",
+                "lang": "en-CA",
+                "region": "CA",
+            },
+            True,
+        )
+    ]
+
+
+def test_predefined_screener_command_rejects_empty_scr_ids() -> None:
+    """Predefined screener requires at least one non-empty screener ID."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "predefined-screener",
+            " ",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "scrIds cannot be empty" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_predefined_screener_command_rejects_non_integer_count() -> None:
+    """Predefined screener count uses integer coercion."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "predefined-screener",
+            "MOST_ACTIVES",
+            "--count",
+            "many",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--count expects an integer" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
 
 
 def test_ratings_top_help_includes_params_and_probe_notes(
