@@ -51,6 +51,18 @@ Python 3.10+, uv, httpx, argparse, pytest, pytest-httpx, ruff, pyright, tox, hat
 - When a parameter has a default, test both omission and explicit override if the default affects the request sent to Yahoo.
 - Ask before making architectural changes that affect the CLI grammar or session-cache behavior.
 
+## Yahoo API state probes
+- When checking the current quote-page API surface with browser tooling or live Yahoo calls, use a mixed symbol set so endpoint behavior is not inferred from US mega-cap equities only.
+- Baseline probe symbols:
+  - US stocks, high profile and smaller: `AAPL`, `MSFT`, `OKLO`
+  - ETFs: `SPY`, `QQQ`, `VT`
+  - Futures and commodities: `ES=F`, `CL=F`
+  - Forex: `EURUSD=X`
+  - Indices: `^GSPC`, `^DJI`, `^IXIC`
+  - Crypto: `BTC-USD`
+  - Foreign listings: `RY.TO`, `0700.HK`, `7203.T`, `SHEL.L`
+- Add targeted probes when an endpoint is symbol-sensitive, but keep this baseline for broad API-surface discovery and for checking whether an observed endpoint applies across asset classes.
+
 ## Out of scope
 - TUI/UX layers from Doubloon.
 - Mapping Yahoo JSON into Python domain models.

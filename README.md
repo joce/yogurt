@@ -78,6 +78,30 @@ Fetch chart data for a recent window:
 uv run yogurt chart AAPL
 ```
 
+Fetch quote-page sparkline data:
+
+```powershell
+uv run yogurt spark AAPL,MSFT
+```
+
+Fetch recommended symbols for a quote page:
+
+```powershell
+uv run yogurt recommendations-by-symbol AAPL
+```
+
+Fetch Yahoo calendar events:
+
+```powershell
+uv run yogurt calendar-events AAPL
+```
+
+Fetch a predefined Yahoo screener:
+
+```powershell
+uv run yogurt predefined-screener MOST_ACTIVES
+```
+
 Fetch an option chain using Yahoo's default expiration:
 
 ```powershell
@@ -103,12 +127,16 @@ Current commands include:
 | Command | Yahoo data |
 | --- | --- |
 | `quote` | Quote data for one or more symbols. |
+| `spark` | Sparkline quote-page data for one or more symbols. |
 | `options` | Option chain data for a single symbol. |
 | `quote-type` | Quote type data for a single symbol. |
 | `quote-summary` | Quote summary modules for a single symbol. |
+| `recommendations-by-symbol` | Recommended symbols related to a single symbol. |
 | `price-insights` | Generated price insight data for one or more symbols. |
+| `calendar-events` | Calendar events such as earnings, economic events, dividends, splits, and IPOs. |
 | `timeseries` | Fundamentals timeseries data for a single symbol. |
 | `insights` | Insight data for one or more symbols. |
+| `predefined-screener` | Yahoo predefined screener results for one or more screener IDs. |
 | `chart` | Chart price data for a single symbol. |
 | `ratings-top` | Top analyst rating scores for a single symbol. |
 | `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
@@ -118,6 +146,7 @@ Each endpoint has its own adaptive help:
 ```powershell
 uv run yogurt quote --help
 uv run yogurt quote-summary --help
+uv run yogurt calendar-events --help
 uv run yogurt timeseries --help
 ```
 
