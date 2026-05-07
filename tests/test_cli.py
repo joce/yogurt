@@ -57,6 +57,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
     assert "price-insights" in captured.out
+    assert "calendar-events" in captured.out
     assert "timeseries" in captured.out
     assert "insights" in captured.out
     assert "ratings-top" in captured.out
@@ -583,6 +584,220 @@ def test_price_insights_command_defaults_to_full_response_params() -> None:
     ]
 
 
+def test_calendar_events_help_includes_params_and_probe_notes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Calendar events help documents dates, modules, and observed filters."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["calendar-events", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert (
+        "https://query1.finance.yahoo.com/ws/screeners/v1/finance/calendar-events"
+        in captured.out
+    )
+    assert "SYMBOL" in captured.out
+    assert "--modules" in captured.out
+    assert "earnings" in captured.out
+    assert "--count-per-day" in captured.out
+    assert "--start-date" in captured.out
+    assert "--end-date" in captured.out
+    assert "milliseconds" in captured.out
+    assert "--economic-events-high-importance-only" in captured.out
+    assert "--economic-events-region-filter" in captured.out
+    assert "Defaults to an empty value when omitted" in captured.out
+    assert "--lang" in captured.out
+    assert "--region" in captured.out
+    assert "yogurt calendar-events AAPL" in captured.out
+
+
+def test_calendar_events_command_passes_params_and_prints_raw_body() -> None:
+    """Calendar events command sends Yahoo's observed query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "calendar-events",
+            "AAPL",
+            "--modules",
+            "earnings",
+            "--count-per-day",
+            "50",
+            "--start-date",
+            "2026-05-01",
+            "--end-date",
+            "1777939200000",
+            "--economic-events-high-importance-only",
+            "false",
+            "--economic-events-region-filter",
+            "US",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/ws/screeners/v1/finance/calendar-events",
+            {
+                "modules": "earnings",
+                "tickersFilter": "AAPL",
+                "countPerDay": 50,
+                "startDate": 1777593600000,
+                "endDate": 1777939200000,
+                "economicEventsHighImportanceOnly": False,
+                "economicEventsRegionFilter": "US",
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_calendar_events_command_uses_observed_defaults(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Calendar events defaults match the observed Yahoo request shape."""
+
+    client = StubClient()
+    stdout = StringIO()
+    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+
+    exit_code = main(["calendar-events", "AAPL"], stdout=stdout, client=client)
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/ws/screeners/v1/finance/calendar-events",
+            {
+                "modules": "earnings",
+                "tickersFilter": "AAPL",
+                "countPerDay": 100,
+                "startDate": 1777644000000,
+                "endDate": 1777903200000,
+                "economicEventsHighImportanceOnly": True,
+                "economicEventsRegionFilter": "",
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_calendar_events_rejects_end_date_before_start_date() -> None:
+    """Calendar events rejects reversed millisecond date windows."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "calendar-events",
+            "AAPL",
+            "--start-date",
+            "1777903200000",
+            "--end-date",
+            "1777593600000",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--end-date must be greater than --start-date" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_calendar_events_rejects_explicit_empty_economic_region_filter() -> None:
+    """Only the omitted-option default can send an empty economic region filter."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "calendar-events",
+            "AAPL",
+            "--economic-events-region-filter",
+            "",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "economicEventsRegionFilter cannot be empty" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_calendar_events_end_date_without_start_date_is_an_error() -> None:
+    """Calendar events requires explicit start-date when end-date is explicit."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        ["calendar-events", "AAPL", "--end-date", "1777593600000"],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--end-date cannot be provided without --start-date" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_calendar_events_rejects_empty_symbol() -> None:
+    """Calendar events requires a non-empty ticker filter."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        ["calendar-events", " "],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "tickersFilter cannot be empty" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_calendar_events_rejects_empty_modules() -> None:
+    """Calendar events modules cannot be blank."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        ["calendar-events", "AAPL", "--modules", " "],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--modules cannot be empty" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
 def test_fundamentals_timeseries_help_includes_params_and_type_values(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -629,6 +844,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
         ["quote-type", "AAPL"],
         ["quote-summary", "AAPL"],
         ["price-insights", "AAPL"],
+        ["calendar-events", "AAPL"],
         ["timeseries", "AAPL"],
         ["insights", "AAPL"],
         ["chart", "AAPL"],

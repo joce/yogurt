@@ -25,3 +25,4 @@ node_modules/
 yahoo-session.json
 .playwright-cli
 .playwright-mcp
+docs/plans/

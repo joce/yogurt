@@ -988,6 +988,126 @@ PRICE_INSIGHTS_COMMAND = CommandSpec(
     ),
 )
 
+CALENDAR_EVENTS_COMMAND = CommandSpec(
+    name="calendar-events",
+    path="/ws/screeners/v1/finance/calendar-events",
+    summary="Calendar events for a single symbol.",
+    description=(
+        "Calendar event data such as earnings events for one symbol, with "
+        "optional economic-event filters when Yahoo supports them."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="tickersFilter",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+        ),
+        ParamSpec(
+            name="modules",
+            cli_name="modules",
+            kind=ParamKind.CSV,
+            default="earnings",
+            metavar="MODULE[,MODULE...]",
+            min_items=1,
+            help=(
+                "Comma-separated Yahoo calendar event modules to request. "
+                "Observed value: earnings. Yogurt does not validate module names."
+            ),
+        ),
+        ParamSpec(
+            name="countPerDay",
+            cli_name="count-per-day",
+            kind=ParamKind.INTEGER,
+            default=100,
+            metavar="COUNT",
+            help="Maximum calendar event rows to request per day.",
+        ),
+        ParamSpec(
+            name="startDate",
+            cli_name="start-date",
+            kind=ParamKind.DATETIME_MILLISECONDS,
+            default="now-3d",
+            metavar="DATE",
+            help=(
+                "Start date as Unix seconds, Unix milliseconds, YYYY-MM-DD date, "
+                "or ISO datetime. Yogurt sends milliseconds to Yahoo."
+            ),
+        ),
+        ParamSpec(
+            name="endDate",
+            cli_name="end-date",
+            kind=ParamKind.DATETIME_MILLISECONDS,
+            default="now",
+            metavar="DATE",
+            help=(
+                "End date as Unix seconds, Unix milliseconds, YYYY-MM-DD date, "
+                "or ISO datetime. Yogurt sends milliseconds to Yahoo."
+            ),
+        ),
+        ParamSpec(
+            name="economicEventsHighImportanceOnly",
+            cli_name="economic-events-high-importance-only",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Request only high-importance economic events when Yahoo supports it.",
+        ),
+        ParamSpec(
+            name="economicEventsRegionFilter",
+            cli_name="economic-events-region-filter",
+            kind=ParamKind.STRING,
+            default="",
+            allow_empty_default=True,
+            metavar="REGION",
+            help=(
+                "Economic event region filter. Observed Yahoo requests send an "
+                "empty value. Defaults to an empty value when omitted."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt calendar-events AAPL",
+        (
+            "yogurt calendar-events AAPL --start-date 2026-05-01 "
+            "--end-date 2026-05-04 --count-per-day 100"
+        ),
+        (
+            "yogurt calendar-events AAPL --start-date 1777593600000 "
+            "--end-date 1777852800000 --modules earnings"
+        ),
+    ),
+    common_modules=("earnings",),
+    notes=(
+        "startDate and endDate are sent to Yahoo as milliseconds.",
+        "The --modules parameter is open-ended; observed useful value is earnings.",
+        (
+            "Observed Yahoo requests include economic event filters even when "
+            "requesting earnings."
+        ),
+    ),
+)
+
 FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
     name="timeseries",
     path="/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}",
@@ -1373,6 +1493,7 @@ COMMANDS: tuple[CommandSpec, ...] = (
     QUOTE_TYPE_COMMAND,
     QUOTE_SUMMARY_COMMAND,
     PRICE_INSIGHTS_COMMAND,
+    CALENDAR_EVENTS_COMMAND,
     FUNDAMENTALS_TIMESERIES_COMMAND,
     INSIGHTS_COMMAND,
     CHART_COMMAND,

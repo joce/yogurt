@@ -11,7 +11,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from string import Formatter
-from typing import TYPE_CHECKING, Protocol, TextIO
+from typing import TYPE_CHECKING, Final, Protocol, TextIO
 from urllib.parse import quote
 
 from typing_extensions import override
@@ -20,7 +20,7 @@ from yogurt import __version__
 from yogurt.client import YahooClient
 from yogurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec
 from yogurt.exceptions import YogurtError
-from yogurt.params import ParamSpec, coerce_param
+from yogurt.params import ParamKind, ParamSpec, coerce_param
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -32,6 +32,11 @@ _HELP_WIDTH = 100
 _HELP_MAX_POSITION = 32
 _REFERENCE_INDENT = "  "
 _REFERENCE_LABEL_WIDTH = _HELP_MAX_POSITION - len(_REFERENCE_INDENT) - 2
+_DATE_PAIR_NAMES: Final[dict[str, tuple[str, str]]] = {
+    "chart": ("period1", "period2"),
+    "timeseries": ("period1", "period2"),
+    "calendar-events": ("startDate", "endDate"),
+}
 
 
 class _YahooClientProtocol(Protocol):
@@ -171,16 +176,23 @@ def _default_for_param(param: ParamSpec) -> object:
         return argparse.SUPPRESS
     if param.default == "today":
         return datetime.now(timezone.utc).date().isoformat()
+    if (
+        param.allow_empty_default
+        and isinstance(param.default, str)
+        and len(param.default) == 0
+    ):
+        return argparse.SUPPRESS
     return param.default
 
 
 def _dynamic_default_for_param(
     spec: ParamSpec, current_timestamp: int
 ) -> ParamValue | None:
+    multiplier = 1000 if spec.kind is ParamKind.DATETIME_MILLISECONDS else 1
     if spec.default == "now":
-        return current_timestamp
+        return current_timestamp * multiplier
     if spec.default == "now-3d":
-        return current_timestamp - _THREE_DAYS_SECONDS
+        return (current_timestamp - _THREE_DAYS_SECONDS) * multiplier
     return None
 
 
@@ -286,17 +298,29 @@ def _params_for_command(
     command: CommandSpec, namespace: argparse.Namespace
 ) -> dict[str, ParamValue]:
     params: dict[str, ParamValue] = {}
-    explicit_period1 = hasattr(namespace, "period1")
-    explicit_period2 = hasattr(namespace, "period2")
-    if explicit_period2 and not explicit_period1:
-        message = "--period2 cannot be provided without --period1"
-        raise ValueError(message)
+    date_pair = _date_pair_for_command(command)
+    if date_pair is not None:
+        start_spec, end_spec = date_pair
+        explicit_start = hasattr(namespace, start_spec.name)
+        explicit_end = hasattr(namespace, end_spec.name)
+        if explicit_end and not explicit_start:
+            message = (
+                f"{end_spec.option} cannot be provided without {start_spec.option}"
+            )
+            raise ValueError(message)
     current_timestamp = int(time.time())
     for spec in command.params:
         if not hasattr(namespace, spec.name):
             dynamic_default = _dynamic_default_for_param(spec, current_timestamp)
             if dynamic_default is not None:
                 params[spec.name] = dynamic_default
+                continue
+            if (
+                spec.allow_empty_default
+                and isinstance(spec.default, str)
+                and len(spec.default) == 0
+            ):
+                params[spec.name] = ""
             continue
         value = getattr(namespace, spec.name)
         if value is None:
@@ -310,18 +334,32 @@ def _params_for_command(
     return params
 
 
+def _date_pair_for_command(command: CommandSpec) -> tuple[ParamSpec, ParamSpec] | None:
+    names = _DATE_PAIR_NAMES.get(command.name)
+    if names is None:
+        return None
+    start = next(spec for spec in command.params if spec.name == names[0])
+    end = next(spec for spec in command.params if spec.name == names[1])
+    return start, end
+
+
 def _validate_command_params(
     command: CommandSpec, params: dict[str, ParamValue]
 ) -> None:
-    if "period1" in params and "period2" in params:
-        period1 = params["period1"]
-        period2 = params["period2"]
-        if not isinstance(period1, int) or not isinstance(period2, int):
-            message = "--period1 and --period2 must be datetime values"
-            raise ValueError(message)
-        if period2 <= period1:
-            message = "--period2 must be greater than --period1"
-            raise ValueError(message)
+    date_pair = _date_pair_for_command(command)
+    if date_pair is not None:
+        start_spec, end_spec = date_pair
+        if start_spec.name in params and end_spec.name in params:
+            start = params[start_spec.name]
+            end = params[end_spec.name]
+            if not isinstance(start, int) or not isinstance(end, int):
+                message = (
+                    f"{start_spec.option} and {end_spec.option} must be datetime values"
+                )
+                raise ValueError(message)
+            if end <= start:
+                message = f"{end_spec.option} must be greater than {start_spec.option}"
+                raise ValueError(message)
 
     if command.name == "chart":
         interval = params.get("interval")

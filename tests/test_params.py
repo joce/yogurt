@@ -14,6 +14,7 @@ from yogurt.params import (
 
 IMAGE_SIZE = 50
 NOV_17_2017 = 1510876800
+NOV_17_2017_MS = NOV_17_2017 * 1000
 
 
 @pytest.mark.parametrize(
@@ -83,6 +84,58 @@ def test_coerce_param_parses_datetime_kind() -> None:
     spec = ParamSpec("date", "date", ParamKind.DATETIME, "Expiration date")
 
     assert coerce_param(spec, "2017-11-17") == NOV_17_2017
+
+
+def test_parse_datetime_milliseconds_accepts_supported_date_forms() -> None:
+    """Millisecond datetime params preserve Yahoo's expected unit."""
+
+    spec = ParamSpec(
+        "startDate",
+        "start-date",
+        ParamKind.DATETIME_MILLISECONDS,
+        "Start date",
+    )
+
+    assert coerce_param(spec, "2017-11-17") == NOV_17_2017_MS
+
+
+def test_parse_datetime_milliseconds_converts_unix_seconds() -> None:
+    """Unix-second timestamps are converted to milliseconds."""
+
+    spec = ParamSpec(
+        "startDate",
+        "start-date",
+        ParamKind.DATETIME_MILLISECONDS,
+        "Start date",
+    )
+
+    assert coerce_param(spec, "1510876800") == NOV_17_2017_MS
+
+
+def test_parse_datetime_milliseconds_accepts_iso_datetime() -> None:
+    """ISO datetimes are converted to UTC milliseconds."""
+
+    spec = ParamSpec(
+        "startDate",
+        "start-date",
+        ParamKind.DATETIME_MILLISECONDS,
+        "Start date",
+    )
+
+    assert coerce_param(spec, "2017-11-17T00:00:00Z") == NOV_17_2017_MS
+
+
+def test_parse_datetime_milliseconds_preserves_integer_milliseconds() -> None:
+    """Already-millisecond integer values are passed through unchanged."""
+
+    spec = ParamSpec(
+        "endDate",
+        "end-date",
+        ParamKind.DATETIME_MILLISECONDS,
+        "End date",
+    )
+
+    assert coerce_param(spec, "1510876800000") == NOV_17_2017_MS
 
 
 def test_coerce_csv_param_validates_allowed_values() -> None:

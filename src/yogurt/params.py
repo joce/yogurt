@@ -18,6 +18,7 @@ class ParamKind(str, Enum):
     CSV = "csv"
     INTEGER = "integer"
     DATETIME = "datetime"
+    DATETIME_MILLISECONDS = "datetime_milliseconds"
     BOOLEAN = "boolean"
 
 
@@ -38,6 +39,7 @@ class ParamSpec:
     max_items: int | None = None
     allowed_values: tuple[str, ...] = ()
     csv_separator: str = ","
+    allow_empty_default: bool = False
 
     @property
     def option(self) -> str:
@@ -50,6 +52,26 @@ class ParamSpec:
 
 _TRUE_VALUES: Final[frozenset[str]] = frozenset({"1", "true", "t", "yes", "y", "on"})
 _FALSE_VALUES: Final[frozenset[str]] = frozenset({"0", "false", "f", "no", "n", "off"})
+_MILLISECONDS_TIMESTAMP_DIGITS: Final[int] = 13
+
+
+def _allows_omitted_empty_default(spec: ParamSpec) -> bool:
+    return (
+        spec.allow_empty_default
+        and isinstance(spec.default, str)
+        and len(spec.default) == 0
+    )
+
+
+def _coerce_string_param(spec: ParamSpec, value: str) -> str:
+    stripped = value.strip()
+    if not stripped:
+        if _allows_omitted_empty_default(spec):
+            message = f"{spec.name} cannot be empty"
+            raise ValueError(message)
+        message = f"{spec.option} cannot be empty"
+        raise ValueError(message)
+    return stripped
 
 
 def _coerce_csv_param(spec: ParamSpec, value: str) -> str:
@@ -136,6 +158,19 @@ def parse_datetime(value: str) -> int:
     return int(parsed.timestamp())
 
 
+def parse_datetime_milliseconds(value: str) -> int:
+    """Parse a Unix timestamp or datetime value into milliseconds.
+
+    Returns:
+        int: Unix timestamp in milliseconds.
+    """
+
+    stripped = value.strip()
+    if stripped.isdecimal() and len(stripped) >= _MILLISECONDS_TIMESTAMP_DIGITS:
+        return int(stripped)
+    return parse_datetime(value) * 1000
+
+
 def coerce_param(spec: ParamSpec, value: str) -> ParamValue:
     """Coerce one CLI parameter value according to its endpoint spec.
 
@@ -147,11 +182,7 @@ def coerce_param(spec: ParamSpec, value: str) -> ParamValue:
     """
 
     if spec.kind is ParamKind.STRING:
-        stripped = value.strip()
-        if not stripped:
-            message = f"{spec.option} cannot be empty"
-            raise ValueError(message)
-        return stripped
+        return _coerce_string_param(spec, value)
     if spec.kind is ParamKind.CSV:
         return _coerce_csv_param(spec, value)
     if spec.kind is ParamKind.INTEGER:
@@ -163,6 +194,12 @@ def coerce_param(spec: ParamSpec, value: str) -> ParamValue:
     if spec.kind is ParamKind.DATETIME:
         try:
             return parse_datetime(value)
+        except ValueError as exc:
+            message = f"{spec.option} {exc}"
+            raise ValueError(message) from exc
+    if spec.kind is ParamKind.DATETIME_MILLISECONDS:
+        try:
+            return parse_datetime_milliseconds(value)
         except ValueError as exc:
             message = f"{spec.option} {exc}"
             raise ValueError(message) from exc
