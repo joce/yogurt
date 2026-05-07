@@ -603,6 +603,118 @@ QUOTE_COMMAND = CommandSpec(
     field_reference=QUOTE_FIELDS,
 )
 
+SPARK_COMMAND = CommandSpec(
+    name="spark",
+    path="/v7/finance/spark",
+    summary="Sparkline price data for one or more symbols.",
+    description=(
+        "Compact timestamp and price-series data for one or more symbols across "
+        "equities, ETFs, indices, futures, forex, and crypto when Yahoo supports them."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="symbols",
+            cli_name="symbols",
+            kind=ParamKind.CSV,
+            positional=True,
+            required=True,
+            metavar="SYMBOL[,SYMBOL...]",
+            min_items=1,
+            help=(
+                "One or more comma-separated Yahoo symbols, such as AAPL,MSFT, "
+                "^GSPC, GC=F, EURUSD=X, or BTC-USD."
+            ),
+        ),
+        ParamSpec(
+            name="range",
+            cli_name="range",
+            kind=ParamKind.STRING,
+            default="1d",
+            metavar="RANGE",
+            help=(
+                "Spark range to request. Observed quote-page value: 1d. "
+                "Yogurt does not validate range values."
+            ),
+        ),
+        ParamSpec(
+            name="interval",
+            cli_name="interval",
+            kind=ParamKind.STRING,
+            default="5m",
+            metavar="INTERVAL",
+            help=(
+                "Spark interval to request. Observed quote-page value: 5m. "
+                "Yogurt does not validate interval values."
+            ),
+        ),
+        ParamSpec(
+            name="indicators",
+            cli_name="indicators",
+            kind=ParamKind.CSV,
+            default="close",
+            metavar="INDICATOR[,INDICATOR...]",
+            help=(
+                "Comma-separated Spark indicators to request. Observed value: close. "
+                "Yogurt does not validate indicator names."
+            ),
+        ),
+        ParamSpec(
+            name="includeTimestamps",
+            cli_name="include-timestamps",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            metavar="BOOL",
+            help="Include timestamp arrays when Yahoo supports them.",
+        ),
+        ParamSpec(
+            name="includePrePost",
+            cli_name="include-pre-post",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            metavar="BOOL",
+            help="Include pre-market and post-market data when Yahoo supports it.",
+        ),
+        ParamSpec(
+            name="corsDomain",
+            cli_name="cors-domain",
+            kind=ParamKind.STRING,
+            default="finance.yahoo.com",
+            metavar="DOMAIN",
+            help="Yahoo CORS domain parameter observed on finance.yahoo.com pages.",
+        ),
+        ParamSpec(
+            name=".tsrc",
+            cli_name="tsrc",
+            kind=ParamKind.STRING,
+            default="finance",
+            metavar="SOURCE",
+            help="Yahoo source marker observed on finance.yahoo.com pages.",
+        ),
+    ),
+    examples=(
+        "yogurt spark AAPL,MSFT",
+        "yogurt spark SPY,QQQ --range 1d --interval 5m",
+        (
+            "yogurt spark ^GSPC,GC=F,EURUSD=X,BTC-USD --indicators close "
+            "--include-timestamps false --include-pre-post false"
+        ),
+    ),
+    notes=(
+        "Observed quote pages request range=1d, interval=5m, and indicators=close.",
+        (
+            "Live probes should include representative equities, ETFs, indices, "
+            "foreign listings, futures, forex, and crypto because symbol support "
+            "varies."
+        ),
+        (
+            "The --range, --interval, and --indicators values are intentionally "
+            "open-ended; Yahoo may accept values beyond the observed quote-page "
+            "request."
+        ),
+    ),
+)
+
 OPTIONS_COMMAND = CommandSpec(
     name="options",
     path="/v7/finance/options/{symbol}",
@@ -1620,6 +1732,7 @@ RATINGS_TOP_COMMAND = CommandSpec(
 
 COMMANDS: tuple[CommandSpec, ...] = (
     QUOTE_COMMAND,
+    SPARK_COMMAND,
     OPTIONS_COMMAND,
     QUOTE_TYPE_COMMAND,
     QUOTE_SUMMARY_COMMAND,

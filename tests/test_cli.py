@@ -53,6 +53,7 @@ def test_top_level_help_lists_quote_endpoint(
     captured = capsys.readouterr()
     assert "commands" in captured.out
     assert "quote" in captured.out
+    assert "spark" in captured.out
     assert "options" in captured.out
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
@@ -213,6 +214,165 @@ def test_quote_command_rejects_more_than_ten_symbols() -> None:
     assert "symbols accepts at most 10 comma-separated values; got 11" in (
         stderr.getvalue()
     )
+    assert client.closed
+    assert not client.calls
+
+
+def test_spark_help_includes_params_examples_and_probe_notes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Spark help documents observed quote-page params and symbol variety."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["spark", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "https://query1.finance.yahoo.com/v7/finance/spark" in captured.out
+    assert "SYMBOL[,SYMBOL...]" in captured.out
+    assert "--range" in captured.out
+    assert "--interval" in captured.out
+    assert "--indicators" in captured.out
+    assert "--include-timestamps" in captured.out
+    assert "--include-pre-post" in captured.out
+    assert "--cors-domain" in captured.out
+    assert "--tsrc" in captured.out
+    assert "Observed quote-page value: 1d" in captured.out
+    assert "Observed quote-page value: 5m" in captured.out
+    assert "Observed value: close" in captured.out
+    assert "finance.yahoo.com" in captured.out
+    assert "yogurt spark AAPL,MSFT" in captured.out
+    assert "^GSPC,GC=F,EURUSD=X,BTC-USD" in captured.out
+    assert "open-ended" in captured.out
+
+
+def test_spark_command_passes_params_and_prints_raw_body() -> None:
+    """Spark command sends Yahoo's observed query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "spark",
+            "AAPL, MSFT,^GSPC,GC=F,EURUSD=X,BTC-USD",
+            "--range",
+            "1d",
+            "--interval",
+            "5m",
+            "--indicators",
+            "close",
+            "--include-timestamps",
+            "false",
+            "--include-pre-post",
+            "false",
+            "--cors-domain",
+            "finance.yahoo.com",
+            "--tsrc",
+            "finance",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v7/finance/spark",
+            {
+                "symbols": "AAPL,MSFT,^GSPC,GC=F,EURUSD=X,BTC-USD",
+                "range": "1d",
+                "interval": "5m",
+                "indicators": "close",
+                "includeTimestamps": False,
+                "includePrePost": False,
+                "corsDomain": "finance.yahoo.com",
+                ".tsrc": "finance",
+            },
+            True,
+        )
+    ]
+
+
+def test_spark_command_uses_observed_defaults() -> None:
+    """Spark command defaults to the observed quote-page query shape."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "spark",
+            "AAPL",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/v7/finance/spark",
+            {
+                "symbols": "AAPL",
+                "range": "1d",
+                "interval": "5m",
+                "indicators": "close",
+                "includeTimestamps": False,
+                "includePrePost": False,
+                "corsDomain": "finance.yahoo.com",
+                ".tsrc": "finance",
+            },
+            True,
+        )
+    ]
+
+
+def test_spark_command_rejects_empty_symbol_items() -> None:
+    """Spark symbols use shared CSV validation and reject empty items."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "spark",
+            "AAPL,,MSFT",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "symbols cannot contain empty comma-separated values" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
+def test_spark_command_rejects_invalid_include_timestamps_boolean() -> None:
+    """Spark boolean params use shared boolean parsing."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "spark",
+            "AAPL",
+            "--include-timestamps",
+            "maybe",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "expected boolean value, got 'maybe'" in stderr.getvalue()
     assert client.closed
     assert not client.calls
 
@@ -841,6 +1001,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     "argv",
     [
         ["quote", "AAPL"],
+        ["spark", "AAPL"],
         ["options", "AAPL"],
         ["quote-type", "AAPL"],
         ["quote-summary", "AAPL"],
