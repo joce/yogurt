@@ -1006,6 +1006,71 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
     ),
 )
 
+RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
+    name="recommendations-by-symbol",
+    path="/v6/finance/recommendationsbysymbol/{symbol}",
+    summary="Recommended related symbols for a single symbol.",
+    description=(
+        "Yahoo related-symbol recommendations for one symbol, commonly requested "
+        "from index quote pages."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="symbol",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            path_param=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo symbol, such as ^GSPC, ^DJI, ^IXIC, or AAPL.",
+        ),
+        ParamSpec(
+            name="fields",
+            cli_name="fields",
+            kind=ParamKind.CSV,
+            metavar="FIELD[,FIELD...]",
+            help=(
+                "Optional comma-separated Yahoo recommendation fields to request. "
+                "Yogurt does not validate field names."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt recommendations-by-symbol ^GSPC",
+        "yogurt recommendations-by-symbol ^DJI",
+        "yogurt recommendations-by-symbol ^IXIC --fields symbol,recommendedSymbols",
+    ),
+    notes=(
+        "Observed index quote pages request this endpoint for ^GSPC, ^DJI, and ^IXIC.",
+        (
+            "Observed traffic sometimes included an empty fields= parameter; Yogurt "
+            "omits --fields by default because empty CSV values are rejected."
+        ),
+        (
+            "^DJI live probing also triggered a related MU request during the same "
+            "browser session."
+        ),
+    ),
+)
+
 PRICE_INSIGHTS_COMMAND = CommandSpec(
     name="price-insights",
     path="/ws/company-fundamentals/v1/finance/price-insights",
@@ -1736,6 +1801,7 @@ COMMANDS: tuple[CommandSpec, ...] = (
     OPTIONS_COMMAND,
     QUOTE_TYPE_COMMAND,
     QUOTE_SUMMARY_COMMAND,
+    RECOMMENDATIONS_BY_SYMBOL_COMMAND,
     PRICE_INSIGHTS_COMMAND,
     CALENDAR_EVENTS_COMMAND,
     FUNDAMENTALS_TIMESERIES_COMMAND,

@@ -57,6 +57,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "options" in captured.out
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
+    assert "recommendations-by-symbol" in captured.out
     assert "price-insights" in captured.out
     assert "calendar-events" in captured.out
     assert "timeseries" in captured.out
@@ -648,6 +649,123 @@ def test_quote_summary_command_uses_default_modules() -> None:
     ]
 
 
+def test_recommendations_by_symbol_help_includes_params_and_probe_notes(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Recommendations-by-symbol help documents symbol, fields, and probes."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["recommendations-by-symbol", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert (
+        "https://query1.finance.yahoo.com/v6/finance/recommendationsbysymbol/{symbol}"
+        in captured.out
+    )
+    assert "SYMBOL" in captured.out
+    assert "--fields" in captured.out
+    assert "Yogurt" in captured.out
+    assert "does not validate field names" in captured.out
+    assert "--lang" in captured.out
+    assert "--region" in captured.out
+    assert "^GSPC" in captured.out
+    assert "^DJI" in captured.out
+    assert "^IXIC" in captured.out
+    assert "fields=" in captured.out
+
+
+def test_recommendations_by_symbol_command_passes_params_and_prints_raw_body() -> None:
+    """Recommendations-by-symbol sends observed Yahoo query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "recommendations-by-symbol",
+            "^GSPC",
+            "--fields",
+            "symbol,recommendedSymbols",
+            "--lang",
+            "en-US",
+            "--region",
+            "US",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v6/finance/recommendationsbysymbol/%5EGSPC",
+            {
+                "fields": "symbol,recommendedSymbols",
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_recommendations_by_symbol_command_uses_observed_defaults() -> None:
+    """Recommendations-by-symbol omits optional fields by default."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "recommendations-by-symbol",
+            "^DJI",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/v6/finance/recommendationsbysymbol/%5EDJI",
+            {
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_recommendations_by_symbol_rejects_empty_fields() -> None:
+    """Recommendations-by-symbol does not send Yahoo's observed empty fields param."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "recommendations-by-symbol",
+            "^GSPC",
+            "--fields",
+            "",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "--fields cannot be empty" in stderr.getvalue()
+    assert client.closed
+    assert not client.calls
+
+
 def test_price_insights_help_includes_params_and_probe_notes(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1005,6 +1123,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
         ["options", "AAPL"],
         ["quote-type", "AAPL"],
         ["quote-summary", "AAPL"],
+        ["recommendations-by-symbol", "^IXIC"],
         ["price-insights", "AAPL"],
         ["calendar-events", "AAPL"],
         ["timeseries", "AAPL"],
