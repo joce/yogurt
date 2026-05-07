@@ -18,7 +18,7 @@ from typing_extensions import override
 
 from yogurt import __version__
 from yogurt.client import YahooClient
-from yogurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec
+from yogurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
 from yogurt.exceptions import YogurtError
 from yogurt.params import ParamKind, ParamSpec, coerce_param
 
@@ -86,10 +86,10 @@ def _examples_text(examples: tuple[str, ...]) -> str:
     return "\n".join(f"  {example}" for example in examples)
 
 
-def _reference_text(command: CommandSpec) -> str:
+def _reference_text(references: tuple[FieldReference, ...]) -> str:
     lines: list[str] = []
     description_indent = " " * _HELP_MAX_POSITION
-    for field in command.field_reference:
+    for field in references:
         label = f"{field.name}:"
         if len(label) <= _REFERENCE_LABEL_WIDTH:
             first_prefix = f"{_REFERENCE_INDENT}{label:<{_REFERENCE_LABEL_WIDTH}}  "
@@ -118,7 +118,14 @@ def _epilog_for_command(command: CommandSpec) -> str:
     field_reference = ""
     if command.field_reference:
         field_reference = (
-            f"\n\n{command.field_reference_title}:\n{_reference_text(command)}"
+            f"\n\n{command.field_reference_title}:\n"
+            f"{_reference_text(command.field_reference)}"
+        )
+    reference_sections = ""
+    if command.reference_sections:
+        reference_sections = "".join(
+            f"\n\n{section.title}:\n{_reference_text(section.values)}"
+            for section in command.reference_sections
         )
     common_modules = ""
     if command.common_modules:
@@ -134,6 +141,7 @@ def _epilog_for_command(command: CommandSpec) -> str:
     return (
         f"Yahoo endpoint:\n  {command.yahoo_url}\n\n"
         f"Examples:\n{_examples_text(command.examples)}"
+        f"{reference_sections}"
         f"{field_reference}"
         f"{common_modules}"
         f"{common_types}"

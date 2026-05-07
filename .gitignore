@@ -25,4 +25,6 @@ node_modules/
 yahoo-session.json
 .playwright-cli
 .playwright-mcp
+docs/MISSING_ENDPOINTS.md
 docs/plans/
+.worktrees/

@@ -41,6 +41,13 @@ class StubClient:
         self.closed = True
 
 
+def assert_formatted_default_false(help_text: str) -> None:
+    """Assert endpoint help documents the --formatted default."""
+
+    assert "--formatted BOOL" in help_text
+    assert "Request Yahoo formatted values. (default: False)" in help_text
+
+
 def test_top_level_help_lists_quote_endpoint(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -131,7 +138,9 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "SYMBOL[,SYMBOL...]" in captured.out
     assert "1 to 10 comma-separated Yahoo symbols" in captured.out
     assert "--fields" in captured.out
+    assert_formatted_default_false(captured.out)
     assert "--enable-private-company" in captured.out
+    assert "--top-pick-this-month" in captured.out
     assert "Common --fields values" not in captured.out
     assert "Quote --fields reference" in captured.out
     assert (
@@ -139,6 +148,9 @@ def test_quote_help_includes_endpoint_params_and_examples(
         in captured.out
     )
     assert "regularMarketPrice" in captured.out
+    assert "companyLogoUrl" in captured.out
+    assert "extendedMarketPrice" in captured.out
+    assert "overnightMarketPrice" in captured.out
     assert "customPriceAlertConfidence" in captured.out
     assert "Uses Yahoo crumb/session" not in captured.out
     assert "yogurt quote SMR,OKLO,LEU,VST,CEG" in captured.out
@@ -179,7 +191,7 @@ def test_quote_command_passes_params_and_prints_raw_body() -> None:
             {
                 "symbols": "SMR,OKLO",
                 "fields": "marketCap,logoUrl,notYetDocumentedByYogurt",
-                "formatted": True,
+                "formatted": False,
                 "enablePrivateCompany": True,
                 "overnightPrice": True,
                 "lang": "en-US",
@@ -187,6 +199,51 @@ def test_quote_command_passes_params_and_prints_raw_body() -> None:
                 "imgHeights": 50,
                 "imgLabels": "logoUrl",
                 "imgWidths": 50,
+            },
+            True,
+        )
+    ]
+
+
+def test_quote_command_passes_top_pick_param_when_requested() -> None:
+    """Quote command sends topPickThisMonth only when explicitly requested."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "quote",
+            "OKLO",
+            "--fields",
+            "companyLogoUrl,extendedMarketPrice,overnightMarketPrice",
+            "--formatted",
+            "true",
+            "--top-pick-this-month",
+            "true",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v7/finance/quote",
+            {
+                "symbols": "OKLO",
+                "fields": "companyLogoUrl,extendedMarketPrice,overnightMarketPrice",
+                "formatted": True,
+                "enablePrivateCompany": True,
+                "overnightPrice": True,
+                "lang": "en-US",
+                "region": "US",
+                "topPickThisMonth": True,
             },
             True,
         )
@@ -394,7 +451,7 @@ def test_options_help_includes_endpoint_params_and_examples(
     assert "SYMBOL" in captured.out
     assert "--date" in captured.out
     assert "YYYY-MM-DD" in captured.out
-    assert "--formatted" in captured.out
+    assert_formatted_default_false(captured.out)
     assert "--straddle" in captured.out
     assert "--lang" in captured.out
     assert "--region" in captured.out
@@ -468,7 +525,7 @@ def test_options_command_defaults_date_to_negative_one() -> None:
             "/v7/finance/options/AAPL",
             {
                 "date": -1,
-                "formatted": True,
+                "formatted": False,
                 "straddle": False,
                 "lang": "en-US",
                 "region": "US",
@@ -481,23 +538,28 @@ def test_options_command_defaults_date_to_negative_one() -> None:
 def test_quote_type_help_includes_endpoint_params_and_examples(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Quote type help documents the symbol and query parameters."""
+    """Quote type help documents the path symbol and query parameters."""
 
     with pytest.raises(SystemExit) as exc_info:
         main(["quote-type", "--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert "https://query1.finance.yahoo.com/v1/finance/quoteType" in captured.out
+    assert "https://query1.finance.yahoo.com/v1/finance/quoteType/{symbol}" in (
+        captured.out
+    )
     assert "SYMBOL" in captured.out
+    assert_formatted_default_false(captured.out)
     assert "--lang" in captured.out
     assert "--region" in captured.out
     assert "--enable-private-company" in captured.out
+    assert "--overnight-price" in captured.out
     assert "yogurt quote-type AAPL" in captured.out
+    assert "yogurt quote-type AAPL --enable-private-company true" in captured.out
 
 
-def test_quote_type_command_passes_symbol_and_common_params() -> None:
-    """Quote type command passes the symbol as a query parameter."""
+def test_quote_type_command_uses_path_symbol_and_observed_defaults() -> None:
+    """Quote type command uses Yahoo's observed path-symbol request shape."""
 
     client = StubClient()
     stdout = StringIO()
@@ -506,7 +568,7 @@ def test_quote_type_command_passes_symbol_and_common_params() -> None:
     exit_code = main(
         [
             "quote-type",
-            "AAPL",
+            "^GSPC",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -519,12 +581,55 @@ def test_quote_type_command_passes_symbol_and_common_params() -> None:
     assert client.closed
     assert client.calls == [
         (
-            "/v1/finance/quoteType/",
+            "/v1/finance/quoteType/%5EGSPC",
             {
-                "symbol": "AAPL",
+                "formatted": False,
                 "lang": "en-US",
                 "region": "US",
                 "enablePrivateCompany": True,
+                "overnightPrice": True,
+            },
+            True,
+        )
+    ]
+
+
+def test_quote_type_command_passes_boolean_overrides() -> None:
+    """Quote type command lets callers override observed boolean query params."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "quote-type",
+            "AAPL",
+            "--formatted",
+            "true",
+            "--enable-private-company",
+            "false",
+            "--overnight-price",
+            "false",
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v1/finance/quoteType/AAPL",
+            {
+                "formatted": True,
+                "lang": "en-US",
+                "region": "US",
+                "enablePrivateCompany": False,
+                "overnightPrice": False,
             },
             True,
         )
@@ -549,6 +654,14 @@ def test_quote_summary_help_includes_modules_and_probe_notes(
     assert "financialData" in captured.out
     assert "recommendationTrend" in captured.out
     assert "equityPerformance" in captured.out
+    assert "pageViews" in captured.out
+    assert "financialsTemplate" in captured.out
+    assert "quoteUnadjustedPerformanceOverview" in captured.out
+    assert "corporateActions" in captured.out
+    assert "earningsCallTranscripts" in captured.out
+    assert "earningsGaap" in captured.out
+    assert "earningsNonGaap" in captured.out
+    assert_formatted_default_false(captured.out)
     assert "Yogurt does" in captured.out
     assert "not validate module names" in captured.out
     assert "Common --modules values" not in captured.out
@@ -581,6 +694,8 @@ def test_quote_summary_command_passes_symbol_in_path_and_params() -> None:
             "AAPL",
             "--modules",
             "summaryProfile,financialData,notYetDocumentedByYogurt",
+            "--formatted",
+            "true",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -597,6 +712,52 @@ def test_quote_summary_command_passes_symbol_in_path_and_params() -> None:
             {
                 "modules": "summaryProfile,financialData,notYetDocumentedByYogurt",
                 "formatted": True,
+                "enablePrivateCompany": True,
+                "enableQSPExpandedEarnings": True,
+                "overnightPrice": True,
+                "lang": "en-US",
+                "region": "US",
+            },
+            True,
+        )
+    ]
+
+
+def test_quote_summary_command_passes_observed_index_modules() -> None:
+    """Quote summary command passes the observed index module set unchanged."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+    modules = (
+        "price,summaryDetail,pageViews,financialsTemplate,calendarEvents,"
+        "quoteUnadjustedPerformanceOverview,corporateActions,"
+        "earningsCallTranscripts,earningsGaap,earningsNonGaap,"
+        "upgradeDowngradeHistory"
+    )
+
+    exit_code = main(
+        [
+            "quote-summary",
+            "^GSPC",
+            "--modules",
+            modules,
+        ],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v10/finance/quoteSummary/%5EGSPC",
+            {
+                "modules": modules,
+                "formatted": False,
                 "enablePrivateCompany": True,
                 "enableQSPExpandedEarnings": True,
                 "overnightPrice": True,
@@ -637,7 +798,7 @@ def test_quote_summary_command_uses_default_modules() -> None:
                     "summaryProfile,financialData,recommendationTrend,earnings,"
                     "equityPerformance,defaultKeyStatistics"
                 ),
-                "formatted": True,
+                "formatted": False,
                 "enablePrivateCompany": True,
                 "enableQSPExpandedEarnings": True,
                 "overnightPrice": True,
@@ -1324,7 +1485,7 @@ def test_insights_help_includes_params_and_probe_notes(
     )
     assert "SYMBOL[,SYMBOL...]" in captured.out
     assert "--disable-related-reports" in captured.out
-    assert "--formatted" in captured.out
+    assert_formatted_default_false(captured.out)
     assert "--get-all-research-reports" in captured.out
     assert "--reports-count" in captured.out
     assert "--ssl" in captured.out
@@ -1347,6 +1508,8 @@ def test_insights_command_passes_params_and_prints_raw_body() -> None:
             "8",
             "--disable-related-reports",
             "false",
+            "--formatted",
+            "true",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -1397,7 +1560,7 @@ def test_insights_command_uses_observed_defaults() -> None:
             {
                 "symbols": "AAPL",
                 "disableRelatedReports": True,
-                "formatted": True,
+                "formatted": False,
                 "getAllResearchReports": True,
                 "reportsCount": 4,
                 "ssl": True,
@@ -1427,13 +1590,34 @@ def test_predefined_screener_help_includes_params_and_probe_notes(
     assert "--count" in captured.out
     assert "--start" in captured.out
     assert "--fields" in captured.out
-    assert "--formatted" in captured.out
+    assert_formatted_default_false(captured.out)
     assert "--use-records-response" in captured.out
     assert "--sort-field" in captured.out
     assert "--sort-type" in captured.out
     assert "--lang" in captured.out
     assert "--region" in captured.out
     assert "MOST_ACTIVES" in captured.out
+    assert "Predefined screener ID reference" in captured.out
+    assert (
+        "  DAY_GAINERS:                  Stocks with the greatest daily gains."
+        in captured.out
+    )
+    assert (
+        "  MOST_ACTIVE_PENNY_STOCKS:     Penny stocks with high daily volume."
+        in captured.out
+    )
+    assert "  MORNINGSTAR_FIVE_STAR_STOCKS:" in captured.out
+    assert (
+        "                                Five-star Morningstar stock ideas."
+        in captured.out
+    )
+    assert "  MOST_INSTITUTIONALLY_HELD_LARGE_CAP_STOCKS:" in captured.out
+    assert "  SOLID_LARGE_GROWTH_FUNDS:" in captured.out
+    assert (
+        "  LARGE_BLEND_ETFS:             Large-blend exchange-traded funds."
+        in captured.out
+    )
+    assert "Known observed screener IDs include the groups below" not in captured.out
     assert "Screener IDs are Yahoo-defined and open-ended" in captured.out
     assert "Predefined screener --fields reference" in captured.out
     assert "regularMarketPrice" in captured.out
@@ -1473,7 +1657,7 @@ def test_predefined_screener_command_uses_observed_defaults() -> None:
                 "count": 200,
                 "start": 0,
                 "fields": "symbol,shortName",
-                "formatted": True,
+                "formatted": False,
                 "useRecordsResponse": True,
                 "sortField": "",
                 "sortType": "",
@@ -1503,7 +1687,7 @@ def test_predefined_screener_command_passes_overrides_and_prints_raw_body() -> N
             "--fields",
             "symbol, shortName, regularMarketPrice",
             "--formatted",
-            "false",
+            "true",
             "--use-records-response",
             "false",
             "--sort-field",
@@ -1532,7 +1716,7 @@ def test_predefined_screener_command_passes_overrides_and_prints_raw_body() -> N
                 "count": 25,
                 "start": 25,
                 "fields": "symbol,shortName,regularMarketPrice",
-                "formatted": False,
+                "formatted": True,
                 "useRecordsResponse": False,
                 "sortField": "regularMarketVolume",
                 "sortType": "DESC",

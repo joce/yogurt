@@ -16,6 +16,14 @@ class FieldReference:
 
 
 @dataclass(frozen=True, slots=True)
+class ReferenceSection:
+    """Describe a titled help reference section."""
+
+    title: str
+    values: tuple[FieldReference, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class CommandSpec:
     """Describe one Yogurt command backed by a Yahoo Finance endpoint."""
 
@@ -27,6 +35,7 @@ class CommandSpec:
     examples: tuple[str, ...]
     field_reference: tuple[FieldReference, ...] = ()
     field_reference_title: str = "Quote --fields reference"
+    reference_sections: tuple[ReferenceSection, ...] = ()
     common_modules: tuple[str, ...] = ()
     common_types: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
@@ -300,6 +309,18 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
     ),
     FieldReference("exchangeTimezoneName", "Name of the exchange timezone."),
     FieldReference("exchangeTimezoneShortName", "Short name of the exchange timezone."),
+    FieldReference(
+        "extendedMarketChange", "Change in the extended-hours market price."
+    ),
+    FieldReference(
+        "extendedMarketChangePercent",
+        "Percent change in the extended-hours market price.",
+    ),
+    FieldReference("extendedMarketPrice", "Latest price from extended-hours trading."),
+    FieldReference(
+        "extendedMarketTime",
+        "Raw timestamp of the most recent extended-hours price.",
+    ),
     FieldReference("expireDate", "Date on which the option contract expires."),
     FieldReference("expireIsoDate", "Option expiration date in ISO 8601 format."),
     FieldReference(
@@ -356,6 +377,9 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
     FieldReference("ipoExpectedDate", "Expected date of the initial public offering."),
     FieldReference("language", "Language in which financial results are reported."),
     FieldReference("lastMarket", "Last market in which the security was traded."),
+    FieldReference(
+        "companyLogoUrl", "URL of the company's logo in Yahoo quote responses."
+    ),
     FieldReference("logoUrl", "URL of the company's logo."),
     FieldReference("longName", "Official name of the company or security."),
     FieldReference("market", "Primary market for the security."),
@@ -377,6 +401,16 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
         "openInterest", "Total number of open futures or options contracts."
     ),
     FieldReference("optionType", "Type of option."),
+    FieldReference("overnightMarketChange", "Change in the overnight-market price."),
+    FieldReference(
+        "overnightMarketChangePercent",
+        "Percent change in the overnight-market price.",
+    ),
+    FieldReference("overnightMarketPrice", "Latest overnight-market price."),
+    FieldReference(
+        "overnightMarketTime",
+        "Raw timestamp of the most recent overnight-market price.",
+    ),
     FieldReference("postMarketChange", "Change in the security's post-market price."),
     FieldReference(
         "postMarketChangePercent", "Percent change in the security's post-market price."
@@ -532,7 +566,7 @@ QUOTE_COMMAND = CommandSpec(
             name="formatted",
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
-            default=True,
+            default=False,
             metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
@@ -551,6 +585,13 @@ QUOTE_COMMAND = CommandSpec(
             default=True,
             metavar="BOOL",
             help="Request overnight price fields when available.",
+        ),
+        ParamSpec(
+            name="topPickThisMonth",
+            cli_name="top-pick-this-month",
+            kind=ParamKind.BOOLEAN,
+            metavar="BOOL",
+            help="Request top-pick-this-month quote metadata when Yahoo supports it.",
         ),
         ParamSpec(
             name="lang",
@@ -751,7 +792,7 @@ OPTIONS_COMMAND = CommandSpec(
             name="formatted",
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
-            default=True,
+            default=False,
             metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
@@ -789,7 +830,7 @@ OPTIONS_COMMAND = CommandSpec(
 
 QUOTE_TYPE_COMMAND = CommandSpec(
     name="quote-type",
-    path="/v1/finance/quoteType/",
+    path="/v1/finance/quoteType/{symbol}",
     summary="Quote type data for a single symbol.",
     description=(
         "Instrument classification, exchange, market, and quote-type metadata for "
@@ -802,9 +843,18 @@ QUOTE_TYPE_COMMAND = CommandSpec(
             cli_name="symbol",
             kind=ParamKind.STRING,
             positional=True,
+            path_param=True,
             required=True,
             metavar="SYMBOL",
-            help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+            help="A single Yahoo symbol, such as AAPL, ^GSPC, or SHOP.TO.",
+        ),
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            metavar="BOOL",
+            help="Request Yahoo formatted values.",
         ),
         ParamSpec(
             name="lang",
@@ -830,6 +880,14 @@ QUOTE_TYPE_COMMAND = CommandSpec(
             metavar="BOOL",
             help="Include private company data when Yahoo supports it.",
         ),
+        ParamSpec(
+            name="overnightPrice",
+            cli_name="overnight-price",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            metavar="BOOL",
+            help="Request overnight price fields when available.",
+        ),
     ),
     examples=(
         "yogurt quote-type AAPL",
@@ -850,6 +908,9 @@ QUOTE_SUMMARY_MODULES: tuple[FieldReference, ...] = (
         "calendarEvents",
         "Earnings dates, ex-dividend date, and related calendar data.",
     ),
+    FieldReference(
+        "corporateActions", "Corporate action metadata when Yahoo returns it."
+    ),
     FieldReference("cashflowStatementHistory", "Annual cash flow statements."),
     FieldReference(
         "cashflowStatementHistoryQuarterly", "Quarterly cash flow statements."
@@ -859,7 +920,10 @@ QUOTE_SUMMARY_MODULES: tuple[FieldReference, ...] = (
         "Valuation, share-count, short-interest, and per-share statistics.",
     ),
     FieldReference("earnings", "Earnings charts and annual financial summaries."),
+    FieldReference("earningsCallTranscripts", "Earnings call transcript metadata."),
+    FieldReference("earningsGaap", "GAAP earnings data."),
     FieldReference("earningsHistory", "Historical EPS estimate and surprise data."),
+    FieldReference("earningsNonGaap", "Non-GAAP earnings data."),
     FieldReference("earningsTrend", "Analyst earnings and revenue estimate trends."),
     FieldReference(
         "equityPerformance", "Equity performance overview and peer context."
@@ -867,6 +931,10 @@ QUOTE_SUMMARY_MODULES: tuple[FieldReference, ...] = (
     FieldReference(
         "financialData",
         "Analyst targets, recommendation data, margins, cash, debt, and growth fields.",
+    ),
+    FieldReference(
+        "financialsTemplate",
+        "Yahoo financial statement display template metadata.",
     ),
     FieldReference("fundOwnership", "Institutional fund ownership records."),
     FieldReference(
@@ -889,12 +957,17 @@ QUOTE_SUMMARY_MODULES: tuple[FieldReference, ...] = (
         "Insider, institution, and float ownership percentages.",
     ),
     FieldReference("netSharePurchaseActivity", "Insider net share purchase activity."),
+    FieldReference("pageViews", "Yahoo page-view engagement metadata."),
     FieldReference(
         "price",
         "Current price, exchange, currency, market state, and quote source data.",
     ),
     FieldReference(
         "quoteType", "Instrument type, exchange, timezone, and symbol identity."
+    ),
+    FieldReference(
+        "quoteUnadjustedPerformanceOverview",
+        "Unadjusted quote performance overview data.",
     ),
     FieldReference("recommendationTrend", "Analyst recommendation trend counts."),
     FieldReference("secFilings", "Recent SEC filing metadata."),
@@ -948,7 +1021,7 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
             name="formatted",
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
-            default=True,
+            default=False,
             metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
@@ -1434,7 +1507,7 @@ INSIGHTS_COMMAND = CommandSpec(
             name="formatted",
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
-            default=True,
+            default=False,
             metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
@@ -1488,6 +1561,72 @@ INSIGHTS_COMMAND = CommandSpec(
         "Live probes returned one finance.result item per requested symbol.",
         "AAPL,MSFT,NVDA returned three result objects in live probing.",
     ),
+)
+
+PREDEFINED_SCREENER_ID_REFERENCES = (
+    FieldReference("MOST_ACTIVES", "Stocks with the highest daily trading volume."),
+    FieldReference("MOST_ACTIVE_PENNY_STOCKS", "Penny stocks with high daily volume."),
+    FieldReference("DAY_GAINERS", "Stocks with the greatest daily gains."),
+    FieldReference("DAY_LOSERS", "Stocks with the greatest daily losses."),
+    FieldReference("MOST_SHORTED_STOCKS", "Stocks with high short interest."),
+    FieldReference(
+        "RECENT_52_WEEK_HIGHS", "Stocks recently trading near 52-week highs."
+    ),
+    FieldReference("RECENT_52_WEEK_LOWS", "Stocks recently trading near 52-week lows."),
+    FieldReference("SMALL_CAP_GAINERS", "Small-cap stocks with recent gains."),
+    FieldReference(
+        "BULLISH_STOCKS_RIGHT_NOW", "Stocks matching Yahoo bullish screens."
+    ),
+    FieldReference(
+        "BEARISH_STOCKS_RIGHT_NOW", "Stocks matching Yahoo bearish screens."
+    ),
+    FieldReference(
+        "ANALYST_STRONG_BUY_STOCKS", "Stocks with strong-buy analyst signals."
+    ),
+    FieldReference(
+        "MORNINGSTAR_FIVE_STAR_STOCKS", "Five-star Morningstar stock ideas."
+    ),
+    FieldReference(
+        "UNDERVALUED_GROWTH_STOCKS", "Growth stocks Yahoo marks as undervalued."
+    ),
+    FieldReference(
+        "UNDERVALUED_LARGE_CAPS", "Large-cap stocks Yahoo marks as undervalued."
+    ),
+    FieldReference(
+        "UNDERVALUED_WIDE_MOAT_STOCKS",
+        "Wide-moat stocks Yahoo marks as undervalued.",
+    ),
+    FieldReference("GROWTH_TECHNOLOGY_STOCKS", "Technology stocks with growth traits."),
+    FieldReference(
+        "AGGRESSIVE_SMALL_CAPS", "Small-cap stocks with aggressive growth traits."
+    ),
+    FieldReference(
+        "MOST_INSTITUTIONALLY_BOUGHT_LARGE_CAP_STOCKS",
+        "Large-cap stocks with institutional buying.",
+    ),
+    FieldReference(
+        "MOST_INSTITUTIONALLY_HELD_LARGE_CAP_STOCKS",
+        "Large-cap stocks with high institutional ownership.",
+    ),
+    FieldReference(
+        "TOP_STOCKS_OWNED_BY_CATHIE_WOOD", "Stocks associated with Cathie Wood funds."
+    ),
+    FieldReference(
+        "TOP_MUTUAL_FUNDS", "Top mutual funds in Yahoo's predefined screen."
+    ),
+    FieldReference(
+        "SOLID_LARGE_GROWTH_FUNDS", "Large-growth funds with solid ratings."
+    ),
+    FieldReference(
+        "SOLID_MIDCAP_GROWTH_FUNDS", "Mid-cap growth funds with solid ratings."
+    ),
+    FieldReference(
+        "CONSERVATIVE_FOREIGN_FUNDS", "Foreign funds with conservative profiles."
+    ),
+    FieldReference("HIGH_YIELD_BOND", "High-yield bond funds."),
+    FieldReference("LARGE_BLEND_ETFS", "Large-blend exchange-traded funds."),
+    FieldReference("TECHNOLOGY_ETFS", "Technology exchange-traded funds."),
+    FieldReference("PORTFOLIO_ANCHORS", "Funds Yahoo identifies as portfolio anchors."),
 )
 
 PREDEFINED_SCREENER_COMMAND = CommandSpec(
@@ -1544,7 +1683,7 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
             name="formatted",
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
-            default=True,
+            default=False,
             metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
@@ -1607,12 +1746,18 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
     ),
     field_reference=QUOTE_FIELDS,
     field_reference_title="Predefined screener --fields reference",
+    reference_sections=(
+        ReferenceSection(
+            title="Predefined screener ID reference",
+            values=PREDEFINED_SCREENER_ID_REFERENCES,
+        ),
+    ),
     notes=(
         "Screener IDs are Yahoo-defined and open-ended; Yogurt does not validate them.",
         (
             "Observed Yahoo quote pages request MOST_ACTIVES with count=200, "
-            "start=0, fields=symbol,shortName, formatted=true, and "
-            "useRecordsResponse=true."
+            "start=0, fields=symbol,shortName, and useRecordsResponse=true; "
+            "Yogurt defaults formatted=false."
         ),
         (
             "Observed browser requests include empty sortField and sortType; "

@@ -14,14 +14,19 @@ Yogurt probes against Yahoo's raw quote summary endpoint. Equity probes used
 | `balanceSheetHistory` | Annual balance sheet statements. |
 | `balanceSheetHistoryQuarterly` | Quarterly balance sheet statements. |
 | `calendarEvents` | Earnings dates, ex-dividend date, and related calendar data. |
+| `corporateActions` | Corporate action metadata when Yahoo returns it. |
 | `cashflowStatementHistory` | Annual cash flow statements. |
 | `cashflowStatementHistoryQuarterly` | Quarterly cash flow statements. |
 | `defaultKeyStatistics` | Valuation, share-count, short-interest, and per-share statistics. |
 | `earnings` | Earnings charts and annual financial summaries. |
+| `earningsCallTranscripts` | Earnings call transcript metadata. |
+| `earningsGaap` | GAAP earnings data. |
 | `earningsHistory` | Historical EPS estimate and surprise data. |
+| `earningsNonGaap` | Non-GAAP earnings data. |
 | `earningsTrend` | Analyst earnings and revenue estimate trends. |
 | `equityPerformance` | Equity performance overview and peer context. |
 | `financialData` | Analyst targets, recommendation data, margins, cash, debt, and growth fields. |
+| `financialsTemplate` | Yahoo financial statement display template metadata. |
 | `fundOwnership` | Institutional fund ownership records. |
 | `fundPerformance` | Fund returns, risk statistics, and performance category comparisons. |
 | `fundProfile` | Fund family, category, fees, expenses, and management details. |
@@ -35,8 +40,10 @@ Yogurt probes against Yahoo's raw quote summary endpoint. Equity probes used
 | `majorDirectHolders` | Major direct holder records. |
 | `majorHoldersBreakdown` | Insider, institution, and float ownership percentages. |
 | `netSharePurchaseActivity` | Insider net share purchase activity. |
+| `pageViews` | Yahoo page-view engagement metadata. |
 | `price` | Current price, exchange, currency, market state, and quote source data. |
 | `quoteType` | Instrument type, exchange, timezone, and symbol identity. |
+| `quoteUnadjustedPerformanceOverview` | Unadjusted quote performance overview data. |
 | `recommendationTrend` | Analyst recommendation trend counts. |
 | `secFilings` | Recent SEC filing metadata. |
 | `sectorTrend` | Sector-level earnings trend context. |
@@ -51,5 +58,10 @@ Yogurt probes against Yahoo's raw quote summary endpoint. Equity probes used
   holders, trends, recommendations, price, quote type, and `equityPerformance`.
 - `VT` populated the fund-specific `fundProfile`, `fundPerformance`, and
   `topHoldings` modules.
+- Index quote pages were observed requesting `price`, `summaryDetail`,
+  `pageViews`, `financialsTemplate`, `calendarEvents`,
+  `quoteUnadjustedPerformanceOverview`, `corporateActions`,
+  `earningsCallTranscripts`, `earningsGaap`, `earningsNonGaap`, and
+  `upgradeDowngradeHistory`.
 - `esgScores` appears in older third-party references, but live Yahoo probes
   returned HTTP 404 for `AAPL`, so it is not listed as a supported module here.

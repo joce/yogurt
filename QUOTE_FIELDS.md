@@ -3,7 +3,7 @@
 The `quote` command accepts an optional `--fields` value for Yahoo quote fields:
 
 ```powershell
-uv run yogurt quote AAPL,MSFT --fields symbol,longName,regularMarketPrice
+uv run yogurt quote AAPL,MSFT --fields symbol,longName,companyLogoUrl,regularMarketPrice,overnightMarketPrice
 ```
 
 Yogurt passes field names through to Yahoo without validation. Availability
@@ -46,6 +46,10 @@ requests and Yogurt uses it in quote examples.
 | `exchangeDataDelayedBy` | Delay in data from the exchange, typically in minutes. |
 | `exchangeTimezoneName` | Name of the exchange timezone. |
 | `exchangeTimezoneShortName` | Short name of the exchange timezone. |
+| `extendedMarketChange` | Change in the extended-hours market price. |
+| `extendedMarketChangePercent` | Percent change in the extended-hours market price. |
+| `extendedMarketPrice` | Latest price from extended-hours trading. |
+| `extendedMarketTime` | Raw timestamp of the most recent extended-hours price. |
 | `expireDate` | Date on which the option contract expires. |
 | `expireIsoDate` | Option expiration date in ISO 8601 format. |
 | `fiftyDayAverage` | Average closing price over the past 50 trading days. |
@@ -69,6 +73,7 @@ requests and Yogurt uses it in quote examples.
 | `ipoExpectedDate` | Expected date of the initial public offering. |
 | `language` | Language in which financial results are reported. |
 | `lastMarket` | Last market in which the security was traded. |
+| `companyLogoUrl` | URL of the company's logo in Yahoo quote responses. |
 | `logoUrl` | URL of the company's logo. |
 | `longName` | Official name of the company or security. |
 | `market` | Primary market for the security. |
@@ -81,6 +86,10 @@ requests and Yogurt uses it in quote examples.
 | `netExpenseRatio` | Ratio of total expenses to total net assets. |
 | `openInterest` | Total number of open futures or options contracts. |
 | `optionType` | Type of option. |
+| `overnightMarketChange` | Change in the overnight-market price. |
+| `overnightMarketChangePercent` | Percent change in the overnight-market price. |
+| `overnightMarketPrice` | Latest overnight-market price. |
+| `overnightMarketTime` | Raw timestamp of the most recent overnight-market price. |
 | `postMarketChange` | Change in the security's post-market price. |
 | `postMarketChangePercent` | Percent change in the security's post-market price. |
 | `postMarketPrice` | Price of the security in post-market trading. |

@@ -57,7 +57,7 @@ uv run yogurt quote AAPL,MSFT,NVDA
 Request specific quote fields:
 
 ```powershell
-uv run yogurt quote AAPL,MSFT --fields symbol,longName,regularMarketPrice,regularMarketChangePercent
+uv run yogurt quote AAPL,MSFT --fields symbol,longName,companyLogoUrl,regularMarketPrice,overnightMarketPrice
 ```
 
 See [QUOTE_FIELDS.md](QUOTE_FIELDS.md) for the full quote field reference and
@@ -66,11 +66,17 @@ best-effort meanings.
 Fetch selected quote summary modules:
 
 ```powershell
-uv run yogurt quote-summary AAPL --modules price,quoteType,summaryDetail
+uv run yogurt quote-summary ^GSPC --modules price,summaryDetail,pageViews,financialsTemplate
 ```
 
 See [QUOTE_SUMMARY_MODULES.md](QUOTE_SUMMARY_MODULES.md) for the researched
 quote-summary module list and descriptions.
+
+Fetch quote-type metadata using Yahoo's path-symbol endpoint:
+
+```powershell
+uv run yogurt quote-type ^GSPC
+```
 
 Fetch chart data for a recent window:
 
@@ -101,6 +107,24 @@ Fetch a predefined Yahoo screener:
 ```powershell
 uv run yogurt predefined-screener MOST_ACTIVES
 ```
+
+Known observed predefined screener IDs include:
+
+- Market movers: `MOST_ACTIVES`, `MOST_ACTIVE_PENNY_STOCKS`, `DAY_GAINERS`,
+  `DAY_LOSERS`, `MOST_SHORTED_STOCKS`
+- Recent and technical: `RECENT_52_WEEK_HIGHS`, `RECENT_52_WEEK_LOWS`,
+  `SMALL_CAP_GAINERS`, `BULLISH_STOCKS_RIGHT_NOW`, `BEARISH_STOCKS_RIGHT_NOW`
+- Analyst and value: `ANALYST_STRONG_BUY_STOCKS`,
+  `MORNINGSTAR_FIVE_STAR_STOCKS`, `UNDERVALUED_GROWTH_STOCKS`,
+  `UNDERVALUED_LARGE_CAPS`, `UNDERVALUED_WIDE_MOAT_STOCKS`,
+  `GROWTH_TECHNOLOGY_STOCKS`, `AGGRESSIVE_SMALL_CAPS`
+- Institutional: `MOST_INSTITUTIONALLY_BOUGHT_LARGE_CAP_STOCKS`,
+  `MOST_INSTITUTIONALLY_HELD_LARGE_CAP_STOCKS`,
+  `TOP_STOCKS_OWNED_BY_CATHIE_WOOD`
+- Fund and ETF: `TOP_MUTUAL_FUNDS`, `SOLID_LARGE_GROWTH_FUNDS`,
+  `SOLID_MIDCAP_GROWTH_FUNDS`, `CONSERVATIVE_FOREIGN_FUNDS`,
+  `HIGH_YIELD_BOND`, `LARGE_BLEND_ETFS`, `TECHNOLOGY_ETFS`,
+  `PORTFOLIO_ANCHORS`
 
 Fetch an option chain using Yahoo's default expiration:
 
