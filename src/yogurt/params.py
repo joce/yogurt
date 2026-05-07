@@ -74,25 +74,6 @@ def _coerce_string_param(spec: ParamSpec, value: str) -> str:
     return stripped
 
 
-def _allows_omitted_empty_default(spec: ParamSpec) -> bool:
-    return (
-        spec.allow_empty_default
-        and isinstance(spec.default, str)
-        and len(spec.default) == 0
-    )
-
-
-def _coerce_string_param(spec: ParamSpec, value: str) -> str:
-    stripped = value.strip()
-    if not stripped:
-        if _allows_omitted_empty_default(spec):
-            message = f"{spec.name} cannot be empty"
-            raise ValueError(message)
-        message = f"{spec.option} cannot be empty"
-        raise ValueError(message)
-    return stripped
-
-
 def _coerce_csv_param(spec: ParamSpec, value: str) -> str:
     stripped = value.strip()
     if not stripped:
