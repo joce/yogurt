@@ -367,6 +367,9 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
         "forwardPe", "Projected price-to-earnings ratio for the next 12 months."
     ),
     FieldReference("fromCurrency", "Base currency in an exchange pair."),
+    FieldReference(
+        "fromExchange", "Source exchange for a currency or conversion pair."
+    ),
     FieldReference("fullExchangeName", "Full name of the securities exchange."),
     FieldReference(
         "gmtOffSetMilliseconds", "Exchange offset from GMT in milliseconds."
@@ -400,6 +403,9 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
     FieldReference(
         "openInterest", "Total number of open futures or options contracts."
     ),
+    FieldReference(
+        "optionsType", "Yahoo option-type metadata returned by quote-page requests."
+    ),
     FieldReference("optionType", "Type of option."),
     FieldReference("overnightMarketChange", "Change in the overnight-market price."),
     FieldReference(
@@ -431,6 +437,9 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
     FieldReference("priceEpsCurrentYear", "Current-year price-to-earnings ratio."),
     FieldReference("priceHint", "Decimal precision indicator for price values."),
     FieldReference("priceToBook", "Market value relative to book value per share."),
+    FieldReference(
+        "quartrId", "Yahoo Quartr identifier when quote pages request it."
+    ),
     FieldReference("quoteSourceName", "Name of the source providing the quote."),
     FieldReference("quoteType", "Type of quote."),
     FieldReference("region", "Region in which the company or security is located."),
@@ -460,6 +469,9 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
         "regularMarketPrice", "Latest price from the regular trading session."
     ),
     FieldReference(
+        "regularMarketSource", "Source label for the regular-market quote."
+    ),
+    FieldReference(
         "regularMarketTime", "Raw timestamp of the most recent regular-session trade."
     ),
     FieldReference(
@@ -474,9 +486,13 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
         "Interval at which the data source provides updates, in seconds.",
     ),
     FieldReference("startDate", "Date on which the coin started trading."),
+    FieldReference("stockStory", "Yahoo StockStory metadata when returned."),
     FieldReference("strike", "Contractually specified price for options exercise."),
     FieldReference("symbol", "Ticker symbol of the security."),
     FieldReference("toCurrency", "Counter currency in an exchange pair."),
+    FieldReference(
+        "toExchange", "Destination exchange for a currency or conversion pair."
+    ),
     FieldReference("tradeable", "Whether the security is currently tradeable."),
     FieldReference(
         "trailingAnnualDividendRate",
@@ -670,7 +686,7 @@ SPARK_COMMAND = CommandSpec(
             default="1d",
             metavar="RANGE",
             help=(
-                "Spark range to request. Observed quote-page value: 1d. "
+                "Spark range to request. Observed quote-page values: 1d and 24h. "
                 "Yogurt does not validate range values."
             ),
         ),
@@ -736,7 +752,10 @@ SPARK_COMMAND = CommandSpec(
         ),
     ),
     notes=(
-        "Observed quote pages request range=1d, interval=5m, and indicators=close.",
+        (
+            "Observed quote pages request range=1d or range=24h, interval=5m, "
+            "and indicators=close."
+        ),
         (
             "Live probes should include representative equities, ETFs, indices, "
             "foreign listings, futures, forex, and crypto because symbol support "

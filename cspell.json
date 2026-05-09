@@ -80,6 +80,7 @@
     "pylint",
     "pyright",
     "pyproject",
+    "Quartr",
     "quoteSummary",
     "quoteType",
     "recommendationsbysymbol",

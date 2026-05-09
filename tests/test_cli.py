@@ -157,6 +157,8 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "extendedMarketPrice" in captured.out
     assert "overnightMarketPrice" in captured.out
     assert "customPriceAlertConfidence" in captured.out
+    assert "regularMarketSource" in captured.out
+    assert "stockStory" in captured.out
     assert "Uses Yahoo crumb/session" not in captured.out
     assert "yogurt quote SMR,OKLO,LEU,VST,CEG" in captured.out
 
@@ -320,7 +322,7 @@ def test_spark_help_includes_params_examples_and_probe_notes(
     assert "--include-pre-post" in captured.out
     assert "--cors-domain" in captured.out
     assert "--tsrc" in captured.out
-    assert "Observed quote-page value: 1d" in captured.out
+    assert "Observed quote-page values: 1d and 24h" in captured.out
     assert "Observed quote-page value: 5m" in captured.out
     assert "Observed value: close" in captured.out
     assert "finance.yahoo.com" in captured.out

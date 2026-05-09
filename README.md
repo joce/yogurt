@@ -90,6 +90,9 @@ Fetch quote-page sparkline data:
 uv run yogurt spark AAPL,MSFT
 ```
 
+Quote-page probes have observed `1d` and `24h` spark ranges; pass values such
+as `--range 24h` through when Yahoo supports them.
+
 Fetch recommended symbols for a quote page:
 
 ```powershell

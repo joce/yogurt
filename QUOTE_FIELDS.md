@@ -67,6 +67,7 @@ requests and Yogurt uses it in quote examples.
 | `firstTradeDateMilliseconds` | Raw first-trade timestamp in milliseconds. |
 | `forwardPe` | Projected price-to-earnings ratio for the next 12 months. |
 | `fromCurrency` | Base currency in an exchange pair. |
+| `fromExchange` | Source exchange for a currency or conversion pair. |
 | `fullExchangeName` | Full name of the securities exchange. |
 | `gmtOffSetMilliseconds` | Exchange offset from GMT in milliseconds. |
 | `headSymbolAsString` | Symbol of the contract's underlying security. |
@@ -85,6 +86,7 @@ requests and Yogurt uses it in quote examples.
 | `netAssets` | Total net assets of the fund or company. |
 | `netExpenseRatio` | Ratio of total expenses to total net assets. |
 | `openInterest` | Total number of open futures or options contracts. |
+| `optionsType` | Yahoo option-type metadata returned by quote-page requests. |
 | `optionType` | Type of option. |
 | `overnightMarketChange` | Change in the overnight-market price. |
 | `overnightMarketChangePercent` | Percent change in the overnight-market price. |
@@ -102,6 +104,7 @@ requests and Yogurt uses it in quote examples.
 | `priceEpsCurrentYear` | Current-year price-to-earnings ratio. |
 | `priceHint` | Decimal precision indicator for price values. |
 | `priceToBook` | Market value relative to book value per share. |
+| `quartrId` | Yahoo Quartr identifier when quote pages request it. |
 | `quoteSourceName` | Name of the source providing the quote. |
 | `quoteType` | Type of quote. |
 | `region` | Region in which the company or security is located. |
@@ -113,15 +116,18 @@ requests and Yogurt uses it in quote examples.
 | `regularMarketOpen` | Opening price for the regular trading session. |
 | `regularMarketPreviousClose` | Previous regular-session closing price. |
 | `regularMarketPrice` | Latest price from the regular trading session. |
+| `regularMarketSource` | Source label for the regular-market quote. |
 | `regularMarketTime` | Raw timestamp of the most recent regular-session trade. |
 | `regularMarketVolume` | Number of units traded in the regular session. |
 | `sharesOutstanding` | Number of shares currently held by shareholders. |
 | `shortName` | Short user-friendly name for the quote or security. |
 | `sourceInterval` | Interval at which the data source provides updates, in seconds. |
 | `startDate` | Date on which the coin started trading. |
+| `stockStory` | Yahoo StockStory metadata when returned. |
 | `strike` | Contractually specified price for options exercise. |
 | `symbol` | Ticker symbol of the security. |
 | `toCurrency` | Counter currency in an exchange pair. |
+| `toExchange` | Destination exchange for a currency or conversion pair. |
 | `tradeable` | Whether the security is currently tradeable. |
 | `trailingAnnualDividendRate` | Dividend payment per share over the past 12 months. |
 | `trailingAnnualDividendYield` | Dividend yield over the past 12 months. |
