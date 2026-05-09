@@ -437,9 +437,7 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
     FieldReference("priceEpsCurrentYear", "Current-year price-to-earnings ratio."),
     FieldReference("priceHint", "Decimal precision indicator for price values."),
     FieldReference("priceToBook", "Market value relative to book value per share."),
-    FieldReference(
-        "quartrId", "Yahoo Quartr identifier when quote pages request it."
-    ),
+    FieldReference("quartrId", "Yahoo Quartr identifier when quote pages request it."),
     FieldReference("quoteSourceName", "Name of the source providing the quote."),
     FieldReference("quoteType", "Type of quote."),
     FieldReference("region", "Region in which the company or security is located."),
@@ -468,9 +466,7 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
     FieldReference(
         "regularMarketPrice", "Latest price from the regular trading session."
     ),
-    FieldReference(
-        "regularMarketSource", "Source label for the regular-market quote."
-    ),
+    FieldReference("regularMarketSource", "Source label for the regular-market quote."),
     FieldReference(
         "regularMarketTime", "Raw timestamp of the most recent regular-session trade."
     ),
@@ -1269,7 +1265,8 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             min_items=1,
             help=(
                 "Comma-separated Yahoo calendar event modules to request. "
-                "Observed value: earnings. Yogurt does not validate module names."
+                "Observed values: earnings, economicEvents. "
+                "Yogurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -1349,10 +1346,13 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             "--end-date 1777852800000 --modules earnings"
         ),
     ),
-    common_modules=("earnings",),
+    common_modules=("earnings", "economicEvents"),
     notes=(
         "startDate and endDate are sent to Yahoo as milliseconds.",
-        "The --modules parameter is open-ended; observed useful value is earnings.",
+        (
+            "The --modules parameter is open-ended; observed values are earnings "
+            "and economicEvents."
+        ),
         (
             "Observed Yahoo requests include economic event filters even when "
             "requesting earnings."
@@ -1918,6 +1918,118 @@ RATINGS_TOP_COMMAND = CommandSpec(
     ),
 )
 
+MARKET_TIME_COMMAND = CommandSpec(
+    name="market-time",
+    path="/v6/finance/markettime",
+    summary="Market hours and session status.",
+    description="Current market session state and trading hours for global markets.",
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="key",
+            cli_name="key",
+            kind=ParamKind.STRING,
+            default="finance",
+            metavar="KEY",
+            help="Yahoo product key sent with the request.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt market-time",
+        "yogurt market-time --formatted",
+    ),
+    notes=(
+        (
+            "Observed Yahoo requests send formatted=true; Yogurt defaults to "
+            "formatted=false for raw values."
+        ),
+    ),
+)
+
+ANALYST_COMMAND = CommandSpec(
+    name="analyst",
+    path="/ws/mad/v2/analyst/symbol/{symbol}",
+    summary="Analyst intelligence for a single symbol.",
+    description=(
+        "Analyst intelligence including options put/call ratio, news summary, "
+        "key takeaways, price targets, and analyst ratings for one symbol."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="symbol",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            path_param=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo symbol, such as AAPL or SHOP.TO.",
+        ),
+        ParamSpec(
+            name="debug_flag",
+            cli_name="debug-flag",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Enable Yahoo debug mode in the response.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt analyst AAPL",
+        "yogurt analyst MSFT --debug-flag",
+    ),
+    notes=(
+        (
+            "Requires a valid Yahoo crumb session. Coverage across non-equity "
+            "asset classes is unconfirmed."
+        ),
+        (
+            "Response includes options PCR (put/call ratio and notional), news "
+            "summary with TLDR and themes, timeframe insights (1w/1m/1y), price "
+            "targets, and analyst ratings."
+        ),
+    ),
+)
+
 COMMANDS: tuple[CommandSpec, ...] = (
     QUOTE_COMMAND,
     SPARK_COMMAND,
@@ -1932,6 +2044,8 @@ COMMANDS: tuple[CommandSpec, ...] = (
     PREDEFINED_SCREENER_COMMAND,
     CHART_COMMAND,
     RATINGS_TOP_COMMAND,
+    MARKET_TIME_COMMAND,
+    ANALYST_COMMAND,
 )
 COMMANDS_BY_NAME: dict[str, CommandSpec] = {
     command.name: command for command in COMMANDS

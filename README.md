@@ -135,6 +135,19 @@ Fetch an option chain using Yahoo's default expiration:
 uv run yogurt options AAPL
 ```
 
+Fetch current market session status and trading hours:
+
+```powershell
+uv run yogurt market-time
+```
+
+Fetch analyst intelligence for a symbol (put/call ratio, news summary, price
+targets, and ratings):
+
+```powershell
+uv run yogurt analyst AAPL
+```
+
 Pass through a Yahoo query path directly:
 
 ```powershell
@@ -166,6 +179,8 @@ Current commands include:
 | `screener` | Yahoo predefined screener results for one or more screener IDs. |
 | `chart` | Chart price data for a single symbol. |
 | `ratings-top` | Top analyst rating scores for a single symbol. |
+| `market-time` | Market session status and trading hours. |
+| `analyst` | Analyst intelligence: PCR, news summary, price targets, and ratings for a single symbol. |
 | `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
 
 Each endpoint has its own adaptive help:
