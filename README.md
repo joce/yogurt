@@ -103,7 +103,19 @@ Fetch Yahoo calendar events:
 
 ```powershell
 uv run yogurt calendar-events AAPL
+uv run yogurt calendar-events AAPL --modules ipoEvents
+uv run yogurt calendar-events AAPL --modules secReports
+uv run yogurt calendar-events AAPL --modules economicEvents --include-all-economic-events
 ```
+
+Confirmed `--modules` values for `calendar-events`:
+
+| Module | Returns |
+| --- | --- |
+| `earnings` | Upcoming and recent earnings dates and EPS estimates (default). |
+| `economicEvents` | Macro economic calendar events (CPI, Fed decisions, employment reports, etc.). |
+| `ipoEvents` | Upcoming and recent IPO events. |
+| `secReports` | Recent SEC filing events (10-K, 10-Q, 8-K, etc.). |
 
 Fetch a predefined Yahoo screener:
 

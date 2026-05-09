@@ -1237,13 +1237,36 @@ PRICE_INSIGHTS_COMMAND = CommandSpec(
     ),
 )
 
+CALENDAR_EVENTS_MODULES: tuple[FieldReference, ...] = (
+    FieldReference(
+        "earnings",
+        "Upcoming and recent earnings release dates and EPS estimates.",
+    ),
+    FieldReference(
+        "economicEvents",
+        (
+            "Macro economic calendar events (CPI, Fed decisions, employment "
+            "reports, etc.). Filters controlled by "
+            "--include-all-economic-events and --economic-events-region-filter."
+        ),
+    ),
+    FieldReference(
+        "ipoEvents",
+        "Upcoming and recent IPO events.",
+    ),
+    FieldReference(
+        "secReports",
+        "Recent SEC filing events (10-K, 10-Q, 8-K, etc.).",
+    ),
+)
+
 CALENDAR_EVENTS_COMMAND = CommandSpec(
     name="calendar-events",
     path="/ws/screeners/v1/finance/calendar-events",
     summary="Calendar events for a single symbol.",
     description=(
-        "Calendar event data such as earnings events for one symbol, with "
-        "optional economic-event filters when Yahoo supports them."
+        "Earnings dates, economic events, IPO events, and SEC filing events "
+        "for one symbol. The modules parameter selects which event type to return."
     ),
     use_crumb=True,
     params=(
@@ -1264,9 +1287,9 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             metavar="MODULE[,MODULE...]",
             min_items=1,
             help=(
-                "Comma-separated Yahoo calendar event modules to request. "
-                "Confirmed values: earnings, economicEvents, ipoEvents, "
-                "secReports. Yogurt does not validate module names."
+                "Comma-separated event modules to request. "
+                "See the --modules reference below. "
+                "Yogurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -1337,22 +1360,22 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
     ),
     examples=(
         "yogurt calendar-events AAPL",
+        "yogurt calendar-events AAPL --modules ipoEvents",
+        "yogurt calendar-events AAPL --modules secReports",
         (
             "yogurt calendar-events AAPL --start-date 2026-05-01 "
-            "--end-date 2026-05-04 --count-per-day 100"
+            "--end-date 2026-05-31 --modules economicEvents "
+            "--include-all-economic-events"
         ),
         (
             "yogurt calendar-events AAPL --start-date 1777593600000 "
             "--end-date 1777852800000 --modules earnings"
         ),
     ),
-    common_modules=("earnings", "economicEvents", "ipoEvents", "secReports"),
+    field_reference=CALENDAR_EVENTS_MODULES,
+    field_reference_title="Calendar events --modules reference",
     notes=(
         "startDate and endDate are sent to Yahoo as milliseconds.",
-        (
-            "The --modules parameter is open-ended; confirmed values are "
-            "earnings, economicEvents, ipoEvents, and secReports."
-        ),
         (
             "Observed Yahoo requests include economic event filters even when "
             "requesting earnings."
