@@ -212,6 +212,18 @@ def _add_command_param(parser: argparse.ArgumentParser, param: ParamSpec) -> Non
             help=param.help,
         )
         return
+    if param.kind is ParamKind.BOOLEAN:
+        const = not param.default if isinstance(param.default, bool) else True
+        parser.add_argument(
+            param.option,
+            dest=param.name,
+            required=param.required,
+            default=_default_for_param(param),
+            action="store_const",
+            const=const,
+            help=param.help,
+        )
+        return
     parser.add_argument(
         param.option,
         dest=param.name,

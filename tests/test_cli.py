@@ -12,6 +12,8 @@ from yogurt.cli import main
 if TYPE_CHECKING:
     from yogurt.types import ParamValue
 
+ARGPARSE_ERROR = 2
+
 
 class StubClient:
     """Capture CLI calls without touching Yahoo."""
@@ -42,9 +44,10 @@ class StubClient:
 
 
 def assert_formatted_default_false(help_text: str) -> None:
-    """Assert endpoint help documents the --formatted default."""
+    """Assert endpoint help documents the --formatted toggle default."""
 
-    assert "--formatted BOOL" in help_text
+    assert "--formatted" in help_text
+    assert "--formatted BOOL" not in help_text
     assert "Request Yahoo formatted values. (default: False)" in help_text
 
 
@@ -140,7 +143,7 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "1 to 10 comma-separated Yahoo symbols" in captured.out
     assert "--fields" in captured.out
     assert_formatted_default_false(captured.out)
-    assert "--enable-private-company" in captured.out
+    assert "--disable-private-company" in captured.out
     assert "--top-pick-this-month" in captured.out
     assert "Common --fields values" not in captured.out
     assert "Quote --fields reference" in captured.out
@@ -207,7 +210,7 @@ def test_quote_command_passes_params_and_prints_raw_body() -> None:
 
 
 def test_quote_command_passes_top_pick_param_when_requested() -> None:
-    """Quote command sends topPickThisMonth only when explicitly requested."""
+    """Quote command toggles booleans and sends optional booleans only on request."""
 
     client = StubClient()
     stdout = StringIO()
@@ -220,9 +223,9 @@ def test_quote_command_passes_top_pick_param_when_requested() -> None:
             "--fields",
             "companyLogoUrl,extendedMarketPrice,overnightMarketPrice",
             "--formatted",
-            "true",
+            "--disable-private-company",
+            "--no-overnight-price",
             "--top-pick-this-month",
-            "true",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -240,8 +243,8 @@ def test_quote_command_passes_top_pick_param_when_requested() -> None:
                 "symbols": "OKLO",
                 "fields": "companyLogoUrl,extendedMarketPrice,overnightMarketPrice",
                 "formatted": True,
-                "enablePrivateCompany": True,
-                "overnightPrice": True,
+                "enablePrivateCompany": False,
+                "overnightPrice": False,
                 "lang": "en-US",
                 "region": "US",
                 "topPickThisMonth": True,
@@ -249,6 +252,26 @@ def test_quote_command_passes_top_pick_param_when_requested() -> None:
             True,
         )
     ]
+
+
+def test_boolean_endpoint_flags_reject_explicit_values() -> None:
+    """Endpoint boolean options are presence-only flags."""
+
+    client = StubClient()
+    with pytest.raises(SystemExit) as exc_info:
+        main(
+            [
+                "quote",
+                "AAPL",
+                "--formatted",
+                "true",
+            ],
+            client=client,
+        )
+
+    assert exc_info.value.code == ARGPARSE_ERROR
+    assert not client.closed
+    assert not client.calls
 
 
 def test_quote_command_rejects_more_than_ten_symbols() -> None:
@@ -323,9 +346,7 @@ def test_spark_command_passes_params_and_prints_raw_body() -> None:
             "--indicators",
             "close",
             "--include-timestamps",
-            "false",
             "--include-pre-post",
-            "false",
             "--cors-domain",
             "finance.yahoo.com",
             "--tsrc",
@@ -348,8 +369,8 @@ def test_spark_command_passes_params_and_prints_raw_body() -> None:
                 "range": "1d",
                 "interval": "5m",
                 "indicators": "close",
-                "includeTimestamps": False,
-                "includePrePost": False,
+                "includeTimestamps": True,
+                "includePrePost": True,
                 "corsDomain": "finance.yahoo.com",
                 ".tsrc": "finance",
             },
@@ -414,25 +435,23 @@ def test_spark_command_rejects_empty_symbol_items() -> None:
 
 
 def test_spark_command_rejects_invalid_include_timestamps_boolean() -> None:
-    """Spark boolean params use shared boolean parsing."""
+    """Spark boolean params reject explicit values."""
 
     client = StubClient()
-    stderr = StringIO()
 
-    exit_code = main(
-        [
-            "spark",
-            "AAPL",
-            "--include-timestamps",
-            "maybe",
-        ],
-        stderr=stderr,
-        client=client,
-    )
+    with pytest.raises(SystemExit) as exc_info:
+        main(
+            [
+                "spark",
+                "AAPL",
+                "--include-timestamps",
+                "maybe",
+            ],
+            client=client,
+        )
 
-    assert exit_code == 1
-    assert "expected boolean value, got 'maybe'" in stderr.getvalue()
-    assert client.closed
+    assert exc_info.value.code == ARGPARSE_ERROR
+    assert not client.closed
     assert not client.calls
 
 
@@ -473,9 +492,7 @@ def test_options_command_passes_symbol_in_path_and_params() -> None:
             "--date",
             "2017-11-17",
             "--formatted",
-            "true",
             "--straddle",
-            "false",
             "--lang",
             "en-US",
             "--region",
@@ -496,7 +513,7 @@ def test_options_command_passes_symbol_in_path_and_params() -> None:
             {
                 "date": 1510876800,
                 "formatted": True,
-                "straddle": False,
+                "straddle": True,
                 "lang": "en-US",
                 "region": "US",
             },
@@ -553,10 +570,10 @@ def test_quote_type_help_includes_endpoint_params_and_examples(
     assert_formatted_default_false(captured.out)
     assert "--lang" in captured.out
     assert "--region" in captured.out
-    assert "--enable-private-company" in captured.out
-    assert "--overnight-price" in captured.out
+    assert "--disable-private-company" in captured.out
+    assert "--no-overnight-price" in captured.out
     assert "yogurt quote-type AAPL" in captured.out
-    assert "yogurt quote-type AAPL --enable-private-company true" in captured.out
+    assert "yogurt quote-type AAPL --disable-private-company" in captured.out
 
 
 def test_quote_type_command_uses_path_symbol_and_observed_defaults() -> None:
@@ -596,7 +613,7 @@ def test_quote_type_command_uses_path_symbol_and_observed_defaults() -> None:
 
 
 def test_quote_type_command_passes_boolean_overrides() -> None:
-    """Quote type command lets callers override observed boolean query params."""
+    """Quote type command uses presence-only boolean toggles."""
 
     client = StubClient()
     stdout = StringIO()
@@ -607,11 +624,8 @@ def test_quote_type_command_passes_boolean_overrides() -> None:
             "quote-type",
             "AAPL",
             "--formatted",
-            "true",
-            "--enable-private-company",
-            "false",
-            "--overnight-price",
-            "false",
+            "--disable-private-company",
+            "--no-overnight-price",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -696,7 +710,6 @@ def test_quote_summary_command_passes_symbol_in_path_and_params() -> None:
             "--modules",
             "summaryProfile,financialData,notYetDocumentedByYogurt",
             "--formatted",
-            "true",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -969,7 +982,6 @@ def test_price_insights_command_passes_params_and_prints_raw_body() -> None:
             "--ai-modules",
             "news_summary,price_movement",
             "--check-anomaly",
-            "false",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -987,7 +999,7 @@ def test_price_insights_command_passes_params_and_prints_raw_body() -> None:
                 "symbols": "AAPL,MSFT",
                 "modules": "ai",
                 "aiModules": "news_summary,price_movement",
-                "checkAnomaly": False,
+                "checkAnomaly": True,
                 "lang": "en-US",
                 "region": "US",
             },
@@ -1046,7 +1058,7 @@ def test_calendar_events_help_includes_params_and_probe_notes(
     assert "--start-date" in captured.out
     assert "--end-date" in captured.out
     assert "milliseconds" in captured.out
-    assert "--economic-events-high-importance-only" in captured.out
+    assert "--include-all-economic-events" in captured.out
     assert "--economic-events-region-filter" in captured.out
     assert "Defaults to an empty value when omitted" in captured.out
     assert "--lang" in captured.out
@@ -1073,8 +1085,7 @@ def test_calendar_events_command_passes_params_and_prints_raw_body() -> None:
             "2026-05-01",
             "--end-date",
             "1777939200000",
-            "--economic-events-high-importance-only",
-            "false",
+            "--include-all-economic-events",
             "--economic-events-region-filter",
             "US",
         ],
@@ -1261,7 +1272,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
     assert "current Unix timestamp" in captured.out
     assert "YYYY-MM-DD" in captured.out
     assert "--merge" in captured.out
-    assert "--pad-time-series" in captured.out
+    assert "--no-pad-time-series" in captured.out
     assert "Common --type values" not in captured.out
     assert "Timeseries --type reference" in captured.out
     assert (
@@ -1332,9 +1343,7 @@ def test_fundamentals_timeseries_command_passes_path_and_params() -> None:
             "--type",
             "quarterlyMarketCap,trailingMarketCap",
             "--merge",
-            "false",
-            "--pad-time-series",
-            "true",
+            "--no-pad-time-series",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -1352,8 +1361,8 @@ def test_fundamentals_timeseries_command_passes_path_and_params() -> None:
                 "type": "quarterlyMarketCap,trailingMarketCap",
                 "period1": 1762128000,
                 "period2": 1777831199,
-                "merge": False,
-                "padTimeSeries": True,
+                "merge": True,
+                "padTimeSeries": False,
                 "lang": "en-US",
                 "region": "US",
             },
@@ -1485,11 +1494,11 @@ def test_insights_help_includes_params_and_probe_notes(
         in captured.out
     )
     assert "SYMBOL[,SYMBOL...]" in captured.out
-    assert "--disable-related-reports" in captured.out
+    assert "--enable-related-reports" in captured.out
     assert_formatted_default_false(captured.out)
-    assert "--get-all-research-reports" in captured.out
+    assert "--skip-all-research-reports" in captured.out
     assert "--reports-count" in captured.out
-    assert "--ssl" in captured.out
+    assert "--no-ssl" in captured.out
     assert "one finance.result item per requested symbol" in captured.out
     assert "AAPL,MSFT,NVDA" in captured.out
 
@@ -1507,10 +1516,8 @@ def test_insights_command_passes_params_and_prints_raw_body() -> None:
             "AAPL,MSFT",
             "--reports-count",
             "8",
-            "--disable-related-reports",
-            "false",
+            "--enable-related-reports",
             "--formatted",
-            "true",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -1592,7 +1599,7 @@ def test_screener_help_includes_params_and_probe_notes(
     assert "--start" in captured.out
     assert "--fields" not in captured.out
     assert_formatted_default_false(captured.out)
-    assert "--use-records-response" in captured.out
+    assert "--no-records-response" in captured.out
     assert "--sort-field" in captured.out
     assert "--sort-type" in captured.out
     assert "--lang" in captured.out
@@ -1685,9 +1692,7 @@ def test_screener_command_passes_overrides_and_prints_raw_body() -> None:
             "--start",
             "25",
             "--formatted",
-            "true",
-            "--use-records-response",
-            "false",
+            "--no-records-response",
             "--sort-field",
             "regularMarketVolume",
             "--sort-type",
@@ -1781,7 +1786,7 @@ def test_ratings_top_help_includes_params_and_probe_notes(
     captured = capsys.readouterr()
     assert "https://query1.finance.yahoo.com/v2/ratings/top/{symbol}" in captured.out
     assert "SYMBOL" in captured.out
-    assert "--exclude-noncurrent" in captured.out
+    assert "--include-noncurrent" in captured.out
     assert "--lang" in captured.out
     assert "--region" in captured.out
     assert "dir, mm, pt, and fin_score" in captured.out
@@ -1799,8 +1804,7 @@ def test_ratings_top_command_passes_params_and_prints_raw_body() -> None:
         [
             "ratings-top",
             "AAPL",
-            "--exclude-noncurrent",
-            "false",
+            "--include-noncurrent",
         ],
         stdout=stdout,
         stderr=stderr,
@@ -1895,7 +1899,6 @@ def test_chart_command_passes_params_and_packs_events() -> None:
             "--interval",
             "1m",
             "--include-pre-post",
-            "false",
             "--events",
             "div,earn",
         ],
@@ -1915,7 +1918,7 @@ def test_chart_command_passes_params_and_packs_events() -> None:
                 "period1": 1777507200,
                 "period2": 1777593600,
                 "interval": "1m",
-                "includePrePost": False,
+                "includePrePost": True,
                 "events": "div|earn",
                 "lang": "en-US",
                 "region": "US",

@@ -567,30 +567,26 @@ QUOTE_COMMAND = CommandSpec(
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
         ParamSpec(
             name="enablePrivateCompany",
-            cli_name="enable-private-company",
+            cli_name="disable-private-company",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Include private company quote matches when Yahoo supports them.",
+            help="Do not include private company quote matches.",
         ),
         ParamSpec(
             name="overnightPrice",
-            cli_name="overnight-price",
+            cli_name="no-overnight-price",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request overnight price fields when available.",
+            help="Do not request overnight price fields.",
         ),
         ParamSpec(
             name="topPickThisMonth",
             cli_name="top-pick-this-month",
             kind=ParamKind.BOOLEAN,
-            metavar="BOOL",
             help="Request top-pick-this-month quote metadata when Yahoo supports it.",
         ),
         ParamSpec(
@@ -705,7 +701,6 @@ SPARK_COMMAND = CommandSpec(
             cli_name="include-timestamps",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Include timestamp arrays when Yahoo supports them.",
         ),
         ParamSpec(
@@ -713,7 +708,6 @@ SPARK_COMMAND = CommandSpec(
             cli_name="include-pre-post",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Include pre-market and post-market data when Yahoo supports it.",
         ),
         ParamSpec(
@@ -738,7 +732,7 @@ SPARK_COMMAND = CommandSpec(
         "yogurt spark SPY,QQQ --range 1d --interval 5m",
         (
             "yogurt spark ^GSPC,GC=F,EURUSD=X,BTC-USD --indicators close "
-            "--include-timestamps false --include-pre-post false"
+            "--include-timestamps --include-pre-post"
         ),
     ),
     notes=(
@@ -793,7 +787,6 @@ OPTIONS_COMMAND = CommandSpec(
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
         ParamSpec(
@@ -801,7 +794,6 @@ OPTIONS_COMMAND = CommandSpec(
             cli_name="straddle",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Request Yahoo straddle data when available.",
         ),
         ParamSpec(
@@ -824,7 +816,7 @@ OPTIONS_COMMAND = CommandSpec(
     examples=(
         "yogurt options AAPL",
         "yogurt options AAPL --date 2017-11-17",
-        "yogurt options AAPL --date 1510876800 --formatted true --straddle false",
+        "yogurt options AAPL --date 1510876800 --formatted --straddle",
     ),
 )
 
@@ -853,7 +845,6 @@ QUOTE_TYPE_COMMAND = CommandSpec(
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
         ParamSpec(
@@ -874,24 +865,22 @@ QUOTE_TYPE_COMMAND = CommandSpec(
         ),
         ParamSpec(
             name="enablePrivateCompany",
-            cli_name="enable-private-company",
+            cli_name="disable-private-company",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Include private company data when Yahoo supports it.",
+            help="Do not include private company data.",
         ),
         ParamSpec(
             name="overnightPrice",
-            cli_name="overnight-price",
+            cli_name="no-overnight-price",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request overnight price fields when available.",
+            help="Do not request overnight price fields.",
         ),
     ),
     examples=(
         "yogurt quote-type AAPL",
-        "yogurt quote-type AAPL --enable-private-company true",
+        "yogurt quote-type AAPL --disable-private-company",
     ),
 )
 
@@ -1022,32 +1011,28 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
         ParamSpec(
             name="enablePrivateCompany",
-            cli_name="enable-private-company",
+            cli_name="disable-private-company",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Include private company data when Yahoo supports it.",
+            help="Do not include private company data.",
         ),
         ParamSpec(
             name="enableQSPExpandedEarnings",
-            cli_name="enable-qsp-expanded-earnings",
+            cli_name="disable-qsp-expanded-earnings",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request Yahoo expanded quote summary earnings fields.",
+            help="Do not request Yahoo expanded quote summary earnings fields.",
         ),
         ParamSpec(
             name="overnightPrice",
-            cli_name="overnight-price",
+            cli_name="no-overnight-price",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request overnight price fields when available.",
+            help="Do not request overnight price fields.",
         ),
         ParamSpec(
             name="lang",
@@ -1191,7 +1176,6 @@ PRICE_INSIGHTS_COMMAND = CommandSpec(
             name="checkAnomaly",
             cli_name="check-anomaly",
             kind=ParamKind.BOOLEAN,
-            metavar="BOOL",
             help=(
                 "Ask Yahoo to check only for a price anomaly. Observed true value "
                 "returns a tiny hasPriceAnomaly-only response."
@@ -1301,11 +1285,10 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
         ),
         ParamSpec(
             name="economicEventsHighImportanceOnly",
-            cli_name="economic-events-high-importance-only",
+            cli_name="include-all-economic-events",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request only high-importance economic events when Yahoo supports it.",
+            help="Include lower-importance economic events when Yahoo supports them.",
         ),
         ParamSpec(
             name="economicEventsRegionFilter",
@@ -1418,16 +1401,14 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
             name="merge",
             cli_name="merge",
             kind=ParamKind.BOOLEAN,
-            metavar="BOOL",
             help="Ask Yahoo to merge timeseries results when supported.",
         ),
         ParamSpec(
             name="padTimeSeries",
-            cli_name="pad-time-series",
+            cli_name="no-pad-time-series",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Ask Yahoo to pad missing timeseries values when supported.",
+            help="Ask Yahoo not to pad missing timeseries values.",
         ),
         ParamSpec(
             name="lang",
@@ -1455,7 +1436,7 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
         (
             "yogurt timeseries AAPL --period1 1762192800 "
             "--period2 1777831199 --type quarterlyPeRatio,trailingPeRatio "
-            "--merge false --pad-time-series true"
+            "--merge --no-pad-time-series"
         ),
     ),
     field_reference=TIMESERIES_TYPE_REFERENCES,
@@ -1497,27 +1478,24 @@ INSIGHTS_COMMAND = CommandSpec(
         ),
         ParamSpec(
             name="disableRelatedReports",
-            cli_name="disable-related-reports",
+            cli_name="enable-related-reports",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Ask Yahoo not to include related research reports.",
+            help="Allow Yahoo to include related research reports.",
         ),
         ParamSpec(
             name="formatted",
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
         ParamSpec(
             name="getAllResearchReports",
-            cli_name="get-all-research-reports",
+            cli_name="skip-all-research-reports",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request all available research reports when Yahoo supports them.",
+            help="Do not request all available research reports.",
         ),
         ParamSpec(
             name="reportsCount",
@@ -1529,11 +1507,10 @@ INSIGHTS_COMMAND = CommandSpec(
         ),
         ParamSpec(
             name="ssl",
-            cli_name="ssl",
+            cli_name="no-ssl",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request SSL URLs in Yahoo response fields when available.",
+            help="Do not request SSL URLs in Yahoo response fields.",
         ),
         ParamSpec(
             name="lang",
@@ -1672,16 +1649,14 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
             cli_name="formatted",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Request Yahoo formatted values.",
         ),
         ParamSpec(
             name="useRecordsResponse",
-            cli_name="use-records-response",
+            cli_name="no-records-response",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
-            help="Request Yahoo's records-style screener response shape.",
+            help="Do not request Yahoo's records-style screener response shape.",
         ),
         ParamSpec(
             name="sortField",
@@ -1727,7 +1702,7 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
     examples=(
         "yogurt screener MOST_ACTIVES",
         "yogurt screener MOST_ACTIVES --count 25 --start 25",
-        "yogurt screener MOST_ACTIVES --use-records-response false",
+        "yogurt screener MOST_ACTIVES --no-records-response",
     ),
     reference_sections=(
         ReferenceSection(
@@ -1809,7 +1784,6 @@ CHART_COMMAND = CommandSpec(
             cli_name="include-pre-post",
             kind=ParamKind.BOOLEAN,
             default=False,
-            metavar="BOOL",
             help="Include pre-market and post-market data when Yahoo supports it.",
         ),
         ParamSpec(
@@ -1884,13 +1858,12 @@ RATINGS_TOP_COMMAND = CommandSpec(
         ),
         ParamSpec(
             name="exclude_noncurrent",
-            cli_name="exclude-noncurrent",
+            cli_name="include-noncurrent",
             kind=ParamKind.BOOLEAN,
             default=True,
-            metavar="BOOL",
             help=(
-                "Exclude non-current analyst records from Yahoo's top scored "
-                "rating buckets."
+                "Include non-current analyst records in Yahoo's top scored rating "
+                "buckets."
             ),
         ),
         ParamSpec(
@@ -1912,7 +1885,7 @@ RATINGS_TOP_COMMAND = CommandSpec(
     ),
     examples=(
         "yogurt ratings-top AAPL",
-        "yogurt ratings-top AAPL --exclude-noncurrent false",
+        "yogurt ratings-top AAPL --include-noncurrent",
     ),
     notes=(
         (

@@ -192,7 +192,7 @@ window: `period1` defaults to three days before execution time, `period2`
 defaults to execution time, `--interval` defaults to `1m`, and `--events`
 defaults to `div,split,earn`. User-provided events are comma-separated; Yogurt
 packs them for Yahoo internally. Extended-hours data is opt-in with
-`--include-pre-post true`.
+`--include-pre-post`.
 
 ### Timeseries
 
