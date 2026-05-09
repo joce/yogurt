@@ -2286,6 +2286,54 @@ SCREENER_DISCOVER_COMMAND = CommandSpec(
     ),
 )
 
+MARKET_SUMMARY_COMMAND = CommandSpec(
+    name="market-summary",
+    path="/v6/finance/quote/marketSummary",
+    summary="Global market summary across indices, futures, forex, and crypto.",
+    description=(
+        "Global market summary including major indices, futures, forex pairs, "
+        "and cryptocurrencies. The symbol set returned varies by region."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help=(
+                "Yahoo response region. Controls which markets are returned "
+                "(e.g. US returns S&P 500, Dow, Nasdaq; CA returns TSX, CAD pairs)."
+            ),
+        ),
+    ),
+    examples=(
+        "yogurt market-summary",
+        "yogurt market-summary --region CA",
+        "yogurt market-summary --region GB --lang en-GB",
+    ),
+    notes=(
+        "The region parameter changes which indices, pairs, and assets Yahoo returns.",
+        "No symbol or authentication is required.",
+    ),
+)
+
 COMMANDS: tuple[CommandSpec, ...] = (
     QUOTE_COMMAND,
     SPARK_COMMAND,
@@ -2306,6 +2354,7 @@ COMMANDS: tuple[CommandSpec, ...] = (
     TIMESERIES_FIELDS_COMMAND,
     MARKET_INFO_COMMAND,
     SCREENER_DISCOVER_COMMAND,
+    MARKET_SUMMARY_COMMAND,
 )
 COMMANDS_BY_NAME: dict[str, CommandSpec] = {
     command.name: command for command in COMMANDS

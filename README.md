@@ -185,6 +185,7 @@ Current commands include:
 | `timeseries-fields` | Available fundamentals timeseries field names for a given type. |
 | `market-info` | Commodity and currency market data for sidebar widgets. |
 | `screener-discover` | Investment idea discovery results from Yahoo screener modules. |
+| `market-summary` | Global market summary across indices, futures, forex, and crypto. |
 | `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
 
 Each endpoint has its own adaptive help:
