@@ -181,6 +181,10 @@ Current commands include:
 | `ratings-top` | Top analyst rating scores for a single symbol. |
 | `market-time` | Market session status and trading hours. |
 | `analyst` | Analyst intelligence: PCR, news summary, price targets, and ratings for a single symbol. |
+| `trending` | Trending ticker symbols and price data for a region. |
+| `timeseries-fields` | Available fundamentals timeseries field names for a given type. |
+| `market-info` | Commodity and currency market data for sidebar widgets. |
+| `screener-discover` | Investment idea discovery results from Yahoo screener modules. |
 | `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
 
 Each endpoint has its own adaptive help:

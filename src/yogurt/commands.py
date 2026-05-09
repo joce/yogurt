@@ -2030,6 +2030,262 @@ ANALYST_COMMAND = CommandSpec(
     ),
 )
 
+TRENDING_COMMAND = CommandSpec(
+    name="trending",
+    path="/v1/finance/trending/{region}",
+    summary="Trending tickers for a region.",
+    description=(
+        "Trending ticker symbols and price data for a given region, as shown "
+        "in the chart-page sidebar and trending widgets."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            path_param=True,
+            default="US",
+            metavar="REGION",
+            help="Region for trending tickers. Substituted into the URL path.",
+        ),
+        ParamSpec(
+            name="count",
+            cli_name="count",
+            kind=ParamKind.INTEGER,
+            default=5,
+            metavar="COUNT",
+            help="Number of trending tickers to request.",
+        ),
+        ParamSpec(
+            name="useQuotes",
+            cli_name="no-use-quotes",
+            kind=ParamKind.BOOLEAN,
+            default=True,
+            help="Do not request inline quote data with trending results.",
+        ),
+        ParamSpec(
+            name="fields",
+            cli_name="fields",
+            kind=ParamKind.CSV,
+            metavar="FIELD[,FIELD...]",
+            min_items=1,
+            help=(
+                "Comma-separated quote fields to include in the response. "
+                "Yogurt does not validate field names."
+            ),
+        ),
+        ParamSpec(
+            name="quoteType",
+            cli_name="quote-type",
+            kind=ParamKind.STRING,
+            metavar="TYPE",
+            help=(
+                "Filter trending results by quote type (e.g. EQUITY). "
+                "Omitted when not specified."
+            ),
+        ),
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+    ),
+    examples=(
+        "yogurt trending",
+        "yogurt trending --count 10 --quote-type EQUITY",
+        (
+            "yogurt trending --fields "
+            "symbol,shortName,regularMarketPrice,regularMarketChangePercent"
+        ),
+    ),
+    notes=(
+        "The region is substituted into the URL path, not sent as a query parameter.",
+        (
+            "Observed Yahoo chart pages fire two variants: one with logoUrl and "
+            "price fields for the sidebar strip, and one with quoteType=EQUITY "
+            "for the trending tickers widget."
+        ),
+    ),
+)
+
+TIMESERIES_FIELDS_COMMAND = CommandSpec(
+    name="timeseries-fields",
+    path="/ws/fundamentals-timeseries/v1/finance/timeseriesfields",
+    summary="Available fundamentals timeseries field names.",
+    description=(
+        "Returns metadata listing available fundamentals timeseries field names "
+        "for a given type. Observed on chart pages to discover significant-development "
+        "event fields."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="type",
+            cli_name="type",
+            kind=ParamKind.STRING,
+            default="sigDev",
+            metavar="TYPE",
+            help="Timeseries field type to query. Observed value: sigDev.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt timeseries-fields",
+        "yogurt timeseries-fields --type sigDev",
+    ),
+    notes=(
+        (
+            "This endpoint returns field metadata, not timeseries data. "
+            "Use the timeseries command to fetch actual fundamentals data."
+        ),
+        "Observed Yahoo chart pages request type=sigDev on every page load.",
+    ),
+)
+
+MARKET_INFO_COMMAND = CommandSpec(
+    name="market-info",
+    path="/ws/market-info/v1/finance/markets/ids",
+    summary="Commodity and currency market data.",
+    description=(
+        "Market-level commodity and currency data used by Yahoo Finance "
+        "sidebar widgets. Symbol-independent."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="modules",
+            cli_name="modules",
+            kind=ParamKind.CSV,
+            default="commodities,currencies",
+            metavar="MODULE[,MODULE...]",
+            min_items=1,
+            help=(
+                "Comma-separated market data modules to request. "
+                "Observed values: commodities, currencies. "
+                "Yogurt does not validate module names."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt market-info",
+        "yogurt market-info --modules commodities",
+        "yogurt market-info --modules commodities,currencies",
+    ),
+    notes=(
+        "Observed Yahoo chart pages always request modules=commodities,currencies.",
+    ),
+)
+
+SCREENER_DISCOVER_COMMAND = CommandSpec(
+    name="screener-discover",
+    path="/ws/screeners/v1/finance/screener/discover",
+    summary="Discover investment ideas from Yahoo screeners.",
+    description=(
+        "Investment idea discovery results from Yahoo screener modules. "
+        "Distinct from the predefined screener endpoint."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="modules",
+            cli_name="modules",
+            kind=ParamKind.CSV,
+            default="neo_investment_ideas",
+            metavar="MODULE[,MODULE...]",
+            min_items=1,
+            help=(
+                "Comma-separated screener discover modules to request. "
+                "Observed value: neo_investment_ideas. "
+                "Yogurt does not validate module names."
+            ),
+        ),
+        ParamSpec(
+            name="count",
+            cli_name="count",
+            kind=ParamKind.INTEGER,
+            default=5,
+            metavar="COUNT",
+            help="Number of results to request per module.",
+        ),
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt screener-discover",
+        "yogurt screener-discover --count 10",
+        "yogurt screener-discover --modules neo_investment_ideas --count 5",
+    ),
+    notes=(
+        (
+            "Observed Yahoo chart pages request modules=neo_investment_ideas "
+            "with count=5 and formatted=true."
+        ),
+    ),
+)
+
 COMMANDS: tuple[CommandSpec, ...] = (
     QUOTE_COMMAND,
     SPARK_COMMAND,
@@ -2046,6 +2302,10 @@ COMMANDS: tuple[CommandSpec, ...] = (
     RATINGS_TOP_COMMAND,
     MARKET_TIME_COMMAND,
     ANALYST_COMMAND,
+    TRENDING_COMMAND,
+    TIMESERIES_FIELDS_COMMAND,
+    MARKET_INFO_COMMAND,
+    SCREENER_DISCOVER_COMMAND,
 )
 COMMANDS_BY_NAME: dict[str, CommandSpec] = {
     command.name: command for command in COMMANDS
