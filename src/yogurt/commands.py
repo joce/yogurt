@@ -1582,23 +1582,38 @@ INSIGHTS_COMMAND = CommandSpec(
     ),
 )
 
-PREDEFINED_SCREENER_ID_REFERENCES = (
+_SCREENER_EQUITIES_MOVERS = (
     FieldReference("MOST_ACTIVES", "Stocks with the highest daily trading volume."),
     FieldReference("MOST_ACTIVE_PENNY_STOCKS", "Penny stocks with high daily volume."),
+    FieldReference("UNUSUAL_VOLUME_STOCKS", "Stocks with unusual trading volume."),
     FieldReference("DAY_GAINERS", "Stocks with the greatest daily gains."),
     FieldReference("DAY_LOSERS", "Stocks with the greatest daily losses."),
     FieldReference("MOST_SHORTED_STOCKS", "Stocks with high short interest."),
+)
+
+_SCREENER_EQUITIES_SIZE_PRICE = (
+    FieldReference("SMALL_CAP_STOCKS", "Small-cap stocks."),
+    FieldReference("LARGE_CAP_STOCKS", "Large-cap stocks."),
+    FieldReference("MOST_EXPENSIVE_STOCKS", "Stocks trading at the highest prices."),
+    FieldReference("HIGHEST_BETA_STOCKS", "Stocks with the highest beta."),
+    FieldReference("PINK_SHEET_STOCKS", "OTC pink sheet stocks."),
+    FieldReference("SMALL_CAP_GAINERS", "Small-cap stocks with recent gains."),
+)
+
+_SCREENER_EQUITIES_TECHNICAL = (
     FieldReference(
         "RECENT_52_WEEK_HIGHS", "Stocks recently trading near 52-week highs."
     ),
     FieldReference("RECENT_52_WEEK_LOWS", "Stocks recently trading near 52-week lows."),
-    FieldReference("SMALL_CAP_GAINERS", "Small-cap stocks with recent gains."),
     FieldReference(
         "BULLISH_STOCKS_RIGHT_NOW", "Stocks matching Yahoo bullish screens."
     ),
     FieldReference(
         "BEARISH_STOCKS_RIGHT_NOW", "Stocks matching Yahoo bearish screens."
     ),
+)
+
+_SCREENER_EQUITIES_ANALYST_VALUE = (
     FieldReference(
         "ANALYST_STRONG_BUY_STOCKS", "Stocks with strong-buy analyst signals."
     ),
@@ -1620,6 +1635,12 @@ PREDEFINED_SCREENER_ID_REFERENCES = (
         "AGGRESSIVE_SMALL_CAPS", "Small-cap stocks with aggressive growth traits."
     ),
     FieldReference(
+        "HIGHEST_DIVIDEND_STOCKS", "Stocks with the highest dividend yield."
+    ),
+)
+
+_SCREENER_EQUITIES_INSTITUTIONAL = (
+    FieldReference(
         "MOST_INSTITUTIONALLY_BOUGHT_LARGE_CAP_STOCKS",
         "Large-cap stocks with institutional buying.",
     ),
@@ -1630,6 +1651,9 @@ PREDEFINED_SCREENER_ID_REFERENCES = (
     FieldReference(
         "TOP_STOCKS_OWNED_BY_CATHIE_WOOD", "Stocks associated with Cathie Wood funds."
     ),
+)
+
+_SCREENER_FUNDS_ETFS = (
     FieldReference(
         "TOP_MUTUAL_FUNDS", "Top mutual funds in Yahoo's predefined screen."
     ),
@@ -1646,6 +1670,68 @@ PREDEFINED_SCREENER_ID_REFERENCES = (
     FieldReference("LARGE_BLEND_ETFS", "Large-blend exchange-traded funds."),
     FieldReference("TECHNOLOGY_ETFS", "Technology exchange-traded funds."),
     FieldReference("PORTFOLIO_ANCHORS", "Funds Yahoo identifies as portfolio anchors."),
+)
+
+_SCREENER_CRYPTO = (
+    FieldReference(
+        "MOST_ACTIVES_CRYPTOCURRENCIES",
+        "Cryptocurrencies with the highest daily trading volume.",
+    ),
+    FieldReference(
+        "DAY_GAINERS_CRYPTOCURRENCIES",
+        "Cryptocurrencies with the greatest daily gains.",
+    ),
+    FieldReference(
+        "DAY_LOSERS_CRYPTOCURRENCIES",
+        "Cryptocurrencies with the greatest daily losses.",
+    ),
+)
+
+_SCREENER_PRIVATE = (
+    FieldReference(
+        "52_WEEK_GAINERS_PRIVATE_COMPANY",
+        "Private companies with gains over the past 52 weeks.",
+    ),
+    FieldReference(
+        "RECENTLY_FUNDED_PRIVATE_COMPANY", "Recently funded private companies."
+    ),
+)
+
+_SCREENER_OPTIONS = (
+    FieldReference("DAY_GAINERS_OPTIONS", "Options with the greatest daily gains."),
+    FieldReference("DAY_LOSERS_OPTIONS", "Options with the greatest daily losses."),
+    FieldReference("TOP_OPTIONS_OPEN_INTEREST", "Options ranked by open interest."),
+    FieldReference(
+        "TOP_OPTIONS_IMPLIED_VOLATALITY",
+        "Options ranked by implied volatility. (Yahoo ID has a typo.)",
+    ),
+)
+
+PREDEFINED_SCREENER_SECTIONS: tuple[ReferenceSection, ...] = (
+    ReferenceSection(
+        title="Equities — movers and volume",
+        values=_SCREENER_EQUITIES_MOVERS,
+    ),
+    ReferenceSection(
+        title="Equities — size and price",
+        values=_SCREENER_EQUITIES_SIZE_PRICE,
+    ),
+    ReferenceSection(
+        title="Equities — technical signals",
+        values=_SCREENER_EQUITIES_TECHNICAL,
+    ),
+    ReferenceSection(
+        title="Equities — analyst and value",
+        values=_SCREENER_EQUITIES_ANALYST_VALUE,
+    ),
+    ReferenceSection(
+        title="Equities — institutional",
+        values=_SCREENER_EQUITIES_INSTITUTIONAL,
+    ),
+    ReferenceSection(title="Funds and ETFs", values=_SCREENER_FUNDS_ETFS),
+    ReferenceSection(title="Crypto", values=_SCREENER_CRYPTO),
+    ReferenceSection(title="Private companies", values=_SCREENER_PRIVATE),
+    ReferenceSection(title="Options", values=_SCREENER_OPTIONS),
 )
 
 PREDEFINED_SCREENER_COMMAND = CommandSpec(
@@ -1746,12 +1832,7 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
         "yogurt screener MOST_ACTIVES --count 25 --start 25",
         "yogurt screener MOST_ACTIVES --no-records-response",
     ),
-    reference_sections=(
-        ReferenceSection(
-            title="Predefined screener ID reference",
-            values=PREDEFINED_SCREENER_ID_REFERENCES,
-        ),
-    ),
+    reference_sections=PREDEFINED_SCREENER_SECTIONS,
     notes=(
         "Screener IDs are Yahoo-defined and open-ended; Yogurt does not validate them.",
         (

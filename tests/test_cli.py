@@ -1608,7 +1608,7 @@ def test_screener_help_includes_params_and_probe_notes(
     assert "--lang" in captured.out
     assert "--region" in captured.out
     assert "MOST_ACTIVES" in captured.out
-    assert "Predefined screener ID reference" in captured.out
+    assert "Equities — movers and volume" in captured.out
     assert (
         "  DAY_GAINERS:                  Stocks with the greatest daily gains."
         in captured.out

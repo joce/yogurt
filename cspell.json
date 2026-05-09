@@ -65,6 +65,7 @@
     "intraday",
     "markettime",
     "timeseriesfields",
+    "VOLATALITY",
     "OHLCV",
     "pnote",
     "pval",
