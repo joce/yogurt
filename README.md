@@ -93,7 +93,7 @@ uv run yogurt spark AAPL,MSFT
 Fetch recommended symbols for a quote page:
 
 ```powershell
-uv run yogurt recommendations-by-symbol AAPL
+uv run yogurt recommendations AAPL
 ```
 
 Fetch Yahoo calendar events:
@@ -155,7 +155,7 @@ Current commands include:
 | `options` | Option chain data for a single symbol. |
 | `quote-type` | Quote type data for a single symbol. |
 | `quote-summary` | Quote summary modules for a single symbol. |
-| `recommendations-by-symbol` | Recommended symbols related to a single symbol. |
+| `recommendations` | Recommended symbols related to a single symbol. |
 | `price-insights` | Generated price insight data for one or more symbols. |
 | `calendar-events` | Calendar events such as earnings, economic events, dividends, splits, and IPOs. |
 | `timeseries` | Fundamentals timeseries data for a single symbol. |

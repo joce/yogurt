@@ -1065,7 +1065,7 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
 )
 
 RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
-    name="recommendations-by-symbol",
+    name="recommendations",
     path="/v6/finance/recommendationsbysymbol/{symbol}",
     summary="Recommended related symbols for a single symbol.",
     description=(
@@ -1112,9 +1112,9 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt recommendations-by-symbol ^GSPC",
-        "yogurt recommendations-by-symbol ^DJI",
-        "yogurt recommendations-by-symbol ^IXIC --fields symbol,recommendedSymbols",
+        "yogurt recommendations ^GSPC",
+        "yogurt recommendations ^DJI",
+        "yogurt recommendations ^IXIC --fields symbol,recommendedSymbols",
     ),
     notes=(
         "Observed index quote pages request this endpoint for ^GSPC, ^DJI, and ^IXIC.",

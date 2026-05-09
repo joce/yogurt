@@ -67,7 +67,8 @@ def test_top_level_help_lists_quote_endpoint(
     assert "options" in captured.out
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
-    assert "recommendations-by-symbol" in captured.out
+    assert "recommendations" in captured.out
+    assert "recommendations-by-symbol" not in captured.out
     assert "price-insights" in captured.out
     assert "calendar-events" in captured.out
     assert "timeseries" in captured.out
@@ -830,7 +831,7 @@ def test_recommendations_by_symbol_help_includes_params_and_probe_notes(
     """Recommendations-by-symbol help documents symbol, fields, and probes."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["recommendations-by-symbol", "--help"])
+        main(["recommendations", "--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
@@ -859,7 +860,7 @@ def test_recommendations_by_symbol_command_passes_params_and_prints_raw_body() -
 
     exit_code = main(
         [
-            "recommendations-by-symbol",
+            "recommendations",
             "^GSPC",
             "--fields",
             "symbol,recommendedSymbols",
@@ -898,7 +899,7 @@ def test_recommendations_by_symbol_command_uses_observed_defaults() -> None:
 
     exit_code = main(
         [
-            "recommendations-by-symbol",
+            "recommendations",
             "^DJI",
         ],
         stdout=stdout,
@@ -926,7 +927,7 @@ def test_recommendations_by_symbol_rejects_empty_fields() -> None:
 
     exit_code = main(
         [
-            "recommendations-by-symbol",
+            "recommendations",
             "^GSPC",
             "--fields",
             "",
@@ -1296,7 +1297,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
         ["options", "AAPL"],
         ["quote-type", "AAPL"],
         ["quote-summary", "AAPL"],
-        ["recommendations-by-symbol", "^IXIC"],
+        ["recommendations", "^IXIC"],
         ["price-insights", "AAPL"],
         ["calendar-events", "AAPL"],
         ["timeseries", "AAPL"],
