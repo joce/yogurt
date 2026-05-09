@@ -1265,8 +1265,8 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             min_items=1,
             help=(
                 "Comma-separated Yahoo calendar event modules to request. "
-                "Observed values: earnings, economicEvents. "
-                "Yogurt does not validate module names."
+                "Confirmed values: earnings, economicEvents, ipoEvents, "
+                "secReports. Yogurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -1346,12 +1346,12 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             "--end-date 1777852800000 --modules earnings"
         ),
     ),
-    common_modules=("earnings", "economicEvents"),
+    common_modules=("earnings", "economicEvents", "ipoEvents", "secReports"),
     notes=(
         "startDate and endDate are sent to Yahoo as milliseconds.",
         (
-            "The --modules parameter is open-ended; observed values are earnings "
-            "and economicEvents."
+            "The --modules parameter is open-ended; confirmed values are "
+            "earnings, economicEvents, ipoEvents, and secReports."
         ),
         (
             "Observed Yahoo requests include economic event filters even when "
