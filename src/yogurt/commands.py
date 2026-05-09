@@ -1630,12 +1630,11 @@ PREDEFINED_SCREENER_ID_REFERENCES = (
 )
 
 PREDEFINED_SCREENER_COMMAND = CommandSpec(
-    name="predefined-screener",
+    name="screener",
     path="/v1/finance/screener/predefined/saved",
     summary="Predefined Yahoo screener results.",
     description=(
-        "Records from Yahoo's predefined saved screeners, such as most-active "
-        "symbols, with caller-selected quote fields."
+        "Records from Yahoo's predefined saved screeners, such as most-active symbols."
     ),
     use_crumb=True,
     params=(
@@ -1667,17 +1666,6 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
             default=0,
             metavar="OFFSET",
             help="Zero-based record offset for paging through screener results.",
-        ),
-        ParamSpec(
-            name="fields",
-            cli_name="fields",
-            kind=ParamKind.CSV,
-            default="symbol,shortName",
-            metavar="FIELD[,FIELD...]",
-            help=(
-                "Comma-separated Yahoo quote fields to include in screener "
-                "records. Yogurt does not validate field names."
-            ),
         ),
         ParamSpec(
             name="formatted",
@@ -1737,15 +1725,10 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt predefined-screener MOST_ACTIVES",
-        "yogurt predefined-screener MOST_ACTIVES --count 25 --start 25",
-        (
-            "yogurt predefined-screener MOST_ACTIVES "
-            "--fields symbol,shortName,regularMarketPrice,regularMarketVolume"
-        ),
+        "yogurt screener MOST_ACTIVES",
+        "yogurt screener MOST_ACTIVES --count 25 --start 25",
+        "yogurt screener MOST_ACTIVES --use-records-response false",
     ),
-    field_reference=QUOTE_FIELDS,
-    field_reference_title="Predefined screener --fields reference",
     reference_sections=(
         ReferenceSection(
             title="Predefined screener ID reference",
@@ -1756,8 +1739,11 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
         "Screener IDs are Yahoo-defined and open-ended; Yogurt does not validate them.",
         (
             "Observed Yahoo quote pages request MOST_ACTIVES with count=200, "
-            "start=0, fields=symbol,shortName, and useRecordsResponse=true; "
-            "Yogurt defaults formatted=false."
+            "start=0, and useRecordsResponse=true; Yogurt defaults formatted=false."
+        ),
+        (
+            "Yahoo's records-style response returns a fixed record field set; "
+            "use raw for ad hoc fields= experiments with useRecordsResponse=false."
         ),
         (
             "Observed browser requests include empty sortField and sortType; "

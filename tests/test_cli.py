@@ -69,7 +69,8 @@ def test_top_level_help_lists_quote_endpoint(
     assert "calendar-events" in captured.out
     assert "timeseries" in captured.out
     assert "insights" in captured.out
-    assert "predefined-screener" in captured.out
+    assert "screener" in captured.out
+    assert "predefined-screener" not in captured.out
     assert "ratings-top" in captured.out
     assert "chart" in captured.out
     assert "raw" in captured.out
@@ -1289,7 +1290,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
         ["calendar-events", "AAPL"],
         ["timeseries", "AAPL"],
         ["insights", "AAPL"],
-        ["predefined-screener", "MOST_ACTIVES"],
+        ["screener", "MOST_ACTIVES"],
         ["chart", "AAPL"],
         ["ratings-top", "AAPL"],
     ],
@@ -1572,13 +1573,13 @@ def test_insights_command_uses_observed_defaults() -> None:
     ]
 
 
-def test_predefined_screener_help_includes_params_and_probe_notes(
+def test_screener_help_includes_params_and_probe_notes(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Predefined screener help documents screener IDs, paging, fields, and notes."""
+    """Screener help documents screener IDs, paging, and notes."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["predefined-screener", "--help"])
+        main(["screener", "--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
@@ -1589,7 +1590,7 @@ def test_predefined_screener_help_includes_params_and_probe_notes(
     assert "SCR_ID[,SCR_ID...]" in captured.out
     assert "--count" in captured.out
     assert "--start" in captured.out
-    assert "--fields" in captured.out
+    assert "--fields" not in captured.out
     assert_formatted_default_false(captured.out)
     assert "--use-records-response" in captured.out
     assert "--sort-field" in captured.out
@@ -1619,17 +1620,17 @@ def test_predefined_screener_help_includes_params_and_probe_notes(
     )
     assert "Known observed screener IDs include the groups below" not in captured.out
     assert "Screener IDs are Yahoo-defined and open-ended" in captured.out
-    assert "Predefined screener --fields reference" in captured.out
-    assert "regularMarketPrice" in captured.out
-    assert "customPriceAlertConfidence" in captured.out
+    assert "Predefined screener --fields reference" not in captured.out
+    assert "customPriceAlertConfidence" not in captured.out
     assert "count=200" in captured.out
     assert "useRecordsResponse=true" in captured.out
+    assert "records-style response returns a fixed record field set" in captured.out
     assert "Output:" not in captured.out
     assert "response-model mapping" not in captured.out
 
 
-def test_predefined_screener_command_uses_observed_defaults() -> None:
-    """Predefined screener command sends Yahoo's observed default query params."""
+def test_screener_command_uses_observed_defaults() -> None:
+    """Screener command sends Yahoo's observed default query params."""
 
     client = StubClient()
     stdout = StringIO()
@@ -1637,7 +1638,7 @@ def test_predefined_screener_command_uses_observed_defaults() -> None:
 
     exit_code = main(
         [
-            "predefined-screener",
+            "screener",
             "MOST_ACTIVES",
         ],
         stdout=stdout,
@@ -1656,7 +1657,6 @@ def test_predefined_screener_command_uses_observed_defaults() -> None:
                 "scrIds": "MOST_ACTIVES",
                 "count": 200,
                 "start": 0,
-                "fields": "symbol,shortName",
                 "formatted": False,
                 "useRecordsResponse": True,
                 "sortField": "",
@@ -1669,8 +1669,8 @@ def test_predefined_screener_command_uses_observed_defaults() -> None:
     ]
 
 
-def test_predefined_screener_command_passes_overrides_and_prints_raw_body() -> None:
-    """Predefined screener command coerces CLI overrides into Yahoo query params."""
+def test_screener_command_passes_overrides_and_prints_raw_body() -> None:
+    """Screener command coerces CLI overrides into Yahoo query params."""
 
     client = StubClient()
     stdout = StringIO()
@@ -1678,14 +1678,12 @@ def test_predefined_screener_command_passes_overrides_and_prints_raw_body() -> N
 
     exit_code = main(
         [
-            "predefined-screener",
+            "screener",
             "MOST_ACTIVES,DAY_GAINERS",
             "--count",
             "25",
             "--start",
             "25",
-            "--fields",
-            "symbol, shortName, regularMarketPrice",
             "--formatted",
             "true",
             "--use-records-response",
@@ -1715,7 +1713,6 @@ def test_predefined_screener_command_passes_overrides_and_prints_raw_body() -> N
                 "scrIds": "MOST_ACTIVES,DAY_GAINERS",
                 "count": 25,
                 "start": 25,
-                "fields": "symbol,shortName,regularMarketPrice",
                 "formatted": True,
                 "useRecordsResponse": False,
                 "sortField": "regularMarketVolume",
@@ -1728,15 +1725,15 @@ def test_predefined_screener_command_passes_overrides_and_prints_raw_body() -> N
     ]
 
 
-def test_predefined_screener_command_rejects_empty_scr_ids() -> None:
-    """Predefined screener requires at least one non-empty screener ID."""
+def test_screener_command_rejects_empty_scr_ids() -> None:
+    """Screener requires at least one non-empty screener ID."""
 
     client = StubClient()
     stderr = StringIO()
 
     exit_code = main(
         [
-            "predefined-screener",
+            "screener",
             " ",
         ],
         stderr=stderr,
@@ -1749,15 +1746,15 @@ def test_predefined_screener_command_rejects_empty_scr_ids() -> None:
     assert not client.calls
 
 
-def test_predefined_screener_command_rejects_non_integer_count() -> None:
-    """Predefined screener count uses integer coercion."""
+def test_screener_command_rejects_non_integer_count() -> None:
+    """Screener count uses integer coercion."""
 
     client = StubClient()
     stderr = StringIO()
 
     exit_code = main(
         [
-            "predefined-screener",
+            "screener",
             "MOST_ACTIVES",
             "--count",
             "many",

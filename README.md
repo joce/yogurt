@@ -105,7 +105,7 @@ uv run yogurt calendar-events AAPL
 Fetch a predefined Yahoo screener:
 
 ```powershell
-uv run yogurt predefined-screener MOST_ACTIVES
+uv run yogurt screener MOST_ACTIVES
 ```
 
 Known observed predefined screener IDs include:
@@ -160,7 +160,7 @@ Current commands include:
 | `calendar-events` | Calendar events such as earnings, economic events, dividends, splits, and IPOs. |
 | `timeseries` | Fundamentals timeseries data for a single symbol. |
 | `insights` | Insight data for one or more symbols. |
-| `predefined-screener` | Yahoo predefined screener results for one or more screener IDs. |
+| `screener` | Yahoo predefined screener results for one or more screener IDs. |
 | `chart` | Chart price data for a single symbol. |
 | `ratings-top` | Top analyst rating scores for a single symbol. |
 | `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
