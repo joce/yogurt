@@ -2357,6 +2357,87 @@ MARKET_SUMMARY_COMMAND = CommandSpec(
     ),
 )
 
+_SECTOR_SLUGS: tuple[FieldReference, ...] = (
+    FieldReference("technology", "Technology sector."),
+    FieldReference("financial-services", "Financial services sector."),
+    FieldReference("consumer-cyclical", "Consumer cyclical sector."),
+    FieldReference("communication-services", "Communication services sector."),
+    FieldReference("healthcare", "Healthcare sector."),
+    FieldReference("industrials", "Industrials sector."),
+    FieldReference("consumer-defensive", "Consumer defensive sector."),
+    FieldReference("energy", "Energy sector."),
+    FieldReference("basic-materials", "Basic materials sector."),
+    FieldReference("real-estate", "Real estate sector."),
+    FieldReference("utilities", "Utilities sector."),
+)
+
+SECTOR_COMMAND = CommandSpec(
+    name="sector",
+    path="/v1/finance/sectors/{sector}",
+    summary="Sector overview, performance, companies, ETFs, and industries.",
+    description=(
+        "Sector-level data including performance metrics, top companies, "
+        "top ETFs, top mutual funds, industry breakdown, and research reports."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="sector",
+            cli_name="sector",
+            kind=ParamKind.STRING,
+            positional=True,
+            path_param=True,
+            required=True,
+            metavar="SECTOR",
+            help=("Sector slug. See the sector reference below for confirmed values."),
+        ),
+        ParamSpec(
+            name="withReturns",
+            cli_name="with-returns",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Include return data in the sector performance response.",
+        ),
+        ParamSpec(
+            name="formatted",
+            cli_name="formatted",
+            kind=ParamKind.BOOLEAN,
+            default=False,
+            help="Request Yahoo formatted values.",
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt sector technology",
+        "yogurt sector financial-services",
+        "yogurt sector consumer-cyclical --with-returns",
+    ),
+    field_reference=_SECTOR_SLUGS,
+    field_reference_title="Sector reference",
+    notes=(
+        (
+            "Response includes data.name, data.symbol, data.key, data.overview, "
+            "data.performance, data.topCompanies, data.topETFs, "
+            "data.topMutualFunds, data.industries, and data.researchReports."
+        ),
+    ),
+)
+
 COMMANDS: tuple[CommandSpec, ...] = (
     QUOTE_COMMAND,
     SPARK_COMMAND,
@@ -2378,6 +2459,7 @@ COMMANDS: tuple[CommandSpec, ...] = (
     MARKET_INFO_COMMAND,
     SCREENER_DISCOVER_COMMAND,
     MARKET_SUMMARY_COMMAND,
+    SECTOR_COMMAND,
 )
 COMMANDS_BY_NAME: dict[str, CommandSpec] = {
     command.name: command for command in COMMANDS

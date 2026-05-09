@@ -117,6 +117,17 @@ Confirmed `--modules` values for `calendar-events`:
 | `ipoEvents` | Upcoming and recent IPO events. |
 | `secReports` | Recent SEC filing events (10-K, 10-Q, 8-K, etc.). |
 
+Fetch sector data:
+
+```powershell
+uv run yogurt sector technology
+uv run yogurt sector financial-services --with-returns
+```
+
+Confirmed sector slugs: `technology`, `financial-services`, `consumer-cyclical`,
+`communication-services`, `healthcare`, `industrials`, `consumer-defensive`,
+`energy`, `basic-materials`, `real-estate`, `utilities`.
+
 Fetch a predefined Yahoo screener:
 
 ```powershell
@@ -198,6 +209,7 @@ Current commands include:
 | `market-info` | Commodity and currency market data for sidebar widgets. |
 | `screener-discover` | Investment idea discovery results from Yahoo screener modules. |
 | `market-summary` | Global market summary across indices, futures, forex, and crypto. |
+| `sector` | Sector overview, performance, top companies, ETFs, and industries. |
 | `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
 
 Each endpoint has its own adaptive help:
