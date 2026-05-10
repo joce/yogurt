@@ -324,6 +324,33 @@ class YahooClient:
         )
         return response.text
 
+    async def post(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        json_body: dict[str, Any],
+        *,
+        use_crumb: bool = True,
+    ) -> str:
+        """Call a Yahoo Finance POST endpoint with a JSON body.
+
+        Returns:
+            str: Raw Yahoo response body.
+        """
+
+        await self._ensure_ready()
+        request_params = dict(params)
+        if use_crumb and self._crumb:
+            request_params["crumb"] = self._crumb
+        response = await self._request_or_raise(
+            "POST",
+            self._YAHOO_FINANCE_QUERY_URL + path,
+            context=f"api call: {path}",
+            params=request_params,
+            json=json_body,
+        )
+        return response.text
+
     async def aclose(self) -> None:
         """Close the underlying HTTP client."""
 

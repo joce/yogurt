@@ -1080,7 +1080,7 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
 )
 
 RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
-    name="recommendations",
+    name="recommendations-by-symbol",
     path="/v6/finance/recommendationsbysymbol/{symbol}",
     summary="Recommended related symbols for a single symbol.",
     description=(
@@ -1127,9 +1127,9 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt recommendations ^GSPC",
-        "yogurt recommendations ^DJI",
-        "yogurt recommendations ^IXIC --fields symbol,recommendedSymbols",
+        "yogurt recommendations-by-symbol ^GSPC",
+        "yogurt recommendations-by-symbol ^DJI",
+        "yogurt recommendations-by-symbol ^IXIC --fields symbol,recommendedSymbols",
     ),
     notes=(
         "Observed index quote pages request this endpoint for ^GSPC, ^DJI, and ^IXIC.",
@@ -1735,7 +1735,7 @@ PREDEFINED_SCREENER_SECTIONS: tuple[ReferenceSection, ...] = (
 )
 
 PREDEFINED_SCREENER_COMMAND = CommandSpec(
-    name="screener",
+    name="screener-predefined",
     path="/v1/finance/screener/predefined/saved",
     summary="Predefined Yahoo screener results.",
     description=(
@@ -1828,9 +1828,9 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt screener MOST_ACTIVES",
-        "yogurt screener MOST_ACTIVES --count 25 --start 25",
-        "yogurt screener MOST_ACTIVES --no-records-response",
+        "yogurt screener-predefined MOST_ACTIVES",
+        "yogurt screener-predefined MOST_ACTIVES --count 25 --start 25",
+        "yogurt screener-predefined MOST_ACTIVES --no-records-response",
     ),
     reference_sections=PREDEFINED_SCREENER_SECTIONS,
     notes=(

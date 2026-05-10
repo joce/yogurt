@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from io import StringIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -13,6 +13,9 @@ if TYPE_CHECKING:
     from yogurt.types import ParamValue
 
 ARGPARSE_ERROR = 2
+INSIDER_LIMIT = 5
+EQUITY_LIMIT = 25
+BODY_JSON_FILE_LIMIT = 2
 
 
 class StubClient:
@@ -23,6 +26,9 @@ class StubClient:
 
         self.body = body
         self.calls: list[tuple[str, dict[str, ParamValue], bool]] = []
+        self.post_calls: list[
+            tuple[str, dict[str, ParamValue], dict[str, Any], bool]
+        ] = []
         self.closed = False
 
     async def get(
@@ -35,6 +41,19 @@ class StubClient:
         """Record the request and return the configured body."""
 
         self.calls.append((path, params, use_crumb))
+        return self.body
+
+    async def post(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        json_body: dict[str, Any],
+        *,
+        use_crumb: bool = True,
+    ) -> str:
+        """Record the POST request and return the configured body."""
+
+        self.post_calls.append((path, params, json_body, use_crumb))
         return self.body
 
     async def aclose(self) -> None:
@@ -67,17 +86,17 @@ def test_top_level_help_lists_quote_endpoint(
     assert "options" in captured.out
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
-    assert "recommendations" in captured.out
-    assert "recommendations-by-symbol" not in captured.out
+    assert "recommendations-by-symbol" in captured.out
     assert "price-insights" in captured.out
     assert "calendar-events" in captured.out
     assert "timeseries" in captured.out
     assert "insights" in captured.out
-    assert "screener" in captured.out
-    assert "predefined-screener" not in captured.out
+    assert "screener-predefined" in captured.out
     assert "ratings-top" in captured.out
     assert "chart" in captured.out
     assert "raw" in captured.out
+    assert "visualization" in captured.out
+    assert "screener" in captured.out
     assert "Retrieve raw" not in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
 
@@ -833,7 +852,7 @@ def test_recommendations_by_symbol_help_includes_params_and_probe_notes(
     """Recommendations-by-symbol help documents symbol, fields, and probes."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["recommendations", "--help"])
+        main(["recommendations-by-symbol", "--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
@@ -862,7 +881,7 @@ def test_recommendations_by_symbol_command_passes_params_and_prints_raw_body() -
 
     exit_code = main(
         [
-            "recommendations",
+            "recommendations-by-symbol",
             "^GSPC",
             "--fields",
             "symbol,recommendedSymbols",
@@ -901,7 +920,7 @@ def test_recommendations_by_symbol_command_uses_observed_defaults() -> None:
 
     exit_code = main(
         [
-            "recommendations",
+            "recommendations-by-symbol",
             "^DJI",
         ],
         stdout=stdout,
@@ -929,7 +948,7 @@ def test_recommendations_by_symbol_rejects_empty_fields() -> None:
 
     exit_code = main(
         [
-            "recommendations",
+            "recommendations-by-symbol",
             "^GSPC",
             "--fields",
             "",
@@ -1299,12 +1318,12 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
         ["options", "AAPL"],
         ["quote-type", "AAPL"],
         ["quote-summary", "AAPL"],
-        ["recommendations", "^IXIC"],
+        ["recommendations-by-symbol", "^IXIC"],
         ["price-insights", "AAPL"],
         ["calendar-events", "AAPL"],
         ["timeseries", "AAPL"],
         ["insights", "AAPL"],
-        ["screener", "MOST_ACTIVES"],
+        ["screener-predefined", "MOST_ACTIVES"],
         ["chart", "AAPL"],
         ["ratings-top", "AAPL"],
     ],
@@ -1589,7 +1608,7 @@ def test_screener_help_includes_params_and_probe_notes(
     """Screener help documents screener IDs, paging, and notes."""
 
     with pytest.raises(SystemExit) as exc_info:
-        main(["screener", "--help"])
+        main(["screener-predefined", "--help"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
@@ -1648,7 +1667,7 @@ def test_screener_command_uses_observed_defaults() -> None:
 
     exit_code = main(
         [
-            "screener",
+            "screener-predefined",
             "MOST_ACTIVES",
         ],
         stdout=stdout,
@@ -1688,7 +1707,7 @@ def test_screener_command_passes_overrides_and_prints_raw_body() -> None:
 
     exit_code = main(
         [
-            "screener",
+            "screener-predefined",
             "MOST_ACTIVES,DAY_GAINERS",
             "--count",
             "25",
@@ -1741,7 +1760,7 @@ def test_screener_command_rejects_empty_scr_ids() -> None:
 
     exit_code = main(
         [
-            "screener",
+            "screener-predefined",
             " ",
         ],
         stderr=stderr,
@@ -1762,7 +1781,7 @@ def test_screener_command_rejects_non_integer_count() -> None:
 
     exit_code = main(
         [
-            "screener",
+            "screener-predefined",
             "MOST_ACTIVES",
             "--count",
             "many",
@@ -2131,3 +2150,316 @@ def test_raw_command_passes_path_and_name_value_params() -> None:
             False,
         )
     ]
+
+
+def test_visualization_help_shows_grammar_examples(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Visualization help documents the SQL grammar with concrete examples."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["visualization", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "https://query1.finance.yahoo.com/v1/finance/visualization" in captured.out
+    assert "--query SQL" in captured.out
+    assert "--body-json" in captured.out
+    assert "AGGREGATE date_hist" in captured.out
+    assert "INSIDER_TRANSACTION" in captured.out
+    assert "FROM sp_earnings" in captured.out
+
+
+def test_screener_help_shows_grammar_examples(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Screener help documents the SQL grammar and the route's quoteType list."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["screener", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "https://query1.finance.yahoo.com/v1/finance/screener" in captured.out
+    assert "--query SQL" in captured.out
+    assert "--body-json" in captured.out
+    assert "EQUITY" in captured.out
+    assert "MUTUALFUND" in captured.out
+    assert "--no-records-response" in captured.out
+
+
+def test_visualization_query_translates_to_post_body() -> None:
+    """A SELECT query is parsed and posted as the visualization body."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "visualization",
+            "--query",
+            (
+                "SELECT ticker, transactiondate, shares "
+                "FROM INSIDER_TRANSACTION "
+                "WHERE ticker = 'AAPL' "
+                "ORDER BY transactiondate DESC "
+                "LIMIT 5"
+            ),
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert client.closed
+    assert not client.calls
+    assert len(client.post_calls) == 1
+    path, params, body, use_crumb = client.post_calls[0]
+    assert path == "/v1/finance/visualization"
+    assert params == {"lang": "en-US", "region": "US"}
+    assert use_crumb is True
+    assert body["entityIdType"] == "INSIDER_TRANSACTION"
+    assert body["sortField"] == "transactiondate"
+    assert body["sortType"] == "DESC"
+    assert body["size"] == INSIDER_LIMIT
+    assert body["includeFields"] == ["ticker", "transactiondate", "shares"]
+    assert body["query"] == {
+        "operator": "eq",
+        "operands": ["ticker", "AAPL"],
+    }
+
+
+def test_visualization_aggregate_query_emits_aggregation_block() -> None:
+    """An AGGREGATE query produces aggregation, joinField, and fillNA."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "visualization",
+            "--query",
+            (
+                "AGGREGATE date_hist(startdatetime, '1d') "
+                "FROM sp_earnings, economic_event "
+                "WHERE startdatetime BETWEEN '2026-05-03' AND '2026-05-09' "
+                "JOIN BY startdatetime "
+                "FILL pad"
+            ),
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert len(client.post_calls) == 1
+    body = client.post_calls[0][2]
+    assert body["entityIdType"] == ["sp_earnings", "economic_event"]
+    assert body["aggregation"]["operator"] == "date_hist"
+    assert body["joinField"] == "startdatetime"
+    assert body["fillNA"] == "pad"
+
+
+def test_screener_query_uses_quote_type_for_uppercase_entity() -> None:
+    """A SELECT against EQUITY sends the entity through quoteType."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "screener",
+            "--query",
+            (
+                "SELECT ticker, intradaymarketcap "
+                "FROM EQUITY "
+                "WHERE region = 'us' AND sector = 'Technology' "
+                "  AND intradaymarketcap >= 10e9 "
+                "ORDER BY intradaymarketcap DESC "
+                "LIMIT 25"
+            ),
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert len(client.post_calls) == 1
+    path, params, body, _ = client.post_calls[0]
+    assert path == "/v1/finance/screener"
+    assert params == {
+        "lang": "en-US",
+        "region": "US",
+        "formatted": True,
+        "useRecordsResponse": True,
+    }
+    assert body["quoteType"] == "EQUITY"
+    assert body["sortField"] == "intradaymarketcap"
+    assert body["sortType"] == "DESC"
+    assert body["size"] == EQUITY_LIMIT
+    operands = body["query"]["operands"]
+    assert {"operator": "eq", "operands": ["region", "us"]} in operands
+    assert {"operator": "eq", "operands": ["sector", "Technology"]} in operands
+    assert {
+        "operator": "gte",
+        "operands": ["intradaymarketcap", 10000000000.0],
+    } in operands
+
+
+def test_screener_no_records_response_flag_propagates() -> None:
+    """--no-records-response disables the records-style screener payload."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "screener",
+            "--no-records-response",
+            "--query",
+            "SELECT ticker FROM EQUITY WHERE region = 'us' LIMIT 1",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.post_calls[0][1]["useRecordsResponse"] is False
+
+
+def test_visualization_body_json_inline_is_passed_through() -> None:
+    """--body-json with inline JSON sends the payload verbatim."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "visualization",
+            "--body-json",
+            '{"entityIdType": "sp_earnings", "size": 1, "query": {}}',
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.post_calls[0][2] == {
+        "entityIdType": "sp_earnings",
+        "size": 1,
+        "query": {},
+    }
+
+
+def test_visualization_body_json_from_file_is_loaded(tmp_path: object) -> None:
+    """--body-json with @path reads the file body."""
+
+    body_path = getattr(tmp_path, "joinpath")("body.json")  # noqa: B009
+    body_path.write_text(
+        '{"entityIdType": "sp_earnings", "size": 2, "query": {}}',
+        encoding="utf-8",
+    )
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        [
+            "visualization",
+            "--body-json",
+            f"@{body_path}",
+        ],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.post_calls[0][2]["size"] == BODY_JSON_FILE_LIMIT
+
+
+def test_visualization_query_and_body_json_are_mutually_exclusive() -> None:
+    """Argparse rejects passing both --query and --body-json together."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(
+            [
+                "visualization",
+                "--query",
+                "SELECT ticker FROM sp_earnings",
+                "--body-json",
+                "{}",
+            ],
+            stderr=stderr,
+            client=client,
+        )
+
+    assert exc_info.value.code == ARGPARSE_ERROR
+
+
+def test_visualization_query_parse_error_returns_exit_one() -> None:
+    """A malformed --query is reported as a yogurt error."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "visualization",
+            "--query",
+            "SELECT ticker FROM sp_earnings ORDER BY a, b",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "single field" in stderr.getvalue()
+    assert client.closed
+    assert not client.post_calls
+
+
+def test_visualization_body_json_invalid_json_returns_exit_one() -> None:
+    """Invalid --body-json yields a clear error and no request."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "visualization",
+            "--body-json",
+            "{not-json",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "not valid JSON" in stderr.getvalue()
+    assert client.closed
+    assert not client.post_calls
+
+
+def test_visualization_body_json_must_be_object() -> None:
+    """A non-object JSON body is rejected up front."""
+
+    client = StubClient()
+    stderr = StringIO()
+
+    exit_code = main(
+        [
+            "visualization",
+            "--body-json",
+            "[]",
+        ],
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 1
+    assert "must be a JSON object" in stderr.getvalue()
+    assert not client.post_calls

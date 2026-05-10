@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import json
 import logging
 import sys
 import textwrap
@@ -11,7 +12,7 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from string import Formatter
-from typing import TYPE_CHECKING, Final, Protocol, TextIO
+from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, cast
 from urllib.parse import quote
 
 from typing_extensions import override
@@ -21,6 +22,8 @@ from yogurt.client import YahooClient
 from yogurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
 from yogurt.exceptions import YogurtError
 from yogurt.params import ParamKind, ParamSpec, coerce_param
+from yogurt.query import QueryError
+from yogurt.query import parse as parse_query
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -44,6 +47,15 @@ class _YahooClientProtocol(Protocol):
         self,
         path: str,
         params: dict[str, ParamValue],
+        *,
+        use_crumb: bool = True,
+    ) -> str: ...
+
+    async def post(
+        self,
+        path: str,
+        params: dict[str, ParamValue],
+        json_body: dict[str, Any],
         *,
         use_crumb: bool = True,
     ) -> str: ...
@@ -306,7 +318,161 @@ def build_parser() -> argparse.ArgumentParser:
         help="Do not add Yahoo's crumb parameter to the request.",
     )
     raw_parser.set_defaults(command_kind="raw")
+
+    visualization_parser = subparsers.add_parser(
+        "visualization",
+        help="POST a SQL-flavored query against /v1/finance/visualization.",
+        description=(
+            "Query Yahoo's visualization endpoint with a SQL-like statement. "
+            "Use --query for the SQL DSL or --body-json for the raw JSON body."
+        ),
+        epilog=_VISUALIZATION_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(visualization_parser)
+    _add_query_command_options(visualization_parser, route="visualization")
+
+    screener_parser = subparsers.add_parser(
+        "screener",
+        help="POST a SQL-flavored query against /v1/finance/screener.",
+        description=(
+            "Query Yahoo's custom screener endpoint with a SQL-like statement. "
+            "Use --query for the SQL DSL or --body-json for the raw JSON body."
+        ),
+        epilog=_SCREENER_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(screener_parser)
+    _add_query_command_options(screener_parser, route="screener")
     return parser
+
+
+_VISUALIZATION_EPILOG: Final[str] = """\
+Yahoo endpoint:
+  https://query1.finance.yahoo.com/v1/finance/visualization
+
+Examples:
+  # Earnings calendar (sub-week, US, exclude OTC)
+  yogurt visualization --query "
+    SELECT ticker, companyshortname, startdatetime,
+           epsestimate, epsactual, epssurprisepct, intradaymarketcap
+    FROM sp_earnings
+    WHERE region = 'us'
+      AND startdatetime BETWEEN '2026-05-09' AND '2026-05-16'
+      AND eventtype IN ('EAD', 'ERA')
+      AND exchange NOT IN ('PNK','OQB','OQX','OEM','OGM','XXX')
+    ORDER BY intradaymarketcap DESC
+    LIMIT 25"
+
+  # AAPL insider transactions
+  yogurt visualization --query "
+    SELECT ticker, transactiondate, shares
+    FROM INSIDER_TRANSACTION
+    WHERE ticker = 'AAPL'
+    ORDER BY transactiondate DESC
+    LIMIT 50"
+
+  # Cross-entity calendar histogram
+  yogurt visualization --query "
+    AGGREGATE date_hist(startdatetime, '1d')
+    FROM sp_earnings, economic_event, splits, ipo_info
+    WHERE startdatetime BETWEEN '2026-05-03' AND '2026-05-09'
+    JOIN BY startdatetime
+    FILL pad"
+
+  # Raw JSON body escape hatch
+  yogurt visualization --body-json @body.json
+
+Known entityIdType values (case-sensitive): sp_earnings, economic_event, splits,
+  ipo_info, INSIDER_TRANSACTION, RESEARCH_REPORTS, TRADE_IDEA. Multi-entity
+  arrays are supported (FROM a, b) for AGGREGATE statements.
+
+Notes:
+  ORDER BY supports a single field. SELECT * omits includeFields. The body-json
+  payload is sent as-is and may use the underlying JSON DSL Yahoo expects."""
+
+_SCREENER_EPILOG: Final[str] = """\
+Yahoo endpoint:
+  https://query1.finance.yahoo.com/v1/finance/screener
+
+Examples:
+  # Large-cap technology screen
+  yogurt screener --query "
+    SELECT ticker, intradaymarketcap, sector, peratio.lasttwelvemonths
+    FROM EQUITY
+    WHERE region = 'us'
+      AND sector = 'Technology'
+      AND intradaymarketcap >= 10e9
+      AND peratio.lasttwelvemonths < 30
+    ORDER BY intradaymarketcap DESC
+    LIMIT 100"
+
+  # Raw JSON body escape hatch
+  yogurt screener --body-json @body.json
+
+Known quoteType values: EQUITY, ETF, MUTUALFUND, INDEX, CRYPTOCURRENCY, FUTURE.
+Some entityIdType values such as sp_earnings are also accepted by the screener
+route, but the column-rich /v1/finance/visualization endpoint usually fits
+event-style entities better.
+
+Notes:
+  Screener responses use Yahoo's records[] shape; visualization uses the
+  documents[].columns/rows shape. Yogurt prints both bodies verbatim."""
+
+
+def _add_query_command_options(parser: argparse.ArgumentParser, *, route: str) -> None:
+    body_group = parser.add_mutually_exclusive_group(required=True)
+    body_group.add_argument(
+        "--query",
+        metavar="SQL",
+        help=(
+            "SQL-flavored query string. See examples for grammar. "
+            "Mutually exclusive with --body-json."
+        ),
+    )
+    body_group.add_argument(
+        "--body-json",
+        dest="body_json",
+        metavar="JSON_OR_@FILE",
+        help=(
+            "Raw JSON body for Yahoo's POST endpoint. Pass inline JSON or "
+            "@path/to/body.json. Mutually exclusive with --query."
+        ),
+    )
+    parser.add_argument(
+        "--lang",
+        default="en-US",
+        metavar="LANG",
+        help="Yahoo response language.",
+    )
+    parser.add_argument(
+        "--region",
+        default="US",
+        metavar="REGION",
+        help="Yahoo response region.",
+    )
+    if route == "screener":
+        parser.add_argument(
+            "--formatted",
+            action="store_const",
+            const=True,
+            default=True,
+            help=(
+                "Request Yahoo formatted values. The screener route only "
+                "responds when this is set; Yogurt enables it by default."
+            ),
+        )
+        parser.add_argument(
+            "--no-records-response",
+            dest="useRecordsResponse",
+            action="store_const",
+            const=False,
+            default=True,
+            help="Do not request Yahoo's records-style screener response shape.",
+        )
+    parser.set_defaults(command_kind="query", query_route=route)
 
 
 def _configure_logging(*, verbose: bool) -> None:
@@ -416,6 +582,52 @@ def _params_for_raw(raw_params: Sequence[str]) -> dict[str, ParamValue]:
     return params
 
 
+_QUERY_ROUTE_PATHS: Final[dict[str, str]] = {
+    "visualization": "/v1/finance/visualization",
+    "screener": "/v1/finance/screener",
+}
+
+
+def _resolve_query_body(namespace: argparse.Namespace) -> dict[str, Any]:
+    if getattr(namespace, "query", None) is not None:
+        try:
+            statement = parse_query(namespace.query)
+        except QueryError as exc:
+            message = f"--query parse error: {exc}"
+            raise ValueError(message) from exc
+        return statement.to_body()
+    raw = namespace.body_json
+    if raw.startswith("@"):
+        path = Path(raw[1:])
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            message = f"--body-json file could not be read: {exc}"
+            raise ValueError(message) from exc
+    else:
+        text = raw
+    try:
+        loaded = json.loads(text)
+    except json.JSONDecodeError as exc:
+        message = f"--body-json is not valid JSON: {exc}"
+        raise ValueError(message) from exc
+    if not isinstance(loaded, dict):
+        message = "--body-json must be a JSON object"
+        raise ValueError(message)  # noqa: TRY004 - surfaced as a user error
+    return cast("dict[str, Any]", loaded)
+
+
+def _params_for_query_command(namespace: argparse.Namespace) -> dict[str, ParamValue]:
+    params: dict[str, ParamValue] = {
+        "lang": namespace.lang,
+        "region": namespace.region,
+    }
+    if namespace.query_route == "screener":
+        params["formatted"] = namespace.formatted
+        params["useRecordsResponse"] = namespace.useRecordsResponse
+    return params
+
+
 async def _run_async(
     namespace: argparse.Namespace,
     stdout: TextIO,
@@ -436,6 +648,13 @@ async def _run_async(
                 namespace.path,
                 _params_for_raw(namespace.param),
                 use_crumb=not namespace.no_crumb,
+            )
+        elif namespace.command_kind == "query":
+            request_body = _resolve_query_body(namespace)
+            body = await client.post(
+                _QUERY_ROUTE_PATHS[namespace.query_route],
+                _params_for_query_command(namespace),
+                request_body,
             )
         else:
             return 2
