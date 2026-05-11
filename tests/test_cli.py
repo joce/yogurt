@@ -2573,7 +2573,7 @@ def test_screener_help_summary_is_action_oriented(
 
     assert exc_info.value.code == 0
     out = capsys.readouterr().out
-    assert "Build custom stock and asset-class screeners" in out
+    assert "Custom asset-class screeners via a SQL-flavored DSL." in out
 
 
 def test_visualization_epilogue_points_at_field_catalog_command(

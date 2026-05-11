@@ -290,11 +290,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     visualization_parser = subparsers.add_parser(
         "visualization",
-        help=(
-            "Query any Yahoo data-platform entity — earnings, insider trades, "
-            "analyst reports, technical signals, holdings, and more — with a "
-            "SQL-flavored DSL."
-        ),
+        help="Query any Yahoo data-platform entity via a SQL-flavored DSL.",
         description=(
             "Query a Yahoo data-platform entity with a SQL-flavored statement. "
             "Supports SELECT for tabular results and AGGREGATE for histogram-style "
@@ -310,11 +306,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     screener_parser = subparsers.add_parser(
         "screener",
-        help=(
-            "Build custom stock and asset-class screeners with a SQL-flavored "
-            "DSL: filter equities, ETFs, mutual funds, indices, futures, "
-            "options, crypto, and more by any field."
-        ),
+        help="Custom asset-class screeners via a SQL-flavored DSL.",
         description=(
             "Build a custom screener over a Yahoo asset class with a SQL-flavored "
             "statement. Use --query for the SQL DSL or --body-json to pass the "
