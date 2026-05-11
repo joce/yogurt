@@ -450,8 +450,8 @@ Field reference:
 
     yogurt screener-instrument-fields <quote-type>
 
-  Example: `yogurt screener-instrument-fields equity` lists all 236 EQUITY
-  fields. See `yogurt screener-instrument-fields --help` for the full list.
+  Example: `yogurt screener-instrument-fields equity` lists every EQUITY
+  field. See `yogurt screener-instrument-fields --help` for the full list.
 
 Premium fields:
   Many quoteTypes include Morningstar and User-Insights fields flagged

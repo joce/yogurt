@@ -2453,48 +2453,45 @@ _SECTOR_SLUGS: tuple[FieldReference, ...] = (
 )
 
 _SCREENER_INSTRUMENT_ASSET_CLASSES: tuple[FieldReference, ...] = (
-    FieldReference("equity", "Common stocks. 236 fields."),
-    FieldReference("etf", "Exchange-traded funds. 101 fields."),
-    FieldReference("mutualfund", "Mutual funds. 98 fields."),
-    FieldReference("cryptocurrency", "Cryptocurrencies. 91 fields."),
-    FieldReference("index", "Market indices. 84 fields."),
-    FieldReference("future", "Futures contracts. 83 fields."),
-    FieldReference("option", "Option contracts. 44 fields."),
-    FieldReference("currency", "Forex pairs. 80 fields."),
-    FieldReference("bond", "Bonds. 13 fields."),
-    FieldReference("commodity", "Commodities. 13 fields."),
-    FieldReference("warrant", "Warrants. 13 fields."),
+    FieldReference("equity", "Common stocks."),
+    FieldReference("etf", "Exchange-traded funds."),
+    FieldReference("mutualfund", "Mutual funds."),
+    FieldReference("cryptocurrency", "Cryptocurrencies."),
+    FieldReference("index", "Market indices."),
+    FieldReference("future", "Futures contracts."),
+    FieldReference("option", "Option contracts."),
+    FieldReference("currency", "Forex pairs."),
+    FieldReference("bond", "Bonds."),
+    FieldReference("commodity", "Commodities."),
+    FieldReference("warrant", "Warrants."),
 )
 
 _SCREENER_INSTRUMENT_EVENT_ENTITIES: tuple[FieldReference, ...] = (
-    FieldReference("economic_event", "Macroeconomic releases. 11 fields."),
-    FieldReference("splits", "Stock split calendar. 6 fields."),
-    FieldReference("ipo_info", "IPO calendar with pricing. 16 fields."),
-    FieldReference("insider_transaction", "Form 4 insider trades. 13 fields."),
-    FieldReference("research_reports", "Morningstar analyst reports. 23 fields."),
-    FieldReference("trade_idea", "Trade ideas. 7 fields."),
+    FieldReference("economic_event", "Macroeconomic releases."),
+    FieldReference("splits", "Stock split calendar."),
+    FieldReference("ipo_info", "IPO calendar with pricing."),
+    FieldReference("insider_transaction", "Form 4 insider trades."),
+    FieldReference("research_reports", "Morningstar analyst reports."),
+    FieldReference("trade_idea", "Trade ideas."),
 )
 
 _SCREENER_INSTRUMENT_PREMIUM: tuple[FieldReference, ...] = (
     FieldReference(
         "analyst_ratings",
-        "Wall Street ratings and price targets. 244 fields. Data 401-locked; "
-        "schema readable.",
+        "Wall Street ratings and price targets. Data 401-locked; schema readable.",
     ),
     FieldReference(
         "tradingcentral_event_info",
-        "Trading Central technical signals. 244 fields. Data 401-locked; "
-        "schema readable.",
+        "Trading Central technical signals. Data 401-locked; schema readable.",
     ),
     FieldReference(
         "institutional_interest",
-        "Aggregate institutional buying and selling per ticker. 236 fields. "
+        "Aggregate institutional buying and selling per ticker. "
         "Data 401-locked; schema readable.",
     ),
     FieldReference(
         "institutional_holdings",
-        "Per-fund 13F position rows. 10 fields, all premium. Data 401-locked; "
-        "schema readable.",
+        "Per-fund 13F position rows. Data 401-locked; schema readable.",
     ),
 )
 
