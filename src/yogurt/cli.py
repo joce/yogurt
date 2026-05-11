@@ -288,6 +288,45 @@ def build_parser() -> argparse.ArgumentParser:
         _add_help_option(command_parser)
         _set_command_parser(command_parser, command)
 
+    visualization_parser = subparsers.add_parser(
+        "visualization",
+        help=(
+            "Query any Yahoo data-platform entity — earnings, insider trades, "
+            "analyst reports, technical signals, holdings, and more — with a "
+            "SQL-flavored DSL."
+        ),
+        description=(
+            "Query a Yahoo data-platform entity with a SQL-flavored statement. "
+            "Supports SELECT for tabular results and AGGREGATE for histogram-style "
+            "groupings across one or many entities. Use --query for the SQL DSL "
+            "or --body-json to pass the raw JSON body verbatim."
+        ),
+        epilog=_VISUALIZATION_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(visualization_parser)
+    _add_query_command_options(visualization_parser, route="visualization")
+
+    screener_parser = subparsers.add_parser(
+        "screener",
+        help=(
+            "Build custom stock and asset-class screeners with a SQL-flavored "
+            "DSL: filter equities, ETFs, mutual funds, indices, futures, "
+            "options, crypto, and more by any field."
+        ),
+        description=(
+            "Build a custom screener over a Yahoo asset class with a SQL-flavored "
+            "statement. Use --query for the SQL DSL or --body-json to pass the "
+            "raw JSON body verbatim."
+        ),
+        epilog=_SCREENER_EPILOG,
+        formatter_class=_HelpFormatter,
+        add_help=False,
+    )
+    _add_help_option(screener_parser)
+    _add_query_command_options(screener_parser, route="screener")
+
     raw_parser = subparsers.add_parser(
         "raw",
         help="Custom Yahoo query path for data Yogurt does not model yet.",
@@ -318,34 +357,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Do not add Yahoo's crumb parameter to the request.",
     )
     raw_parser.set_defaults(command_kind="raw")
-
-    visualization_parser = subparsers.add_parser(
-        "visualization",
-        help="POST a SQL-flavored query against /v1/finance/visualization.",
-        description=(
-            "Query Yahoo's visualization endpoint with a SQL-like statement. "
-            "Use --query for the SQL DSL or --body-json for the raw JSON body."
-        ),
-        epilog=_VISUALIZATION_EPILOG,
-        formatter_class=_HelpFormatter,
-        add_help=False,
-    )
-    _add_help_option(visualization_parser)
-    _add_query_command_options(visualization_parser, route="visualization")
-
-    screener_parser = subparsers.add_parser(
-        "screener",
-        help="POST a SQL-flavored query against /v1/finance/screener.",
-        description=(
-            "Query Yahoo's custom screener endpoint with a SQL-like statement. "
-            "Use --query for the SQL DSL or --body-json for the raw JSON body."
-        ),
-        epilog=_SCREENER_EPILOG,
-        formatter_class=_HelpFormatter,
-        add_help=False,
-    )
-    _add_help_option(screener_parser)
-    _add_query_command_options(screener_parser, route="screener")
     return parser
 
 
@@ -385,13 +396,36 @@ Examples:
   # Raw JSON body escape hatch
   yogurt visualization --body-json @body.json
 
-Known entityIdType values (case-sensitive): sp_earnings, economic_event, splits,
-  ipo_info, INSIDER_TRANSACTION, RESEARCH_REPORTS, TRADE_IDEA. Multi-entity
-  arrays are supported (FROM a, b) for AGGREGATE statements.
+Known entityIdType values (case-insensitive): sp_earnings, economic_event,
+  splits, ipo_info, insider_transaction, research_reports, trade_idea.
+  Multi-entity arrays are supported (FROM a, b) for AGGREGATE statements.
+
+Field reference:
+  For the complete field catalog of any entity — IDs, types, categories,
+  sortable/premium flags, and quick-pick filter chips — run:
+
+    yogurt screener-instrument-fields <entity>
+
+  See `yogurt screener-instrument-fields --help` for the full instrument list.
+
+Premium data:
+  Four entities return 401 on direct query (analyst_ratings,
+  tradingcentral_event_info, institutional_interest, institutional_holdings)
+  but Yahoo's curated saved screens expose narrow slices of each. See
+  `yogurt screener-predefined --help` for the preset IDs that surface analyst
+  ratings, institutional flow, and Trading Central signals on the free tier.
+
+Field naming:
+  The visualization route returns snake_case and dotted field names
+  (intradaymarketcap, peratio.lasttwelvemonths). The screener route returns
+  the camelCase variants (marketCap, peRatioLtm). Both routes accept either
+  form on input; Yogurt prints raw responses, so the output reflects each
+  route's native convention.
 
 Notes:
-  ORDER BY supports a single field. SELECT * omits includeFields. The body-json
-  payload is sent as-is and may use the underlying JSON DSL Yahoo expects."""
+  ORDER BY supports a single field. SELECT * omits includeFields. The
+  --body-json payload is sent as-is and may use the underlying JSON DSL
+  Yahoo expects."""
 
 _SCREENER_EPILOG: Final[str] = """\
 Yahoo endpoint:
@@ -412,10 +446,33 @@ Examples:
   # Raw JSON body escape hatch
   yogurt screener --body-json @body.json
 
-Known quoteType values: EQUITY, ETF, MUTUALFUND, INDEX, CRYPTOCURRENCY, FUTURE.
+Known quoteType values: EQUITY, ETF, MUTUALFUND, CRYPTOCURRENCY, INDEX,
+  FUTURE, OPTION, BOND, CURRENCY, COMMODITY, WARRANT.
 Some entityIdType values such as sp_earnings are also accepted by the screener
 route, but the column-rich /v1/finance/visualization endpoint usually fits
 event-style entities better.
+
+Field reference:
+  For the complete field catalog of any asset class — IDs, types, categories,
+  sortable/premium flags, and quick-pick filter chips — run:
+
+    yogurt screener-instrument-fields <quote-type>
+
+  Example: `yogurt screener-instrument-fields equity` lists all 236 EQUITY
+  fields. See `yogurt screener-instrument-fields --help` for the full list.
+
+Premium fields:
+  Many quoteTypes include Morningstar and User-Insights fields flagged
+  isPremium=true in the catalog. Filtering by those returns 401. The
+  premium-data entities (analyst_ratings, tradingcentral_event_info,
+  institutional_interest, institutional_holdings) are reachable on the free
+  tier only through curated `screener-predefined` presets.
+
+Field naming:
+  The screener route returns camelCase field names (marketCap, peRatioLtm,
+  fiftyTwoWeekHigh). The visualization route returns the snake_case or
+  dotted equivalents (intradaymarketcap, peratio.lasttwelvemonths,
+  fiftytwowkhigh). Both routes accept either form on input.
 
 Notes:
   Screener responses use Yahoo's records[] shape; visualization uses the

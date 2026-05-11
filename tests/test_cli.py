@@ -97,8 +97,16 @@ def test_top_level_help_lists_quote_endpoint(
     assert "raw" in captured.out
     assert "visualization" in captured.out
     assert "screener" in captured.out
+    assert "screener-instrument-fields" in captured.out
     assert "Retrieve raw" not in captured.out
     assert "Run `yogurt <endpoint> --help`" in captured.out
+    # raw must appear last so the escape-hatch command does not crowd the
+    # primary entries in the listing.
+    visualization_index = captured.out.index("\n    visualization ")
+    screener_index = captured.out.index("\n    screener ")
+    raw_index = captured.out.index("\n    raw ")
+    assert visualization_index < raw_index
+    assert screener_index < raw_index
 
 
 def test_help_action_text_is_capitalized(
@@ -2463,3 +2471,139 @@ def test_visualization_body_json_must_be_object() -> None:
     assert exit_code == 1
     assert "must be a JSON object" in stderr.getvalue()
     assert not client.post_calls
+
+
+def test_screener_instrument_fields_help_lists_instrument_reference(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Help groups known instruments by asset class, event, and premium tiers."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["screener-instrument-fields", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert (
+        "https://query1.finance.yahoo.com/v1/finance/screener/instrument/"
+        "{instrument}/fields" in captured.out
+    )
+    assert "INSTRUMENT" in captured.out
+    assert "--lang" in captured.out
+    assert "--region" in captured.out
+    # Three reference sections.
+    assert "Asset classes" in captured.out
+    assert "Event and calendar entities" in captured.out
+    assert "Premium-locked entities" in captured.out
+    # Spot-check a member of each section.
+    assert "equity:" in captured.out
+    assert "insider_transaction:" in captured.out
+    assert "analyst_ratings:" in captured.out
+    # Notes mention the known quirks.
+    assert "sp_earnings" in captured.out
+    assert "privatecompany" in captured.out
+
+
+def test_screener_instrument_fields_command_passes_path_and_params() -> None:
+    """The command path-encodes the instrument and forwards lang/region."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        ["screener-instrument-fields", "equity"],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert client.closed
+    assert client.calls == [
+        (
+            "/v1/finance/screener/instrument/equity/fields",
+            {"lang": "en-US", "region": "US"},
+            True,
+        )
+    ]
+
+
+def test_screener_instrument_fields_command_accepts_premium_entity() -> None:
+    """Premium-side schemas (e.g. analyst_ratings) round-trip the same way."""
+
+    client = StubClient()
+    stdout = StringIO()
+
+    exit_code = main(
+        ["screener-instrument-fields", "analyst_ratings", "--region", "GB"],
+        stdout=stdout,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert client.calls == [
+        (
+            "/v1/finance/screener/instrument/analyst_ratings/fields",
+            {"lang": "en-US", "region": "GB"},
+            True,
+        )
+    ]
+
+
+def test_visualization_help_summary_is_action_oriented(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Visualization command help describes capabilities, not the HTTP method."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+
+    assert exc_info.value.code == 0
+    out = capsys.readouterr().out
+    assert "Query any Yahoo data-platform entity" in out
+    assert "POST a SQL-flavored query against" not in out
+
+
+def test_screener_help_summary_is_action_oriented(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Screener command help describes capabilities, not the HTTP method."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["--help"])
+
+    assert exc_info.value.code == 0
+    out = capsys.readouterr().out
+    assert "Build custom stock and asset-class screeners" in out
+
+
+def test_visualization_epilogue_points_at_field_catalog_command(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Visualization epilogue links to discovery command and notes premium gating."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["visualization", "--help"])
+
+    assert exc_info.value.code == 0
+    out = capsys.readouterr().out
+    assert "yogurt screener-instrument-fields" in out
+    assert "screener-predefined" in out
+    # Field-naming note appears.
+    assert "snake_case" in out
+    assert "camelCase" in out
+
+
+def test_screener_epilogue_points_at_field_catalog_command(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Screener epilogue links to discovery command and notes premium gating."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["screener", "--help"])
+
+    assert exc_info.value.code == 0
+    out = capsys.readouterr().out
+    assert "yogurt screener-instrument-fields" in out
+    assert "screener-predefined" in out
+    assert "BOND" in out
+    assert "CURRENCY" in out

@@ -2452,6 +2452,151 @@ _SECTOR_SLUGS: tuple[FieldReference, ...] = (
     FieldReference("utilities", "Utilities sector."),
 )
 
+_SCREENER_INSTRUMENT_ASSET_CLASSES: tuple[FieldReference, ...] = (
+    FieldReference("equity", "Common stocks. 236 fields."),
+    FieldReference("etf", "Exchange-traded funds. 101 fields."),
+    FieldReference("mutualfund", "Mutual funds. 98 fields."),
+    FieldReference("cryptocurrency", "Cryptocurrencies. 91 fields."),
+    FieldReference("index", "Market indices. 84 fields."),
+    FieldReference("future", "Futures contracts. 83 fields."),
+    FieldReference("option", "Option contracts. 44 fields."),
+    FieldReference("currency", "Forex pairs. 80 fields."),
+    FieldReference("bond", "Bonds. 13 fields."),
+    FieldReference("commodity", "Commodities. 13 fields."),
+    FieldReference("warrant", "Warrants. 13 fields."),
+)
+
+_SCREENER_INSTRUMENT_EVENT_ENTITIES: tuple[FieldReference, ...] = (
+    FieldReference("economic_event", "Macroeconomic releases. 11 fields."),
+    FieldReference("splits", "Stock split calendar. 6 fields."),
+    FieldReference("ipo_info", "IPO calendar with pricing. 16 fields."),
+    FieldReference("insider_transaction", "Form 4 insider trades. 13 fields."),
+    FieldReference("research_reports", "Morningstar analyst reports. 23 fields."),
+    FieldReference("trade_idea", "Trade ideas. 7 fields."),
+)
+
+_SCREENER_INSTRUMENT_PREMIUM: tuple[FieldReference, ...] = (
+    FieldReference(
+        "analyst_ratings",
+        "Wall Street ratings and price targets. 244 fields. Data 401-locked; "
+        "schema readable.",
+    ),
+    FieldReference(
+        "tradingcentral_event_info",
+        "Trading Central technical signals. 244 fields. Data 401-locked; "
+        "schema readable.",
+    ),
+    FieldReference(
+        "institutional_interest",
+        "Aggregate institutional buying and selling per ticker. 236 fields. "
+        "Data 401-locked; schema readable.",
+    ),
+    FieldReference(
+        "institutional_holdings",
+        "Per-fund 13F position rows. 10 fields, all premium. Data 401-locked; "
+        "schema readable.",
+    ),
+)
+
+_SCREENER_INSTRUMENT_SECTIONS: tuple[ReferenceSection, ...] = (
+    ReferenceSection(
+        title="Asset classes (use as quoteType in visualization or screener)",
+        values=_SCREENER_INSTRUMENT_ASSET_CLASSES,
+    ),
+    ReferenceSection(
+        title=("Event and calendar entities (use as entityIdType in visualization)"),
+        values=_SCREENER_INSTRUMENT_EVENT_ENTITIES,
+    ),
+    ReferenceSection(
+        title=(
+            "Premium-locked entities "
+            "(schema visible here; query data via screener-predefined)"
+        ),
+        values=_SCREENER_INSTRUMENT_PREMIUM,
+    ),
+)
+
+SCREENER_INSTRUMENT_FIELDS_COMMAND = CommandSpec(
+    name="screener-instrument-fields",
+    path="/v1/finance/screener/instrument/{instrument}/fields",
+    summary="List every field available for a Yahoo data-platform entity.",
+    description=(
+        "Retrieve the schema for a Yahoo screener instrument: every field's "
+        "ID, display name, data type, category, and whether it is sortable, "
+        "premium-locked, or deprecated. The response also enumerates the "
+        "quick-pick filter chips Yahoo's screener UI offers per field, "
+        "complete with operator and operand values."
+    ),
+    use_crumb=True,
+    params=(
+        ParamSpec(
+            name="instrument",
+            cli_name="instrument",
+            kind=ParamKind.STRING,
+            positional=True,
+            path_param=True,
+            required=True,
+            metavar="INSTRUMENT",
+            help=(
+                "Instrument identifier. See the reference sections below for "
+                "confirmed values."
+            ),
+        ),
+        ParamSpec(
+            name="lang",
+            cli_name="lang",
+            kind=ParamKind.STRING,
+            default="en-US",
+            metavar="LANG",
+            help="Yahoo response language.",
+        ),
+        ParamSpec(
+            name="region",
+            cli_name="region",
+            kind=ParamKind.STRING,
+            default="US",
+            metavar="REGION",
+            help="Yahoo response region.",
+        ),
+    ),
+    examples=(
+        "yogurt screener-instrument-fields equity",
+        "yogurt screener-instrument-fields etf",
+        "yogurt screener-instrument-fields analyst_ratings",
+        (
+            "yogurt screener-instrument-fields equity | "
+            "jq -r '.finance.result[0].fields | keys[]'"
+        ),
+    ),
+    reference_sections=_SCREENER_INSTRUMENT_SECTIONS,
+    notes=(
+        (
+            "Each field metadata object exposes: fieldId, displayName, type "
+            "(STRING / NUMBER / DATE / BOOLEAN), category, sortable, "
+            "isPremium, deprecated, and a labels[] array of quick-pick "
+            "filter chips with their operator and operand values."
+        ),
+        (
+            "Asset-class field IDs are snake_case or dotted "
+            "(e.g. peratio.lasttwelvemonths). Both the visualization and "
+            "screener routes accept these names in query.operands."
+        ),
+        (
+            "isPremium=true means the underlying data is paywalled. The "
+            "schema itself is always returned. The four premium-data "
+            "entities (analyst_ratings, tradingcentral_event_info, "
+            "institutional_interest, institutional_holdings) only return "
+            "rows through curated screener-predefined presets."
+        ),
+        (
+            "Known quirks: sp_earnings returns a Yahoo 500 here; use the "
+            "default columns observed in live visualization queries instead. "
+            "privatecompany returns an empty fields map (data paywalled)."
+        ),
+    ),
+)
+
+
 SECTOR_COMMAND = CommandSpec(
     name="sector",
     path="/v1/finance/sectors/{sector}",
@@ -2539,6 +2684,7 @@ COMMANDS: tuple[CommandSpec, ...] = (
     TIMESERIES_FIELDS_COMMAND,
     MARKET_INFO_COMMAND,
     SCREENER_DISCOVER_COMMAND,
+    SCREENER_INSTRUMENT_FIELDS_COMMAND,
     MARKET_SUMMARY_COMMAND,
     SECTOR_COMMAND,
 )
