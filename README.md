@@ -19,6 +19,8 @@ help.
 
 - Raw Yahoo Finance JSON on stdout, with no pretty-printing or interpretation.
 - Endpoint-specific commands for common Yahoo Finance data.
+- A SQL-flavored DSL (`screener`, `visualization`) for ad-hoc filters and
+  cross-entity queries against Yahoo's data-platform endpoints.
 - Generated help that includes examples, parameters, field references, modules,
   or types when Yogurt knows them.
 - Reusable Yahoo session cache for faster one-shot CLI calls.
@@ -96,7 +98,7 @@ as `--range 24h` through when Yahoo supports them.
 Fetch recommended symbols for a quote page:
 
 ```powershell
-uv run yogurt recommendations AAPL
+uv run yogurt recommendations-by-symbol AAPL
 ```
 
 Fetch Yahoo calendar events:
@@ -128,12 +130,12 @@ Confirmed sector slugs: `technology`, `financial-services`, `consumer-cyclical`,
 `communication-services`, `healthcare`, `industrials`, `consumer-defensive`,
 `energy`, `basic-materials`, `real-estate`, `utilities`.
 
-Fetch a predefined Yahoo screener:
+Run a predefined Yahoo screener:
 
 ```powershell
-uv run yogurt screener MOST_ACTIVES
-uv run yogurt screener DAY_GAINERS_CRYPTOCURRENCIES
-uv run yogurt screener TOP_OPTIONS_OPEN_INTEREST
+uv run yogurt screener-predefined MOST_ACTIVES
+uv run yogurt screener-predefined DAY_GAINERS_CRYPTOCURRENCIES
+uv run yogurt screener-predefined TOP_OPTIONS_OPEN_INTEREST
 ```
 
 Confirmed predefined screener IDs:
@@ -196,6 +198,38 @@ targets, and ratings):
 uv run yogurt analyst AAPL
 ```
 
+Run a custom screener or cross-entity query with the SQL-flavored DSL:
+
+```powershell
+uv run yogurt screener --query "
+  SELECT ticker, intradaymarketcap, sector, peratio.lasttwelvemonths
+  FROM EQUITY
+  WHERE region = 'us'
+    AND sector = 'Technology'
+    AND intradaymarketcap >= 10e9
+  ORDER BY intradaymarketcap DESC
+  LIMIT 25"
+
+uv run yogurt visualization --query "
+  SELECT ticker, transactiondate, shares
+  FROM INSIDER_TRANSACTION
+  WHERE ticker = 'AAPL'
+  ORDER BY transactiondate DESC
+  LIMIT 50"
+```
+
+List the fields, types, and operators available for a given asset class or
+entity (e.g. for use in a `screener` or `visualization` query):
+
+```powershell
+uv run yogurt screener-instrument-fields equity
+uv run yogurt screener-instrument-fields insider_transaction
+```
+
+See [QUERY_DSL.md](QUERY_DSL.md) for the full DSL reference: grammar,
+operators, entity routing, body shape, premium-locked entities, and more
+examples.
+
 Pass through a Yahoo query path directly:
 
 ```powershell
@@ -210,32 +244,62 @@ Use root help to see the command list:
 uv run yogurt --help
 ```
 
-Current commands include:
+Current commands, grouped roughly by how often they're reached for:
+
+**Daily-driver fetches**
 
 | Command | Yahoo data |
 | --- | --- |
-| `quote` | Quote data for one or more symbols. |
-| `spark` | Sparkline quote-page data for one or more symbols. |
-| `options` | Option chain data for a single symbol. |
-| `quote-type` | Quote type data for a single symbol. |
-| `quote-summary` | Quote summary modules for a single symbol. |
-| `recommendations` | Recommended symbols related to a single symbol. |
-| `price-insights` | Generated price insight data for one or more symbols. |
-| `calendar-events` | Calendar events such as earnings, economic events, dividends, splits, and IPOs. |
-| `timeseries` | Fundamentals timeseries data for a single symbol. |
-| `insights` | Insight data for one or more symbols. |
-| `screener` | Yahoo predefined screener results for one or more screener IDs. |
-| `chart` | Chart price data for a single symbol. |
-| `ratings-top` | Top analyst rating scores for a single symbol. |
-| `market-time` | Market session status and trading hours. |
-| `analyst` | Analyst intelligence: PCR, news summary, price targets, and ratings for a single symbol. |
-| `trending` | Trending ticker symbols and price data for a region. |
-| `timeseries-fields` | Available fundamentals timeseries field names for a given type. |
-| `market-info` | Commodity and currency market data for sidebar widgets. |
-| `screener-discover` | Investment idea discovery results from Yahoo screener modules. |
-| `market-summary` | Global market summary across indices, futures, forex, and crypto. |
-| `sector` | Sector overview, performance, top companies, ETFs, and industries. |
-| `raw` | Custom Yahoo query path for data Yogurt does not model yet. |
+| `quote` | Fetch quotes for one or more symbols. |
+| `chart` | Fetch historical OHLC chart data for a symbol. |
+| `options` | Fetch the option chain for a symbol. |
+| `quote-summary` | Fetch quoteSummary modules for a symbol. |
+| `quote-type` | Fetch instrument classification metadata for a symbol. |
+| `spark` | Fetch sparkline price series for one or more symbols. |
+
+**Discovery (find symbols, build custom queries)**
+
+| Command | Yahoo data |
+| --- | --- |
+| `screener-predefined` | Run one or more of Yahoo's predefined screeners. |
+| `visualization` | Query any Yahoo data-platform entity via a SQL-flavored DSL. |
+| `screener` | Query any Yahoo asset class via a SQL-flavored DSL. |
+| `screener-discover` | Discover investment ideas from Yahoo screener modules. |
+
+**Symbol-bound analysis**
+
+| Command | Yahoo data |
+| --- | --- |
+| `timeseries` | Fetch fundamentals timeseries for a symbol. |
+| `calendar-events` | Fetch earnings, IPO, economic, and SEC filing events for a symbol. |
+| `analyst` | Fetch analyst intelligence for a symbol. |
+| `ratings-top` | Fetch top analyst rating buckets for a symbol. |
+| `recommendations-by-symbol` | Fetch related-symbol recommendations for a symbol. |
+| `price-insights` | Fetch AI-generated price insights for one or more symbols. |
+| `insights` | Fetch research reports and insights for one or more symbols. |
+
+**Market-wide state**
+
+| Command | Yahoo data |
+| --- | --- |
+| `trending` | List trending tickers for a region. |
+| `sector` | Fetch sector overview, performance, top holdings, and industries. |
+| `market-summary` | Fetch global market summary: indices, futures, forex, crypto. |
+| `market-info` | Fetch commodity and currency market data. |
+| `market-time` | Show current market hours and session status. |
+
+**Schema introspection**
+
+| Command | Yahoo data |
+| --- | --- |
+| `screener-instrument-fields` | List every field available for a Yahoo data-platform entity. |
+| `timeseries-fields` | List available fundamentals timeseries field names for a type. |
+
+**Escape hatch**
+
+| Command | Yahoo data |
+| --- | --- |
+| `raw` | Send raw parameters to any Yahoo query path. |
 
 Each endpoint has its own adaptive help:
 

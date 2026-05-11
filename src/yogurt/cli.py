@@ -359,16 +359,19 @@ _VISUALIZATION_EPILOG: Final[str] = """\
 Yahoo endpoint:
   https://query1.finance.yahoo.com/v1/finance/visualization
 
+Grammar: SELECT cols FROM entities [WHERE expr] [ORDER BY field] [LIMIT n]
+         AGGREGATE date_hist(field, 'interval') FROM entities [WHERE expr]
+                   [JOIN BY field] [FILL ident] [LIMIT n]
+See QUERY_DSL.md for the full reference.
+
 Examples:
   # Earnings calendar (sub-week, US, exclude OTC)
   yogurt visualization --query "
-    SELECT ticker, companyshortname, startdatetime,
-           epsestimate, epsactual, epssurprisepct, intradaymarketcap
+    SELECT ticker, companyshortname, startdatetime, intradaymarketcap
     FROM sp_earnings
     WHERE region = 'us'
       AND startdatetime BETWEEN '2026-05-09' AND '2026-05-16'
       AND eventtype IN ('EAD', 'ERA')
-      AND exchange NOT IN ('PNK','OQB','OQX','OEM','OGM','XXX')
     ORDER BY intradaymarketcap DESC
     LIMIT 25"
 
@@ -377,54 +380,42 @@ Examples:
     SELECT ticker, transactiondate, shares
     FROM INSIDER_TRANSACTION
     WHERE ticker = 'AAPL'
-    ORDER BY transactiondate DESC
-    LIMIT 50"
+    ORDER BY transactiondate DESC LIMIT 50"
 
   # Cross-entity calendar histogram
   yogurt visualization --query "
     AGGREGATE date_hist(startdatetime, '1d')
     FROM sp_earnings, economic_event, splits, ipo_info
     WHERE startdatetime BETWEEN '2026-05-03' AND '2026-05-09'
-    JOIN BY startdatetime
-    FILL pad"
+    JOIN BY startdatetime FILL pad"
 
   # Raw JSON body escape hatch
   yogurt visualization --body-json @body.json
 
-Known entityIdType values (case-insensitive): sp_earnings, economic_event,
-  splits, ipo_info, insider_transaction, research_reports, trade_idea.
-  Multi-entity arrays are supported (FROM a, b) for AGGREGATE statements.
+Known entityIdType values: sp_earnings, economic_event, splits, ipo_info,
+  insider_transaction, research_reports, trade_idea. Multi-entity FROM lists
+  power AGGREGATE statements.
+
+Field naming:
+  visualization returns snake_case / dotted names (intradaymarketcap,
+  peratio.lasttwelvemonths); screener returns camelCase (marketCap,
+  peRatioLtm). Both routes accept either on input.
 
 Field reference:
-  For the complete field catalog of any entity — IDs, types, categories,
-  sortable/premium flags, and quick-pick filter chips — run:
-
-    yogurt screener-instrument-fields <entity>
-
-  See `yogurt screener-instrument-fields --help` for the full instrument list.
+  yogurt screener-instrument-fields <entity>
 
 Premium data:
   Four entities return 401 on direct query (analyst_ratings,
-  tradingcentral_event_info, institutional_interest, institutional_holdings)
-  but Yahoo's curated saved screens expose narrow slices of each. See
-  `yogurt screener-predefined --help` for the preset IDs that surface analyst
-  ratings, institutional flow, and Trading Central signals on the free tier.
-
-Field naming:
-  The visualization route returns snake_case and dotted field names
-  (intradaymarketcap, peratio.lasttwelvemonths). The screener route returns
-  the camelCase variants (marketCap, peRatioLtm). Both routes accept either
-  form on input; Yogurt prints raw responses, so the output reflects each
-  route's native convention.
-
-Notes:
-  ORDER BY supports a single field. SELECT * omits includeFields. The
-  --body-json payload is sent as-is and may use the underlying JSON DSL
-  Yahoo expects."""
+  tradingcentral_event_info, institutional_interest, institutional_holdings).
+  See `yogurt screener-predefined --help` for curated presets that surface
+  slices on the free tier."""
 
 _SCREENER_EPILOG: Final[str] = """\
 Yahoo endpoint:
   https://query1.finance.yahoo.com/v1/finance/screener
+
+Grammar: SELECT cols FROM quote_type [WHERE expr] [ORDER BY field] [LIMIT n]
+See QUERY_DSL.md for the full reference.
 
 Examples:
   # Large-cap technology screen
@@ -442,36 +433,24 @@ Examples:
   yogurt screener --body-json @body.json
 
 Known quoteType values: EQUITY, ETF, MUTUALFUND, CRYPTOCURRENCY, INDEX,
-  FUTURE, OPTION, BOND, CURRENCY, COMMODITY, WARRANT.
-Some entityIdType values such as sp_earnings are also accepted by the screener
-route, but the column-rich /v1/finance/visualization endpoint usually fits
-event-style entities better.
-
-Field reference:
-  For the complete field catalog of any asset class — IDs, types, categories,
-  sortable/premium flags, and quick-pick filter chips — run:
-
-    yogurt screener-instrument-fields <quote-type>
-
-  Example: `yogurt screener-instrument-fields equity` lists every EQUITY
-  field. See `yogurt screener-instrument-fields --help` for the full list.
-
-Premium fields:
-  Many quoteTypes include Morningstar and User-Insights fields flagged
-  isPremium=true in the catalog. Filtering by those returns 401. The
-  premium-data entities (analyst_ratings, tradingcentral_event_info,
-  institutional_interest, institutional_holdings) are reachable on the free
-  tier only through curated `screener-predefined` presets.
+  FUTURE, OPTION, BOND, CURRENCY, COMMODITY, WARRANT. Entity IDs accepted by
+  visualization (e.g. sp_earnings) also work here, but the visualization
+  route usually fits event-style entities better.
 
 Field naming:
-  The screener route returns camelCase field names (marketCap, peRatioLtm,
-  fiftyTwoWeekHigh). The visualization route returns the snake_case or
-  dotted equivalents (intradaymarketcap, peratio.lasttwelvemonths,
-  fiftytwowkhigh). Both routes accept either form on input.
+  screener returns camelCase (marketCap, peRatioLtm, fiftyTwoWeekHigh);
+  visualization returns snake_case / dotted (intradaymarketcap,
+  peratio.lasttwelvemonths, fiftytwowkhigh). Both routes accept either on
+  input.
 
-Notes:
-  Screener responses use Yahoo's records[] shape; visualization uses the
-  documents[].columns/rows shape. Yogurt prints both bodies verbatim."""
+Field reference:
+  yogurt screener-instrument-fields <quote-type>     # e.g. equity, etf
+
+Premium data:
+  Many quoteTypes include isPremium=true fields that 401 when filtered.
+  Premium-data entities (analyst_ratings, tradingcentral_event_info,
+  institutional_interest, institutional_holdings) are reachable on the free
+  tier only through curated `screener-predefined` presets."""
 
 
 def _add_query_command_options(parser: argparse.ArgumentParser, *, route: str) -> None:
