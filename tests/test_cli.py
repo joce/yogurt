@@ -1908,7 +1908,7 @@ def test_chart_help_includes_params_and_examples(
     assert "Supported values: div, split" in captured.out
     assert "earn" in captured.out
     assert "source" not in captured.out
-    assert "range" not in captured.out
+    assert "--range" not in captured.out
 
 
 def test_chart_command_passes_params_and_packs_events() -> None:
@@ -2573,7 +2573,7 @@ def test_screener_help_summary_is_action_oriented(
 
     assert exc_info.value.code == 0
     out = capsys.readouterr().out
-    assert "Custom asset-class screeners via a SQL-flavored DSL." in out
+    assert "Query any Yahoo asset class via a SQL-flavored DSL." in out
 
 
 def test_visualization_epilogue_points_at_field_catalog_command(

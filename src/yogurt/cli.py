@@ -288,43 +288,46 @@ def build_parser() -> argparse.ArgumentParser:
         _add_help_option(command_parser)
         _set_command_parser(command_parser, command)
 
-    visualization_parser = subparsers.add_parser(
-        "visualization",
-        help="Query any Yahoo data-platform entity via a SQL-flavored DSL.",
-        description=(
-            "Query a Yahoo data-platform entity with a SQL-flavored statement. "
-            "Supports SELECT for tabular results and AGGREGATE for histogram-style "
-            "groupings across one or many entities. Use --query for the SQL DSL "
-            "or --body-json to pass the raw JSON body verbatim."
-        ),
-        epilog=_VISUALIZATION_EPILOG,
-        formatter_class=_HelpFormatter,
-        add_help=False,
-    )
-    _add_help_option(visualization_parser)
-    _add_query_command_options(visualization_parser, route="visualization")
+        # Slot the DSL screeners in between screener-predefined and
+        # screener-discover so help output reads as a single discovery block.
+        if command.name == "screener-predefined":
+            visualization_parser = subparsers.add_parser(
+                "visualization",
+                help="Query any Yahoo data-platform entity via a SQL-flavored DSL.",
+                description=(
+                    "Run a SQL-flavored statement against a Yahoo data-platform "
+                    "entity. SELECT returns tabular rows; AGGREGATE returns "
+                    "histogram-style groupings across one or many entities. Use "
+                    "--query for the DSL or --body-json to send a raw JSON body."
+                ),
+                epilog=_VISUALIZATION_EPILOG,
+                formatter_class=_HelpFormatter,
+                add_help=False,
+            )
+            _add_help_option(visualization_parser)
+            _add_query_command_options(visualization_parser, route="visualization")
 
-    screener_parser = subparsers.add_parser(
-        "screener",
-        help="Custom asset-class screeners via a SQL-flavored DSL.",
-        description=(
-            "Build a custom screener over a Yahoo asset class with a SQL-flavored "
-            "statement. Use --query for the SQL DSL or --body-json to pass the "
-            "raw JSON body verbatim."
-        ),
-        epilog=_SCREENER_EPILOG,
-        formatter_class=_HelpFormatter,
-        add_help=False,
-    )
-    _add_help_option(screener_parser)
-    _add_query_command_options(screener_parser, route="screener")
+            screener_parser = subparsers.add_parser(
+                "screener",
+                help="Query any Yahoo asset class via a SQL-flavored DSL.",
+                description=(
+                    "Query a Yahoo asset class with a SQL-flavored statement. "
+                    "Use --query for the DSL or --body-json to send a raw JSON "
+                    "body."
+                ),
+                epilog=_SCREENER_EPILOG,
+                formatter_class=_HelpFormatter,
+                add_help=False,
+            )
+            _add_help_option(screener_parser)
+            _add_query_command_options(screener_parser, route="screener")
 
     raw_parser = subparsers.add_parser(
         "raw",
-        help="Custom Yahoo query path for data Yogurt does not model yet.",
+        help="Send raw parameters to any Yahoo query path.",
         description=(
-            "Pass through a query path and NAME=VALUE parameters for ad hoc Yahoo "
-            "Finance requests."
+            "Pass NAME=VALUE query parameters through to any Yahoo Finance "
+            "query path. Useful for endpoints Yogurt does not model yet."
         ),
         epilog=(
             "Example:\n"

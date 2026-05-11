@@ -544,10 +544,10 @@ QUOTE_FIELDS: tuple[FieldReference, ...] = (
 QUOTE_COMMAND = CommandSpec(
     name="quote",
     path="/v7/finance/quote",
-    summary="Quote data for one or more symbols.",
+    summary="Fetch quotes for one or more symbols.",
     description=(
-        "Prices, trading state, identity, market data, and optional quote fields "
-        "for one or more symbols."
+        "Prices, trading state, identity, market data, and optional --fields "
+        "extras for up to 10 symbols in a single call."
     ),
     use_crumb=True,
     params=(
@@ -655,10 +655,10 @@ QUOTE_COMMAND = CommandSpec(
 SPARK_COMMAND = CommandSpec(
     name="spark",
     path="/v7/finance/spark",
-    summary="Sparkline price data for one or more symbols.",
+    summary="Fetch sparkline price series for one or more symbols.",
     description=(
-        "Compact timestamp and price-series data for one or more symbols across "
-        "equities, ETFs, indices, futures, forex, and crypto when Yahoo supports them."
+        "Compact timestamp and price series for equities, ETFs, indices, futures, "
+        "forex, and crypto when Yahoo supports them."
     ),
     use_crumb=True,
     params=(
@@ -749,18 +749,12 @@ SPARK_COMMAND = CommandSpec(
     ),
     notes=(
         (
-            "Observed quote pages request range=1d or range=24h, interval=5m, "
-            "and indicators=close."
+            "Observed quote-page request: range=1d (or 24h), interval=5m, "
+            "indicators=close."
         ),
         (
-            "Live probes should include representative equities, ETFs, indices, "
-            "foreign listings, futures, forex, and crypto because symbol support "
-            "varies."
-        ),
-        (
-            "The --range, --interval, and --indicators values are intentionally "
-            "open-ended; Yahoo may accept values beyond the observed quote-page "
-            "request."
+            "--range, --interval, and --indicators are open-ended; Yahoo may "
+            "accept values beyond the observed quote-page request."
         ),
     ),
 )
@@ -768,10 +762,10 @@ SPARK_COMMAND = CommandSpec(
 OPTIONS_COMMAND = CommandSpec(
     name="options",
     path="/v7/finance/options/{symbol}",
-    summary="Option chain data for a single symbol.",
+    summary="Fetch the option chain for a symbol.",
     description=(
-        "Expiration chains, contract lists, strikes, implied volatility, and quote "
-        "data for one symbol."
+        "Expiration list, contracts, strikes, implied volatility, and underlying "
+        "quote data for one symbol."
     ),
     use_crumb=True,
     params=(
@@ -838,10 +832,9 @@ OPTIONS_COMMAND = CommandSpec(
 QUOTE_TYPE_COMMAND = CommandSpec(
     name="quote-type",
     path="/v1/finance/quoteType/{symbol}",
-    summary="Quote type data for a single symbol.",
+    summary="Fetch instrument classification metadata for a symbol.",
     description=(
-        "Instrument classification, exchange, market, and quote-type metadata for "
-        "one symbol."
+        "Quote type, exchange, market, and identity metadata for one symbol."
     ),
     use_crumb=True,
     params=(
@@ -990,10 +983,10 @@ QUOTE_SUMMARY_MODULES: tuple[FieldReference, ...] = (
 QUOTE_SUMMARY_COMMAND = CommandSpec(
     name="quote-summary",
     path="/v10/finance/quoteSummary/{symbol}",
-    summary="Quote summary modules for a single symbol.",
+    summary="Fetch quoteSummary modules for a symbol.",
     description=(
-        "Selected modules such as price, profile, financial data, earnings, "
-        "statistics, and holder details for one symbol."
+        "Selected quoteSummary modules — price, profile, financialData, earnings, "
+        "statistics, holders, fund data, and more — for one symbol."
     ),
     use_crumb=True,
     params=(
@@ -1073,19 +1066,20 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
     field_reference=QUOTE_SUMMARY_MODULES,
     field_reference_title="Quote summary --modules reference",
     notes=(
-        "Module availability depends on instrument type.",
-        "Live AAPL probe populated the equity-focused modules.",
-        "Live VT probe populated fundProfile, fundPerformance, and topHoldings.",
+        (
+            "Module availability depends on instrument type — funds populate "
+            "fundProfile, fundPerformance, and topHoldings; equities do not."
+        ),
     ),
 )
 
 RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
     name="recommendations-by-symbol",
     path="/v6/finance/recommendationsbysymbol/{symbol}",
-    summary="Recommended related symbols for a single symbol.",
+    summary="Fetch related-symbol recommendations for a symbol.",
     description=(
-        "Yahoo related-symbol recommendations for one symbol, commonly requested "
-        "from index quote pages."
+        "Yahoo's related-symbol recommendations rooted at one anchor symbol — "
+        "the same list served behind index and equity quote pages."
     ),
     use_crumb=True,
     params=(
@@ -1132,14 +1126,13 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
         "yogurt recommendations-by-symbol ^IXIC --fields symbol,recommendedSymbols",
     ),
     notes=(
-        "Observed index quote pages request this endpoint for ^GSPC, ^DJI, and ^IXIC.",
         (
-            "Observed traffic sometimes included an empty fields= parameter; Yogurt "
-            "omits --fields by default because empty CSV values are rejected."
+            "Index quote pages drive this endpoint: ^GSPC, ^DJI, and ^IXIC are "
+            "the canonical anchors."
         ),
         (
-            "^DJI live probing also triggered a related MU request during the same "
-            "browser session."
+            "Observed traffic sometimes includes an empty fields= parameter; "
+            "Yogurt omits --fields by default because empty CSV values are rejected."
         ),
     ),
 )
@@ -1147,10 +1140,10 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
 PRICE_INSIGHTS_COMMAND = CommandSpec(
     name="price-insights",
     path="/ws/company-fundamentals/v1/finance/price-insights",
-    summary="Generated price insight data for one or more symbols.",
+    summary="Fetch AI-generated price insights for one or more symbols.",
     description=(
-        "News, AI analysis, anomaly checks, and analyst-rating context for one or "
-        "more symbols when available."
+        "News summaries, AI analysis, anomaly checks, and analyst-rating context "
+        "for one or more symbols when Yahoo has them."
     ),
     use_crumb=True,
     params=(
@@ -1221,19 +1214,18 @@ PRICE_INSIGHTS_COMMAND = CommandSpec(
     common_modules=("ai",),
     notes=(
         (
-            "Omitting modules returned news, aiAnalysis, analystRating, and "
-            "anomaly data in live AAPL probes."
+            "Default (no modules) returns news, aiAnalysis, analystRating, and "
+            "anomaly data; modules=ai returned aiAnalysis and hasPriceAnomaly "
+            "without the surrounding news/rating sections."
         ),
         (
-            "modules=ai returned aiAnalysis and hasPriceAnomaly without the "
-            "surrounding news/rating sections."
+            "aiModules=news_summary,price_movement does not change the response "
+            "when modules is omitted."
         ),
         (
-            "aiModules=news_summary,price_movement did not change the live "
-            "AAPL response when modules was omitted."
+            "checkAnomaly=true narrows the response to hasPriceAnomaly; "
+            "checkAnomaly=false behaves like omission."
         ),
-        "checkAnomaly=false behaved like omission in live AAPL probes.",
-        "checkAnomaly=true returned only hasPriceAnomaly in live AAPL probes.",
     ),
 )
 
@@ -1263,10 +1255,11 @@ CALENDAR_EVENTS_MODULES: tuple[FieldReference, ...] = (
 CALENDAR_EVENTS_COMMAND = CommandSpec(
     name="calendar-events",
     path="/ws/screeners/v1/finance/calendar-events",
-    summary="Calendar events for a single symbol.",
+    summary="Fetch earnings, IPO, economic, and SEC filing events for a symbol.",
     description=(
-        "Earnings dates, economic events, IPO events, and SEC filing events "
-        "for one symbol. The modules parameter selects which event type to return."
+        "Calendar events over a date range for one symbol. Pick which event "
+        "types to return via --modules (earnings, ipoEvents, secReports, "
+        "economicEvents)."
     ),
     use_crumb=True,
     params=(
@@ -1386,10 +1379,10 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
 FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
     name="timeseries",
     path="/ws/fundamentals-timeseries/v1/finance/timeseries/{symbol}",
-    summary="Fundamentals timeseries data for a single symbol.",
+    summary="Fetch fundamentals timeseries for a symbol.",
     description=(
         "Timestamped fundamentals, valuation ratios, earnings events, analyst "
-        "ratings, and economic events for one symbol."
+        "ratings, and economic events over a date range for one symbol."
     ),
     use_crumb=True,
     params=(
@@ -1499,10 +1492,10 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
 INSIGHTS_COMMAND = CommandSpec(
     name="insights",
     path="/ws/insights/v3/finance/insights",
-    summary="Insight data for one or more symbols.",
+    summary="Fetch research reports and insights for one or more symbols.",
     description=(
-        "Research report metadata, company snapshots, and instrument insights for "
-        "one or more symbols when available."
+        "Research report metadata, company snapshots, and instrument insights "
+        "for one or more symbols when Yahoo has them."
     ),
     use_crumb=True,
     params=(
@@ -1577,8 +1570,10 @@ INSIGHTS_COMMAND = CommandSpec(
         "yogurt insights AAPL --reports-count 4",
     ),
     notes=(
-        "Live probes returned one finance.result item per requested symbol.",
-        "AAPL,MSFT,NVDA returned three result objects in live probing.",
+        (
+            "Yahoo returns one finance.result item per requested symbol — "
+            "AAPL,MSFT,NVDA yields three result objects."
+        ),
     ),
 )
 
@@ -1737,9 +1732,10 @@ PREDEFINED_SCREENER_SECTIONS: tuple[ReferenceSection, ...] = (
 PREDEFINED_SCREENER_COMMAND = CommandSpec(
     name="screener-predefined",
     path="/v1/finance/screener/predefined/saved",
-    summary="Predefined Yahoo screener results.",
+    summary="Run one or more of Yahoo's predefined screeners.",
     description=(
-        "Records from Yahoo's predefined saved screeners, such as most-active symbols."
+        "Records from Yahoo's predefined saved screeners — e.g. MOST_ACTIVES, "
+        "DAY_GAINERS, TOP_MUTUAL_FUNDS. See the reference below for known IDs."
     ),
     use_crumb=True,
     params=(
@@ -1853,10 +1849,10 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
 CHART_COMMAND = CommandSpec(
     name="chart",
     path="/v8/finance/chart/{symbol}",
-    summary="Chart price data for a single symbol.",
+    summary="Fetch historical OHLC chart data for a symbol.",
     description=(
-        "Calls Yahoo Finance's chart endpoint for one symbol and writes the "
-        "response body to stdout without formatting or response-model mapping."
+        "Timestamps, OHLC, volume, and (optionally) dividends, splits, and "
+        "earnings markers over a date range and interval for one symbol."
     ),
     use_crumb=False,
     params=(
@@ -1952,12 +1948,8 @@ CHART_COMMAND = CommandSpec(
             "now is not accepted as a user-provided value."
         ),
         (
-            "Yahoo can reject overlong short-interval windows for 1m, 5m, and 15m "
-            "intervals."
-        ),
-        (
-            "Live probes across several symbol types returned the observed chart "
-            "payload without additional query parameters."
+            "Yahoo can reject overlong windows for short intervals "
+            "(1m, 5m, 15m)."
         ),
     ),
 )
@@ -1965,8 +1957,11 @@ CHART_COMMAND = CommandSpec(
 RATINGS_TOP_COMMAND = CommandSpec(
     name="ratings-top",
     path="/v2/ratings/top/{symbol}",
-    summary="Top analyst rating scores for a single symbol.",
-    description=("Top analyst rating buckets and score components for one symbol."),
+    summary="Fetch top analyst rating buckets for a symbol.",
+    description=(
+        "Direction, momentum, price-target, and financial-score components "
+        "from Yahoo's top scored analyst rating buckets for one symbol."
+    ),
     use_crumb=False,
     params=(
         ParamSpec(
@@ -2025,8 +2020,10 @@ RATINGS_TOP_COMMAND = CommandSpec(
 MARKET_TIME_COMMAND = CommandSpec(
     name="market-time",
     path="/v6/finance/markettime",
-    summary="Market hours and session status.",
-    description="Current market session state and trading hours for global markets.",
+    summary="Show current market hours and session status.",
+    description=(
+        "Trading hours and session state for global markets. Symbol-independent."
+    ),
     use_crumb=False,
     params=(
         ParamSpec(
@@ -2076,10 +2073,11 @@ MARKET_TIME_COMMAND = CommandSpec(
 ANALYST_COMMAND = CommandSpec(
     name="analyst",
     path="/ws/mad/v2/analyst/symbol/{symbol}",
-    summary="Analyst intelligence for a single symbol.",
+    summary="Fetch analyst intelligence for a symbol.",
     description=(
-        "Analyst intelligence including options put/call ratio, news summary, "
-        "key takeaways, price targets, and analyst ratings for one symbol."
+        "Options put/call ratio, news summary with key takeaways, 1w/1m/1y "
+        "timeframe insights, price targets, and analyst ratings — all for "
+        "one symbol."
     ),
     use_crumb=True,
     params=(
@@ -2122,25 +2120,17 @@ ANALYST_COMMAND = CommandSpec(
         "yogurt analyst MSFT --debug-flag",
     ),
     notes=(
-        (
-            "Requires a valid Yahoo crumb session. Coverage across non-equity "
-            "asset classes is unconfirmed."
-        ),
-        (
-            "Response includes options PCR (put/call ratio and notional), news "
-            "summary with TLDR and themes, timeframe insights (1w/1m/1y), price "
-            "targets, and analyst ratings."
-        ),
+        "Coverage across non-equity asset classes is unconfirmed.",
     ),
 )
 
 TRENDING_COMMAND = CommandSpec(
     name="trending",
     path="/v1/finance/trending/{region}",
-    summary="Trending tickers for a region.",
+    summary="List trending tickers for a region.",
     description=(
-        "Trending ticker symbols and price data for a given region, as shown "
-        "in the chart-page sidebar and trending widgets."
+        "The trending tickers Yahoo serves in chart-page sidebars and "
+        "trending widgets, scoped to a region."
     ),
     use_crumb=False,
     params=(
@@ -2226,11 +2216,10 @@ TRENDING_COMMAND = CommandSpec(
 TIMESERIES_FIELDS_COMMAND = CommandSpec(
     name="timeseries-fields",
     path="/ws/fundamentals-timeseries/v1/finance/timeseriesfields",
-    summary="Available fundamentals timeseries field names.",
+    summary="List available fundamentals timeseries field names for a type.",
     description=(
-        "Returns metadata listing available fundamentals timeseries field names "
-        "for a given type. Observed on chart pages to discover significant-development "
-        "event fields."
+        "Field-name catalog for a fundamentals timeseries type. Observed on "
+        "chart pages to discover significant-development (sigDev) event fields."
     ),
     use_crumb=False,
     params=(
@@ -2265,8 +2254,8 @@ TIMESERIES_FIELDS_COMMAND = CommandSpec(
     ),
     notes=(
         (
-            "This endpoint returns field metadata, not timeseries data. "
-            "Use the timeseries command to fetch actual fundamentals data."
+            "Returns field metadata, not timeseries data. Use the timeseries "
+            "command to fetch actual fundamentals values."
         ),
         "Observed Yahoo chart pages request type=sigDev on every page load.",
     ),
@@ -2275,10 +2264,10 @@ TIMESERIES_FIELDS_COMMAND = CommandSpec(
 MARKET_INFO_COMMAND = CommandSpec(
     name="market-info",
     path="/ws/market-info/v1/finance/markets/ids",
-    summary="Commodity and currency market data.",
+    summary="Fetch commodity and currency market data.",
     description=(
-        "Market-level commodity and currency data used by Yahoo Finance "
-        "sidebar widgets. Symbol-independent."
+        "Commodity and currency tiles used by Yahoo Finance's sidebar "
+        "widgets. Symbol-independent."
     ),
     use_crumb=False,
     params=(
@@ -2325,9 +2314,9 @@ MARKET_INFO_COMMAND = CommandSpec(
 SCREENER_DISCOVER_COMMAND = CommandSpec(
     name="screener-discover",
     path="/ws/screeners/v1/finance/screener/discover",
-    summary="Discover investment ideas from Yahoo screeners.",
+    summary="Discover investment ideas from Yahoo screener modules.",
     description=(
-        "Investment idea discovery results from Yahoo screener modules. "
+        "Yahoo's screener-discover idea modules, such as neo_investment_ideas. "
         "Distinct from the predefined screener endpoint."
     ),
     use_crumb=False,
@@ -2393,10 +2382,10 @@ SCREENER_DISCOVER_COMMAND = CommandSpec(
 MARKET_SUMMARY_COMMAND = CommandSpec(
     name="market-summary",
     path="/v6/finance/quote/marketSummary",
-    summary="Global market summary across indices, futures, forex, and crypto.",
+    summary="Fetch global market summary: indices, futures, forex, crypto.",
     description=(
-        "Global market summary including major indices, futures, forex pairs, "
-        "and cryptocurrencies. The symbol set returned varies by region."
+        "Major indices, futures, forex pairs, and cryptocurrencies in one "
+        "snapshot. The symbol set returned varies by region."
     ),
     use_crumb=False,
     params=(
@@ -2518,11 +2507,10 @@ SCREENER_INSTRUMENT_FIELDS_COMMAND = CommandSpec(
     path="/v1/finance/screener/instrument/{instrument}/fields",
     summary="List every field available for a Yahoo data-platform entity.",
     description=(
-        "Retrieve the schema for a Yahoo screener instrument: every field's "
-        "ID, display name, data type, category, and whether it is sortable, "
-        "premium-locked, or deprecated. The response also enumerates the "
-        "quick-pick filter chips Yahoo's screener UI offers per field, "
-        "complete with operator and operand values."
+        "Schema for one Yahoo screener instrument: each field's ID, display "
+        "name, data type, category, and sortable/premium/deprecated flags. "
+        "Also enumerates the quick-pick filter chips Yahoo's screener UI "
+        "offers per field, with their operator and operand values."
     ),
     use_crumb=True,
     params=(
@@ -2597,10 +2585,10 @@ SCREENER_INSTRUMENT_FIELDS_COMMAND = CommandSpec(
 SECTOR_COMMAND = CommandSpec(
     name="sector",
     path="/v1/finance/sectors/{sector}",
-    summary="Sector overview, performance, companies, ETFs, and industries.",
+    summary="Fetch sector overview, performance, top holdings, and industries.",
     description=(
-        "Sector-level data including performance metrics, top companies, "
-        "top ETFs, top mutual funds, industry breakdown, and research reports."
+        "Sector-level data: performance metrics, top companies, top ETFs, "
+        "top mutual funds, industry breakdown, and research reports."
     ),
     use_crumb=True,
     params=(
@@ -2654,36 +2642,43 @@ SECTOR_COMMAND = CommandSpec(
     field_reference_title="Sector reference",
     notes=(
         (
-            "Response includes data.name, data.symbol, data.key, data.overview, "
-            "data.performance, data.topCompanies, data.topETFs, "
-            "data.topMutualFunds, data.industries, and data.researchReports."
+            "Response nests everything under data.*: name, symbol, key, "
+            "overview, performance, topCompanies, topETFs, topMutualFunds, "
+            "industries, and researchReports."
         ),
     ),
 )
 
 COMMANDS: tuple[CommandSpec, ...] = (
+    # Daily-driver fetches (known symbol -> data)
     QUOTE_COMMAND,
-    SPARK_COMMAND,
+    CHART_COMMAND,
     OPTIONS_COMMAND,
-    QUOTE_TYPE_COMMAND,
     QUOTE_SUMMARY_COMMAND,
+    QUOTE_TYPE_COMMAND,
+    SPARK_COMMAND,
+    # Discovery (find symbols, build custom queries).
+    # visualization and screener (DSL-driven, defined in cli.py) slot in
+    # between screener-predefined and screener-discover at the CLI layer.
+    PREDEFINED_SCREENER_COMMAND,
+    SCREENER_DISCOVER_COMMAND,
+    # Symbol-bound analysis
+    FUNDAMENTALS_TIMESERIES_COMMAND,
+    CALENDAR_EVENTS_COMMAND,
+    ANALYST_COMMAND,
+    RATINGS_TOP_COMMAND,
     RECOMMENDATIONS_BY_SYMBOL_COMMAND,
     PRICE_INSIGHTS_COMMAND,
-    CALENDAR_EVENTS_COMMAND,
-    FUNDAMENTALS_TIMESERIES_COMMAND,
     INSIGHTS_COMMAND,
-    PREDEFINED_SCREENER_COMMAND,
-    CHART_COMMAND,
-    RATINGS_TOP_COMMAND,
-    MARKET_TIME_COMMAND,
-    ANALYST_COMMAND,
+    # Market-wide state
     TRENDING_COMMAND,
-    TIMESERIES_FIELDS_COMMAND,
-    MARKET_INFO_COMMAND,
-    SCREENER_DISCOVER_COMMAND,
-    SCREENER_INSTRUMENT_FIELDS_COMMAND,
-    MARKET_SUMMARY_COMMAND,
     SECTOR_COMMAND,
+    MARKET_SUMMARY_COMMAND,
+    MARKET_INFO_COMMAND,
+    MARKET_TIME_COMMAND,
+    # Schema introspection
+    SCREENER_INSTRUMENT_FIELDS_COMMAND,
+    TIMESERIES_FIELDS_COMMAND,
 )
 COMMANDS_BY_NAME: dict[str, CommandSpec] = {
     command.name: command for command in COMMANDS
