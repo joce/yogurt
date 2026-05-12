@@ -32,10 +32,8 @@ Python 3.10+, uv, httpx, argparse, pytest, pytest-httpx, ruff, pyright, tox, hat
 - Print Yahoo response bodies to stdout exactly as returned; do not model, reshape, pretty-print, or interpret endpoint JSON.
 - Keep Yahoo endpoint knowledge in metadata and validation only; do not create response classes.
 - Use `uv run python` for Python scripts; never use bare `python` or `python3`.
-- Use `greenflame` for screen captures or annotations.
 - Never log or print Yahoo cookies, crumbs, or full session-cache contents.
 - Keep runtime dependencies narrow; do not add TUI, ORM, web framework, or rich formatting libraries.
-- Preserve Calahan's Yahoo cookie/crumb flow unless there is a tested reason to change it.
 
 ## Workflow
 - Make minimal changes and avoid unrelated refactors.
@@ -64,7 +62,6 @@ Python 3.10+, uv, httpx, argparse, pytest, pytest-httpx, ruff, pyright, tox, hat
 - Add targeted probes when an endpoint is symbol-sensitive, but keep this baseline for broad API-surface discovery and for checking whether an observed endpoint applies across asset classes.
 
 ## Out of scope
-- TUI/UX layers from Doubloon.
 - Mapping Yahoo JSON into Python domain models.
 - Separate documentation/discovery subcommands.
 - Secrets, API keys, or checked-in session-cache files.

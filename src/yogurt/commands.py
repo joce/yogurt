@@ -833,9 +833,7 @@ QUOTE_TYPE_COMMAND = CommandSpec(
     name="quote-type",
     path="/v1/finance/quoteType/{symbol}",
     summary="Fetch instrument classification metadata for a symbol.",
-    description=(
-        "Quote type, exchange, market, and identity metadata for one symbol."
-    ),
+    description=("Quote type, exchange, market, and identity metadata for one symbol."),
     use_crumb=True,
     params=(
         ParamSpec(
@@ -1947,10 +1945,7 @@ CHART_COMMAND = CommandSpec(
             "When period2 is omitted, Yogurt sends the current Unix timestamp; "
             "now is not accepted as a user-provided value."
         ),
-        (
-            "Yahoo can reject overlong windows for short intervals "
-            "(1m, 5m, 15m)."
-        ),
+        ("Yahoo can reject overlong windows for short intervals " "(1m, 5m, 15m)."),
     ),
 )
 
@@ -2119,9 +2114,7 @@ ANALYST_COMMAND = CommandSpec(
         "yogurt analyst AAPL",
         "yogurt analyst MSFT --debug-flag",
     ),
-    notes=(
-        "Coverage across non-equity asset classes is unconfirmed.",
-    ),
+    notes=("Coverage across non-equity asset classes is unconfirmed.",),
 )
 
 TRENDING_COMMAND = CommandSpec(

@@ -10,7 +10,6 @@ Yogurt passes field names through to Yahoo without validation. Availability
 depends on the symbol, instrument type, exchange, region, and the current Yahoo
 response shape.
 
-Most meanings below are best-effort descriptions from Calahan's `YQuote` model.
 `morningstarIndustry` is included because Yahoo returns it for some quote
 requests and Yogurt uses it in quote examples.
 
