@@ -29,6 +29,8 @@ class StubClient:
         self.post_calls: list[
             tuple[str, dict[str, ParamValue], dict[str, Any], bool]
         ] = []
+        self.base_urls: list[str | None] = []
+        self.post_base_urls: list[str | None] = []
         self.closed = False
 
     async def get(
@@ -37,10 +39,12 @@ class StubClient:
         params: dict[str, ParamValue],
         *,
         use_crumb: bool = True,
+        base_url: str | None = None,
     ) -> str:
         """Record the request and return the configured body."""
 
         self.calls.append((path, params, use_crumb))
+        self.base_urls.append(base_url)
         return self.body
 
     async def post(
@@ -50,10 +54,12 @@ class StubClient:
         json_body: dict[str, Any],
         *,
         use_crumb: bool = True,
+        base_url: str | None = None,
     ) -> str:
         """Record the POST request and return the configured body."""
 
         self.post_calls.append((path, params, json_body, use_crumb))
+        self.post_base_urls.append(base_url)
         return self.body
 
     async def aclose(self) -> None:
@@ -87,6 +93,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "quote-type" in captured.out
     assert "quote-summary" in captured.out
     assert "recommendations-by-symbol" in captured.out
+    assert "stock-recommender" in captured.out
     assert "price-insights" in captured.out
     assert "calendar-events" in captured.out
     assert "timeseries" in captured.out
@@ -971,6 +978,63 @@ def test_recommendations_by_symbol_rejects_empty_fields() -> None:
     assert not client.calls
 
 
+def test_stock_recommender_help_documents_endpoint_and_quirks(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """stock-recommender help documents the finance.yahoo.com host and equity scope."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["stock-recommender", "--help"])
+
+    assert exc_info.value.code == 0
+    captured = capsys.readouterr()
+    assert "https://finance.yahoo.com/xhr/stock-recommender" in captured.out
+    assert "SYMBOL" in captured.out
+    assert "related_tickers" in captured.out
+    assert "Equity-only endpoint" in captured.out
+    assert "query1 mirror returns 500" in captured.out
+    assert "yogurt stock-recommender AAPL" in captured.out
+    assert "Calls Yahoo" not in captured.out
+    assert "Output:" not in captured.out
+
+
+def test_stock_recommender_command_passes_symbol_to_finance_host() -> None:
+    """stock-recommender targets finance.yahoo.com without a crumb."""
+
+    client = StubClient()
+    stdout = StringIO()
+    stderr = StringIO()
+
+    exit_code = main(
+        ["stock-recommender", "AAPL"],
+        stdout=stdout,
+        stderr=stderr,
+        client=client,
+    )
+
+    assert exit_code == 0
+    assert stdout.getvalue() == '{"ok":true}\n'
+    assert not stderr.getvalue()
+    assert client.closed
+    assert client.calls == [
+        ("/xhr/stock-recommender", {"symbol": "AAPL"}, False),
+    ]
+    assert client.base_urls == ["https://finance.yahoo.com"]
+
+
+def test_stock_recommender_rejects_missing_symbol(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """stock-recommender requires the positional SYMBOL argument."""
+
+    with pytest.raises(SystemExit) as exc_info:
+        main(["stock-recommender"])
+
+    assert exc_info.value.code == ARGPARSE_ERROR
+    captured = capsys.readouterr()
+    assert "SYMBOL" in captured.err
+
+
 def test_price_insights_help_includes_params_and_probe_notes(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
@@ -1327,6 +1391,7 @@ def test_fundamentals_timeseries_help_includes_params_and_type_values(
         ["quote-type", "AAPL"],
         ["quote-summary", "AAPL"],
         ["recommendations-by-symbol", "^IXIC"],
+        ["stock-recommender", "AAPL"],
         ["price-insights", "AAPL"],
         ["calendar-events", "AAPL"],
         ["timeseries", "AAPL"],

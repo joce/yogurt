@@ -305,6 +305,7 @@ class YahooClient:
         params: dict[str, ParamValue],
         *,
         use_crumb: bool = True,
+        base_url: str | None = None,
     ) -> str:
         """Call a Yahoo Finance endpoint.
 
@@ -316,9 +317,10 @@ class YahooClient:
         request_params = dict(params)
         if use_crumb and self._crumb:
             request_params["crumb"] = self._crumb
+        host = base_url or self._YAHOO_FINANCE_QUERY_URL
         response = await self._request_or_raise(
             "GET",
-            self._YAHOO_FINANCE_QUERY_URL + path,
+            host + path,
             context=f"api call: {path}",
             params=request_params,
         )
@@ -331,6 +333,7 @@ class YahooClient:
         json_body: dict[str, Any],
         *,
         use_crumb: bool = True,
+        base_url: str | None = None,
     ) -> str:
         """Call a Yahoo Finance POST endpoint with a JSON body.
 
@@ -342,9 +345,10 @@ class YahooClient:
         request_params = dict(params)
         if use_crumb and self._crumb:
             request_params["crumb"] = self._crumb
+        host = base_url or self._YAHOO_FINANCE_QUERY_URL
         response = await self._request_or_raise(
             "POST",
-            self._YAHOO_FINANCE_QUERY_URL + path,
+            host + path,
             context=f"api call: {path}",
             params=request_params,
             json=json_body,

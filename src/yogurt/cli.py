@@ -49,6 +49,7 @@ class _YahooClientProtocol(Protocol):
         params: dict[str, ParamValue],
         *,
         use_crumb: bool = True,
+        base_url: str | None = None,
     ) -> str: ...
 
     async def post(
@@ -58,6 +59,7 @@ class _YahooClientProtocol(Protocol):
         json_body: dict[str, Any],
         *,
         use_crumb: bool = True,
+        base_url: str | None = None,
     ) -> str: ...
 
     async def aclose(self) -> None: ...
@@ -673,6 +675,7 @@ async def _run_async(
                 _path_for_command(command, namespace),
                 params,
                 use_crumb=command.use_crumb,
+                base_url=command.base_url,
             )
         elif namespace.command_kind == "raw":
             body = await client.get(

@@ -40,12 +40,13 @@ class CommandSpec:
     common_types: tuple[str, ...] = ()
     notes: tuple[str, ...] = ()
     use_crumb: bool = True
+    base_url: str = "https://query1.finance.yahoo.com"
 
     @property
     def yahoo_url(self) -> str:
-        """Return the full Yahoo query URL for this endpoint."""
+        """Return the full Yahoo URL for this endpoint."""
 
-        return f"https://query1.finance.yahoo.com{self.path}"
+        return f"{self.base_url}{self.path}"
 
 
 def _prefixed_field_references(
@@ -1135,6 +1136,45 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
     ),
 )
 
+STOCK_RECOMMENDER_COMMAND = CommandSpec(
+    name="stock-recommender",
+    path="/xhr/stock-recommender",
+    base_url="https://finance.yahoo.com",
+    summary="Fetch related-tickers peers for an equity symbol.",
+    description=(
+        "Yahoo's stock-recommender related_tickers feed — a short ordered list "
+        "of peer or competitor tickers Yahoo serves alongside an equity quote "
+        "page."
+    ),
+    use_crumb=False,
+    params=(
+        ParamSpec(
+            name="symbol",
+            cli_name="symbol",
+            kind=ParamKind.STRING,
+            positional=True,
+            required=True,
+            metavar="SYMBOL",
+            help="A single Yahoo equity symbol, such as AAPL or RY.TO.",
+        ),
+    ),
+    examples=(
+        "yogurt stock-recommender AAPL",
+        "yogurt stock-recommender MSFT",
+        "yogurt stock-recommender RY.TO",
+    ),
+    notes=(
+        (
+            "Equity-only endpoint: ETFs, futures, forex, and crypto return 404; "
+            "indices return 400."
+        ),
+        (
+            "Hosted on finance.yahoo.com, not the query1 host used by most "
+            "Yogurt commands; the query1 mirror returns 500."
+        ),
+    ),
+)
+
 PRICE_INSIGHTS_COMMAND = CommandSpec(
     name="price-insights",
     path="/ws/company-fundamentals/v1/finance/price-insights",
@@ -1945,7 +1985,7 @@ CHART_COMMAND = CommandSpec(
             "When period2 is omitted, Yogurt sends the current Unix timestamp; "
             "now is not accepted as a user-provided value."
         ),
-        ("Yahoo can reject overlong windows for short intervals " "(1m, 5m, 15m)."),
+        ("Yahoo can reject overlong windows for short intervals (1m, 5m, 15m)."),
     ),
 )
 
@@ -2661,6 +2701,7 @@ COMMANDS: tuple[CommandSpec, ...] = (
     ANALYST_COMMAND,
     RATINGS_TOP_COMMAND,
     RECOMMENDATIONS_BY_SYMBOL_COMMAND,
+    STOCK_RECOMMENDER_COMMAND,
     PRICE_INSIGHTS_COMMAND,
     INSIGHTS_COMMAND,
     # Market-wide state
