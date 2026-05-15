@@ -9,8 +9,8 @@ from typing import TYPE_CHECKING, Any, Final, Literal
 
 import httpx
 
-from yogurt.exceptions import YahooRequestError, YahooUnavailableError
-from yogurt.session_cache import (
+from yoghurt.exceptions import YahooRequestError, YahooUnavailableError
+from yoghurt.session_cache import (
     default_cache_path,
     load_session_cache,
     save_session_cache,
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from http.cookiejar import Cookie
     from pathlib import Path
 
-    from yogurt.types import ParamValue
+    from yoghurt.types import ParamValue
 
 
 class YahooClient:

@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING
 import httpx
 import pytest
 
-from yogurt.client import YahooClient
-from yogurt.exceptions import YahooRequestError
-from yogurt.session_cache import save_session_cache
+from yoghurt.client import YahooClient
+from yoghurt.exceptions import YahooRequestError
+from yoghurt.session_cache import save_session_cache
 
 if TYPE_CHECKING:
     from pathlib import Path

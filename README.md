@@ -1,14 +1,14 @@
-# Yogurt
+# Yoghurt
 
-[![CI](https://github.com/joce/yogurt/actions/workflows/ci.yml/badge.svg)](https://github.com/joce/yogurt/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/joce/yogurt/graph/badge.svg)](https://codecov.io/gh/joce/yogurt)
+[![CI](https://github.com/joce/yoghurt/actions/workflows/ci.yml/badge.svg)](https://github.com/joce/yoghurt/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/joce/yoghurt/graph/badge.svg)](https://codecov.io/gh/joce/yoghurt)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![GitHub License](https://img.shields.io/github/license/joce/yogurt)](https://github.com/joce/yogurt/blob/main/LICENSE)
+[![GitHub License](https://img.shields.io/github/license/joce/yoghurt)](https://github.com/joce/yoghurt/blob/main/LICENSE)
 
 Yahoo!-Originated Graphs, Updates, Returns & Tickers.
 
-Yogurt brings Yahoo Finance's HTTP endpoints to the command line. It is built
+Yoghurt brings Yahoo Finance's HTTP endpoints to the command line. It is built
 for scripts, agents, and quick terminal work that needs the JSON returned by
 Yahoo's finance endpoints.
 
@@ -23,13 +23,13 @@ help.
 - A SQL-flavored DSL (`screener`, `visualization`) for ad-hoc filters and
   cross-entity queries against Yahoo's data-platform endpoints.
 - Generated help that includes examples, parameters, field references, modules,
-  or types when Yogurt knows them.
+  or types when Yoghurt knows them.
 - Reusable Yahoo session cache for faster one-shot CLI calls.
 - A `raw` command for Yahoo query paths that do not have dedicated metadata yet.
 
 ## Install From Source
 
-Yogurt is currently intended to run from a local checkout. It is a Python 3.10+
+Yoghurt is currently intended to run from a local checkout. It is a Python 3.10+
 project managed with [uv](https://docs.astral.sh/uv/).
 
 ```powershell
@@ -39,14 +39,14 @@ uv sync --all-groups
 Run the CLI from the repository:
 
 ```powershell
-uv run yogurt --help
+uv run yoghurt --help
 ```
 
 Or install it as a package from a local checkout:
 
 ```powershell
 uv tool install .
-yogurt --help
+yoghurt --help
 ```
 
 ## Quick Start
@@ -54,43 +54,43 @@ yogurt --help
 Fetch quotes for a few symbols:
 
 ```powershell
-uv run yogurt quote AAPL,MSFT,NVDA
+uv run yoghurt quote AAPL,MSFT,NVDA
 ```
 
 Request specific quote fields:
 
 ```powershell
-uv run yogurt quote AAPL,MSFT --fields symbol,longName,companyLogoUrl,regularMarketPrice,overnightMarketPrice
+uv run yoghurt quote AAPL,MSFT --fields symbol,longName,companyLogoUrl,regularMarketPrice,overnightMarketPrice
 ```
 
-See [QUOTE_FIELDS.md](src/yogurt/docs/QUOTE_FIELDS.md) for the full quote field reference and
+See [QUOTE_FIELDS.md](src/yoghurt/docs/QUOTE_FIELDS.md) for the full quote field reference and
 best-effort meanings.
 
 Fetch selected quote summary modules:
 
 ```powershell
-uv run yogurt quote-summary ^GSPC --modules price,summaryDetail,pageViews,financialsTemplate
+uv run yoghurt quote-summary ^GSPC --modules price,summaryDetail,pageViews,financialsTemplate
 ```
 
-See [QUOTE_SUMMARY_MODULES.md](src/yogurt/docs/QUOTE_SUMMARY_MODULES.md) for the researched
+See [QUOTE_SUMMARY_MODULES.md](src/yoghurt/docs/QUOTE_SUMMARY_MODULES.md) for the researched
 quote-summary module list and descriptions.
 
 Fetch quote-type metadata using Yahoo's path-symbol endpoint:
 
 ```powershell
-uv run yogurt quote-type ^GSPC
+uv run yoghurt quote-type ^GSPC
 ```
 
 Fetch chart data for a recent window:
 
 ```powershell
-uv run yogurt chart AAPL
+uv run yoghurt chart AAPL
 ```
 
 Fetch quote-page sparkline data:
 
 ```powershell
-uv run yogurt spark AAPL,MSFT
+uv run yoghurt spark AAPL,MSFT
 ```
 
 Quote-page probes have observed `1d` and `24h` spark ranges; pass values such
@@ -99,16 +99,16 @@ as `--range 24h` through when Yahoo supports them.
 Fetch recommended symbols for a quote page:
 
 ```powershell
-uv run yogurt recommendations-by-symbol AAPL
+uv run yoghurt recommendations-by-symbol AAPL
 ```
 
 Fetch Yahoo calendar events:
 
 ```powershell
-uv run yogurt calendar-events AAPL
-uv run yogurt calendar-events AAPL --modules ipoEvents
-uv run yogurt calendar-events AAPL --modules secReports
-uv run yogurt calendar-events AAPL --modules economicEvents --include-all-economic-events
+uv run yoghurt calendar-events AAPL
+uv run yoghurt calendar-events AAPL --modules ipoEvents
+uv run yoghurt calendar-events AAPL --modules secReports
+uv run yoghurt calendar-events AAPL --modules economicEvents --include-all-economic-events
 ```
 
 Confirmed `--modules` values for `calendar-events`:
@@ -123,8 +123,8 @@ Confirmed `--modules` values for `calendar-events`:
 Fetch sector data:
 
 ```powershell
-uv run yogurt sector technology
-uv run yogurt sector financial-services --with-returns
+uv run yoghurt sector technology
+uv run yoghurt sector financial-services --with-returns
 ```
 
 Confirmed sector slugs: `technology`, `financial-services`, `consumer-cyclical`,
@@ -134,9 +134,9 @@ Confirmed sector slugs: `technology`, `financial-services`, `consumer-cyclical`,
 Run a predefined Yahoo screener:
 
 ```powershell
-uv run yogurt screener-predefined MOST_ACTIVES
-uv run yogurt screener-predefined DAY_GAINERS_CRYPTOCURRENCIES
-uv run yogurt screener-predefined TOP_OPTIONS_OPEN_INTEREST
+uv run yoghurt screener-predefined MOST_ACTIVES
+uv run yoghurt screener-predefined DAY_GAINERS_CRYPTOCURRENCIES
+uv run yoghurt screener-predefined TOP_OPTIONS_OPEN_INTEREST
 ```
 
 Confirmed predefined screener IDs:
@@ -183,26 +183,26 @@ Confirmed predefined screener IDs:
 Fetch an option chain using Yahoo's default expiration:
 
 ```powershell
-uv run yogurt options AAPL
+uv run yoghurt options AAPL
 ```
 
 Fetch current market session status and trading hours:
 
 ```powershell
-uv run yogurt market-time
+uv run yoghurt market-time
 ```
 
 Fetch analyst intelligence for a symbol (put/call ratio, news summary, price
 targets, and ratings):
 
 ```powershell
-uv run yogurt analyst AAPL
+uv run yoghurt analyst AAPL
 ```
 
 Run a custom screener or cross-entity query with the SQL-flavored DSL:
 
 ```powershell
-uv run yogurt screener --query "
+uv run yoghurt screener --query "
   SELECT ticker, intradaymarketcap, sector, peratio.lasttwelvemonths
   FROM EQUITY
   WHERE region = 'us'
@@ -211,7 +211,7 @@ uv run yogurt screener --query "
   ORDER BY intradaymarketcap DESC
   LIMIT 25"
 
-uv run yogurt visualization --query "
+uv run yoghurt visualization --query "
   SELECT ticker, transactiondate, shares
   FROM INSIDER_TRANSACTION
   WHERE ticker = 'AAPL'
@@ -223,18 +223,18 @@ List the fields, types, and operators available for a given asset class or
 entity (e.g. for use in a `screener` or `visualization` query):
 
 ```powershell
-uv run yogurt screener-instrument-fields equity
-uv run yogurt screener-instrument-fields insider_transaction
+uv run yoghurt screener-instrument-fields equity
+uv run yoghurt screener-instrument-fields insider_transaction
 ```
 
-See [QUERY_DSL.md](src/yogurt/docs/QUERY_DSL.md) for the full DSL reference: grammar,
+See [QUERY_DSL.md](src/yoghurt/docs/QUERY_DSL.md) for the full DSL reference: grammar,
 operators, entity routing, body shape, premium-locked entities, and more
 examples.
 
 Pass through a Yahoo query path directly:
 
 ```powershell
-uv run yogurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted=true
+uv run yoghurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted=true
 ```
 
 ## Commands
@@ -242,7 +242,7 @@ uv run yogurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted=
 Use root help to see the command list:
 
 ```powershell
-uv run yogurt --help
+uv run yoghurt --help
 ```
 
 Current commands, grouped roughly by how often they're reached for:
@@ -305,10 +305,10 @@ Current commands, grouped roughly by how often they're reached for:
 Each endpoint has its own adaptive help:
 
 ```powershell
-uv run yogurt quote --help
-uv run yogurt quote-summary --help
-uv run yogurt calendar-events --help
-uv run yogurt timeseries --help
+uv run yoghurt quote --help
+uv run yoghurt quote-summary --help
+uv run yoghurt calendar-events --help
+uv run yoghurt timeseries --help
 ```
 
 Endpoint help is the primary documentation surface. It shows Yahoo's target
@@ -321,13 +321,13 @@ The `chart` command calls Yahoo's `/v8/finance/chart/{symbol}` endpoint without
 requesting a crumb:
 
 ```powershell
-uv run yogurt chart AAPL
+uv run yoghurt chart AAPL
 ```
 
-When period arguments are omitted, Yogurt uses a recent quote-page-shaped
+When period arguments are omitted, Yoghurt uses a recent quote-page-shaped
 window: `period1` defaults to three days before execution time, `period2`
 defaults to execution time, `--interval` defaults to `1m`, and `--events`
-defaults to `div,split,earn`. User-provided events are comma-separated; Yogurt
+defaults to `div,split,earn`. User-provided events are comma-separated; Yoghurt
 packs them for Yahoo internally. Extended-hours data is opt-in with
 `--include-pre-post`.
 
@@ -336,16 +336,16 @@ packs them for Yahoo internally. Extended-hours data is opt-in with
 The `timeseries` command can also run with only a ticker:
 
 ```powershell
-uv run yogurt timeseries AAPL
+uv run yoghurt timeseries AAPL
 ```
 
 Its default type list matches the Yahoo quote/analysis page request for
 earnings-release, analyst-rating, and economic-event timeseries data. When
-period arguments are omitted, Yogurt uses a recent quote-page-style window:
+period arguments are omitted, Yoghurt uses a recent quote-page-style window:
 `period1` defaults to three days before execution time and `period2` defaults
 to execution time.
 
-See [TIMESERIES_TYPES.md](src/yogurt/docs/TIMESERIES_TYPES.md) for the observed `--type`
+See [TIMESERIES_TYPES.md](src/yoghurt/docs/TIMESERIES_TYPES.md) for the observed `--type`
 reference with descriptions.
 
 ## Dates and Booleans
@@ -359,7 +359,7 @@ Date and datetime parameters accept:
 Date-only values are converted at UTC midnight before they are sent to Yahoo.
 For endpoints with `period1` and `period2`, documented defaults let ticker-only
 requests run, `period2` defaults to the current Unix timestamp when omitted, and
-Yogurt rejects windows where `period2` is not greater than `period1`. Supplying
+Yoghurt rejects windows where `period2` is not greater than `period1`. Supplying
 `period2` without `period1` is also rejected.
 
 Boolean parameters accept common true and false forms such as `true`, `false`,
@@ -367,26 +367,26 @@ Boolean parameters accept common true and false forms such as `true`, `false`,
 
 ## Session Cache
 
-Most Yahoo endpoints require a cookie and crumb. Yogurt establishes that session
+Most Yahoo endpoints require a cookie and crumb. Yoghurt establishes that session
 state automatically and caches it for reuse across CLI calls.
 
 Useful global options:
 
 ```powershell
-uv run yogurt --refresh-session quote AAPL
-uv run yogurt --no-session-cache quote AAPL
-uv run yogurt --session-cache C:\tmp\yogurt-session.json quote AAPL
+uv run yoghurt --refresh-session quote AAPL
+uv run yoghurt --no-session-cache quote AAPL
+uv run yoghurt --session-cache C:\tmp\yoghurt-session.json quote AAPL
 ```
 
-Yogurt never prints cookies, crumbs, or full session-cache contents.
+Yoghurt never prints cookies, crumbs, or full session-cache contents.
 
 ## Output Contract
 
-Yogurt writes the Yahoo response body to stdout exactly as returned. This makes
+Yoghurt writes the Yahoo response body to stdout exactly as returned. This makes
 it easy to pipe into tools that expect JSON:
 
 ```powershell
-uv run yogurt quote AAPL | jq .
+uv run yoghurt quote AAPL | jq .
 ```
 
 Diagnostics and errors are written to stderr.
@@ -427,4 +427,4 @@ minimal required parameters, and representative optional parameters.
 
 ## License
 
-Yogurt is released under the MIT License. See [LICENSE](LICENSE).
+Yoghurt is released under the MIT License. See [LICENSE](LICENSE).

@@ -7,7 +7,7 @@ from pathlib import Path
 
 import httpx
 
-from yogurt.session_cache import (
+from yoghurt.session_cache import (
     default_cache_path,
     load_session_cache,
     save_session_cache,
@@ -35,6 +35,6 @@ def test_session_cache_round_trips_cookies_crumb_and_expiry(tmp_path: Path) -> N
 def test_default_cache_path_uses_dot_cache() -> None:
     """Default session cache path is stable across platforms."""
 
-    assert default_cache_path() == Path.home() / ".cache" / "yogurt" / (
+    assert default_cache_path() == Path.home() / ".cache" / "yoghurt" / (
         "yahoo-session.json"
     )

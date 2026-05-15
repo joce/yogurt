@@ -1,4 +1,4 @@
-"""Command-line interface for Yogurt."""
+"""Command-line interface for Yoghurt."""
 
 from __future__ import annotations
 
@@ -18,18 +18,18 @@ from urllib.parse import quote
 
 from typing_extensions import override
 
-from yogurt import __version__
-from yogurt.client import YahooClient
-from yogurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
-from yogurt.exceptions import YogurtError
-from yogurt.params import ParamKind, ParamSpec, coerce_param
-from yogurt.query import QueryError
-from yogurt.query import parse as parse_query
+from yoghurt import __version__
+from yoghurt.client import YahooClient
+from yoghurt.commands import COMMANDS, COMMANDS_BY_NAME, CommandSpec, FieldReference
+from yoghurt.exceptions import YoghurtError
+from yoghurt.params import ParamKind, ParamSpec, coerce_param
+from yoghurt.query import QueryError
+from yoghurt.query import parse as parse_query
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from yogurt.types import ParamValue
+    from yoghurt.types import ParamValue
 
 _THREE_DAYS_SECONDS = 3 * 24 * 60 * 60
 _HELP_WIDTH = 100
@@ -136,7 +136,7 @@ class _VerboseHelpAction(argparse.Action):
         """Print help, dump the doc, exit cleanly."""
 
         parser.print_help()
-        doc_text = (files("yogurt.docs") / self._doc_filename).read_text(
+        doc_text = (files("yoghurt.docs") / self._doc_filename).read_text(
             encoding="utf-8"
         )
         sys.stdout.write("\n")
@@ -231,7 +231,7 @@ def _add_global_options(parser: argparse.ArgumentParser) -> None:
     parser.add_argument(
         "--version",
         action="version",
-        version=f"Yogurt {__version__}",
+        version=f"Yoghurt {__version__}",
         help="Show the program version and exit.",
     )
     parser.add_argument(
@@ -319,19 +319,19 @@ def _set_command_parser(parser: argparse.ArgumentParser, command: CommandSpec) -
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """Build Yogurt's adaptive argument parser.
+    """Build Yoghurt's adaptive argument parser.
 
     Returns:
         argparse.ArgumentParser: The configured root parser.
     """
 
     parser = argparse.ArgumentParser(
-        prog="yogurt",
+        prog="yoghurt",
         description=(
             "Expose Yahoo Finance endpoints to the command line and print raw "
             "JSON response bodies."
         ),
-        epilog="Run `yogurt <endpoint> --help` for endpoint-specific parameters.",
+        epilog="Run `yoghurt <endpoint> --help` for endpoint-specific parameters.",
         formatter_class=_HelpFormatter,
         add_help=False,
     )
@@ -396,11 +396,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Send raw parameters to any Yahoo query path.",
         description=(
             "Pass NAME=VALUE query parameters through to any Yahoo Finance "
-            "query path. Useful for endpoints Yogurt does not model yet."
+            "query path. Useful for endpoints Yoghurt does not model yet."
         ),
         epilog=(
             "Example:\n"
-            "  yogurt raw /v7/finance/quote --param symbols=AAPL,MSFT "
+            "  yoghurt raw /v7/finance/quote --param symbols=AAPL,MSFT "
             "--param formatted=true"
         ),
         formatter_class=_HelpFormatter,
@@ -431,11 +431,11 @@ Yahoo endpoint:
 Grammar: SELECT cols FROM entities [WHERE expr] [ORDER BY field] [LIMIT n]
          AGGREGATE date_hist(field, 'interval') FROM entities [WHERE expr]
                    [JOIN BY field] [FILL ident] [LIMIT n]
-Run `yogurt visualization --help-verbose` for the full DSL reference.
+Run `yoghurt visualization --help-verbose` for the full DSL reference.
 
 Examples:
   # Earnings calendar (sub-week, US, exclude OTC)
-  yogurt visualization --query "
+  yoghurt visualization --query "
     SELECT ticker, companyshortname, startdatetime, intradaymarketcap
     FROM sp_earnings
     WHERE region = 'us'
@@ -445,21 +445,21 @@ Examples:
     LIMIT 25"
 
   # AAPL insider transactions
-  yogurt visualization --query "
+  yoghurt visualization --query "
     SELECT ticker, transactiondate, shares
     FROM INSIDER_TRANSACTION
     WHERE ticker = 'AAPL'
     ORDER BY transactiondate DESC LIMIT 50"
 
   # Cross-entity calendar histogram
-  yogurt visualization --query "
+  yoghurt visualization --query "
     AGGREGATE date_hist(startdatetime, '1d')
     FROM sp_earnings, economic_event, splits, ipo_info
     WHERE startdatetime BETWEEN '2026-05-03' AND '2026-05-09'
     JOIN BY startdatetime FILL pad"
 
   # Raw JSON body escape hatch
-  yogurt visualization --body-json @body.json
+  yoghurt visualization --body-json @body.json
 
 Known entityIdType values: sp_earnings, economic_event, splits, ipo_info,
   insider_transaction, research_reports, trade_idea. Multi-entity FROM lists
@@ -471,12 +471,12 @@ Field naming:
   peRatioLtm). Both routes accept either on input.
 
 Field reference:
-  yogurt screener-instrument-fields <entity>
+  yoghurt screener-instrument-fields <entity>
 
 Premium data:
   Four entities return 401 on direct query (analyst_ratings,
   tradingcentral_event_info, institutional_interest, institutional_holdings).
-  See `yogurt screener-predefined --help` for curated presets that surface
+  See `yoghurt screener-predefined --help` for curated presets that surface
   slices on the free tier."""
 
 _SCREENER_EPILOG: Final[str] = """\
@@ -484,11 +484,11 @@ Yahoo endpoint:
   https://query1.finance.yahoo.com/v1/finance/screener
 
 Grammar: SELECT cols FROM quote_type [WHERE expr] [ORDER BY field] [LIMIT n]
-Run `yogurt screener --help-verbose` for the full DSL reference.
+Run `yoghurt screener --help-verbose` for the full DSL reference.
 
 Examples:
   # Large-cap technology screen
-  yogurt screener --query "
+  yoghurt screener --query "
     SELECT ticker, intradaymarketcap, sector, peratio.lasttwelvemonths
     FROM EQUITY
     WHERE region = 'us'
@@ -499,7 +499,7 @@ Examples:
     LIMIT 100"
 
   # Raw JSON body escape hatch
-  yogurt screener --body-json @body.json
+  yoghurt screener --body-json @body.json
 
 Known quoteType values: EQUITY, ETF, MUTUALFUND, CRYPTOCURRENCY, INDEX,
   FUTURE, OPTION, BOND, CURRENCY, COMMODITY, WARRANT. Entity IDs accepted by
@@ -513,7 +513,7 @@ Field naming:
   input.
 
 Field reference:
-  yogurt screener-instrument-fields <quote-type>     # e.g. equity, etf
+  yoghurt screener-instrument-fields <quote-type>     # e.g. equity, etf
 
 Premium data:
   Many quoteTypes include isPremium=true fields that 401 when filtered.
@@ -561,7 +561,7 @@ def _add_query_command_options(parser: argparse.ArgumentParser, *, route: str) -
             default=True,
             help=(
                 "Request Yahoo formatted values. The screener route only "
-                "responds when this is set; Yogurt enables it by default."
+                "responds when this is set; Yoghurt enables it by default."
             ),
         )
         parser.add_argument(
@@ -774,7 +774,7 @@ def main(
     stderr: TextIO | None = None,
     client: _YahooClientProtocol | None = None,
 ) -> int:
-    """Run the Yogurt CLI.
+    """Run the Yoghurt CLI.
 
     Returns:
         int: Process-style exit code.
@@ -800,6 +800,6 @@ def main(
     )
     try:
         return asyncio.run(_run_async(namespace, output, active_client))
-    except (ValueError, YogurtError) as exc:
-        error_output.write(f"yogurt: error: {exc}\n")
+    except (ValueError, YoghurtError) as exc:
+        error_output.write(f"yoghurt: error: {exc}\n")
         return 1

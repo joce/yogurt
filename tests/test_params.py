@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from yogurt.params import (
+from yoghurt.params import (
     ParamKind,
     ParamSpec,
     coerce_param,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from yogurt.query import QueryError, parse
+from yoghurt.query import QueryError, parse
 
 EARNINGS_LIMIT = 25
 PERATIO_THRESHOLD = 30

@@ -6,9 +6,9 @@ from importlib.resources import files
 
 import pytest
 
-from yogurt.cli import main
+from yoghurt.cli import main
 
-_DOCS_DIR = "yogurt.docs"
+_DOCS_DIR = "yoghurt.docs"
 _DOC_MARKER_LINE = 10
 _ARGPARSE_ERROR_EXIT = 2
 
@@ -34,7 +34,7 @@ def test_help_verbose_appends_reference_doc(
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
     # Standard help still present (usage line).
-    assert f"usage: yogurt {command}" in captured.out
+    assert f"usage: yoghurt {command}" in captured.out
     # Doc body appended verbatim.
     assert expected_doc.rstrip() in captured.out
 

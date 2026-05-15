@@ -1,1 +1,1 @@
-"""Yogurt test suite."""
+"""Yoghurt test suite."""

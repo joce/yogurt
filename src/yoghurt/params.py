@@ -8,7 +8,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
-    from yogurt.types import ParamValue
+    from yoghurt.types import ParamValue
 
 
 class ParamKind(str, Enum):

@@ -29,9 +29,9 @@ class CachedSession:
 
 
 def default_cache_path() -> Path:
-    """Return Yogurt's default Yahoo session cache path."""
+    """Return Yoghurt's default Yahoo session cache path."""
 
-    return Path.home() / ".cache" / "yogurt" / "yahoo-session.json"
+    return Path.home() / ".cache" / "yoghurt" / "yahoo-session.json"
 
 
 def _cookie_to_payload(cookie: Cookie) -> dict[str, Any]:

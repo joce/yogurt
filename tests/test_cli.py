@@ -1,4 +1,4 @@
-"""Tests for the Yogurt CLI."""
+"""Tests for the Yoghurt CLI."""
 
 from __future__ import annotations
 
@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from yogurt.cli import main
+from yoghurt.cli import main
 
 if TYPE_CHECKING:
-    from yogurt.types import ParamValue
+    from yoghurt.types import ParamValue
 
 ARGPARSE_ERROR = 2
 INSIDER_LIMIT = 5
@@ -106,7 +106,7 @@ def test_top_level_help_lists_quote_endpoint(
     assert "screener" in captured.out
     assert "screener-instrument-fields" in captured.out
     assert "Retrieve raw" not in captured.out
-    assert "Run `yogurt <endpoint> --help`" in captured.out
+    assert "Run `yoghurt <endpoint> --help`" in captured.out
     # raw must appear last so the escape-hatch command does not crowd the
     # primary entries in the listing.
     visualization_index = captured.out.index("\n    visualization ")
@@ -149,14 +149,14 @@ def test_endpoint_help_action_text_is_capitalized(
 def test_version_output_is_capitalized(
     capsys: pytest.CaptureFixture[str],
 ) -> None:
-    """Version output starts with Yogurt's capitalized product name."""
+    """Version output starts with Yoghurt's capitalized product name."""
 
     with pytest.raises(SystemExit) as exc_info:
         main(["--version"])
 
     assert exc_info.value.code == 0
     captured = capsys.readouterr()
-    assert captured.out.startswith("Yogurt ")
+    assert captured.out.startswith("Yoghurt ")
 
 
 def test_quote_help_includes_endpoint_params_and_examples(
@@ -194,7 +194,7 @@ def test_quote_help_includes_endpoint_params_and_examples(
     assert "regularMarketSource" in captured.out
     assert "stockStory" in captured.out
     assert "Uses Yahoo crumb/session" not in captured.out
-    assert "yogurt quote SMR,OKLO,LEU,VST,CEG" in captured.out
+    assert "yoghurt quote SMR,OKLO,LEU,VST,CEG" in captured.out
 
 
 def test_quote_command_passes_params_and_prints_raw_body() -> None:
@@ -209,7 +209,7 @@ def test_quote_command_passes_params_and_prints_raw_body() -> None:
             "quote",
             "SMR,OKLO",
             "--fields",
-            "marketCap,logoUrl,notYetDocumentedByYogurt",
+            "marketCap,logoUrl,notYetDocumentedByYoghurt",
             "--img-heights",
             "50",
             "--img-labels",
@@ -231,7 +231,7 @@ def test_quote_command_passes_params_and_prints_raw_body() -> None:
             "/v7/finance/quote",
             {
                 "symbols": "SMR,OKLO",
-                "fields": "marketCap,logoUrl,notYetDocumentedByYogurt",
+                "fields": "marketCap,logoUrl,notYetDocumentedByYoghurt",
                 "formatted": False,
                 "enablePrivateCompany": True,
                 "overnightPrice": True,
@@ -360,7 +360,7 @@ def test_spark_help_includes_params_examples_and_probe_notes(
     assert "Observed quote-page value: 5m" in captured.out
     assert "Observed value: close" in captured.out
     assert "finance.yahoo.com" in captured.out
-    assert "yogurt spark AAPL,MSFT" in captured.out
+    assert "yoghurt spark AAPL,MSFT" in captured.out
     assert "^GSPC,GC=F,EURUSD=X,BTC-USD" in captured.out
     assert "open-ended" in captured.out
 
@@ -512,7 +512,7 @@ def test_options_help_includes_endpoint_params_and_examples(
     assert "--straddle" in captured.out
     assert "--lang" in captured.out
     assert "--region" in captured.out
-    assert "yogurt options AAPL" in captured.out
+    assert "yoghurt options AAPL" in captured.out
 
 
 def test_options_command_passes_symbol_in_path_and_params() -> None:
@@ -609,8 +609,8 @@ def test_quote_type_help_includes_endpoint_params_and_examples(
     assert "--region" in captured.out
     assert "--disable-private-company" in captured.out
     assert "--no-overnight-price" in captured.out
-    assert "yogurt quote-type AAPL" in captured.out
-    assert "yogurt quote-type AAPL --disable-private-company" in captured.out
+    assert "yoghurt quote-type AAPL" in captured.out
+    assert "yoghurt quote-type AAPL --disable-private-company" in captured.out
 
 
 def test_quote_type_command_uses_path_symbol_and_observed_defaults() -> None:
@@ -714,7 +714,7 @@ def test_quote_summary_help_includes_modules_and_probe_notes(
     assert "earningsGaap" in captured.out
     assert "earningsNonGaap" in captured.out
     assert_formatted_default_false(captured.out)
-    assert "Yogurt does" in captured.out
+    assert "Yoghurt does" in captured.out
     assert "not validate module names" in captured.out
     assert "Common --modules values" not in captured.out
     assert "Quote summary --modules reference" in captured.out
@@ -745,7 +745,7 @@ def test_quote_summary_command_passes_symbol_in_path_and_params() -> None:
             "quote-summary",
             "AAPL",
             "--modules",
-            "summaryProfile,financialData,notYetDocumentedByYogurt",
+            "summaryProfile,financialData,notYetDocumentedByYoghurt",
             "--formatted",
         ],
         stdout=stdout,
@@ -761,7 +761,7 @@ def test_quote_summary_command_passes_symbol_in_path_and_params() -> None:
         (
             "/v10/finance/quoteSummary/AAPL",
             {
-                "modules": "summaryProfile,financialData,notYetDocumentedByYogurt",
+                "modules": "summaryProfile,financialData,notYetDocumentedByYoghurt",
                 "formatted": True,
                 "enablePrivateCompany": True,
                 "enableQSPExpandedEarnings": True,
@@ -877,7 +877,7 @@ def test_recommendations_by_symbol_help_includes_params_and_probe_notes(
     )
     assert "SYMBOL" in captured.out
     assert "--fields" in captured.out
-    assert "Yogurt" in captured.out
+    assert "Yoghurt" in captured.out
     assert "does not validate field names" in captured.out
     assert "--lang" in captured.out
     assert "--region" in captured.out
@@ -993,7 +993,7 @@ def test_stock_recommender_help_documents_endpoint_and_quirks(
     assert "related_tickers" in captured.out
     assert "Equity-only endpoint" in captured.out
     assert "query1 mirror returns 500" in captured.out
-    assert "yogurt stock-recommender AAPL" in captured.out
+    assert "yoghurt stock-recommender AAPL" in captured.out
     assert "Calls Yahoo" not in captured.out
     assert "Output:" not in captured.out
 
@@ -1157,7 +1157,7 @@ def test_calendar_events_help_includes_params_and_probe_notes(
     assert "Defaults to an empty value when omitted" in captured.out
     assert "--lang" in captured.out
     assert "--region" in captured.out
-    assert "yogurt calendar-events AAPL" in captured.out
+    assert "yoghurt calendar-events AAPL" in captured.out
 
 
 def test_calendar_events_command_passes_params_and_prints_raw_body() -> None:
@@ -1218,7 +1218,7 @@ def test_calendar_events_command_uses_observed_defaults(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
 
     exit_code = main(["calendar-events", "AAPL"], stdout=stdout, client=client)
 
@@ -1409,7 +1409,7 @@ def test_endpoint_commands_accept_ticker_only(
     client = StubClient()
     stdout = StringIO()
     stderr = StringIO()
-    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
 
     exit_code = main(argv, stdout=stdout, stderr=stderr, client=client)
 
@@ -1473,7 +1473,7 @@ def test_fundamentals_timeseries_command_uses_observed_defaults(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
 
     exit_code = main(
         [
@@ -1510,7 +1510,7 @@ def test_fundamentals_timeseries_command_defaults_period_window(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
 
     exit_code = main(["timeseries", "AAPL"], stdout=stdout, client=client)
 
@@ -1885,7 +1885,7 @@ def test_ratings_top_help_includes_params_and_probe_notes(
     assert "--lang" in captured.out
     assert "--region" in captured.out
     assert "dir, mm, pt, and fin_score" in captured.out
-    assert "yogurt ratings-top AAPL" in captured.out
+    assert "yoghurt ratings-top AAPL" in captured.out
 
 
 def test_ratings_top_command_passes_params_and_prints_raw_body() -> None:
@@ -2030,7 +2030,7 @@ def test_chart_command_defaults_period2_to_execution_time(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
 
     exit_code = main(
         [
@@ -2068,7 +2068,7 @@ def test_chart_command_defaults_period_window_to_quote_page_shape(
 
     client = StubClient()
     stdout = StringIO()
-    monkeypatch.setattr("yogurt.cli.time.time", lambda: 1777903200.9)
+    monkeypatch.setattr("yoghurt.cli.time.time", lambda: 1777903200.9)
 
     exit_code = main(
         [
@@ -2474,7 +2474,7 @@ def test_visualization_query_and_body_json_are_mutually_exclusive() -> None:
 
 
 def test_visualization_query_parse_error_returns_exit_one() -> None:
-    """A malformed --query is reported as a yogurt error."""
+    """A malformed --query is reported as a yoghurt error."""
 
     client = StubClient()
     stderr = StringIO()
@@ -2651,7 +2651,7 @@ def test_visualization_epilogue_points_at_field_catalog_command(
 
     assert exc_info.value.code == 0
     out = capsys.readouterr().out
-    assert "yogurt screener-instrument-fields" in out
+    assert "yoghurt screener-instrument-fields" in out
     assert "screener-predefined" in out
     # Field-naming note appears.
     assert "snake_case" in out
@@ -2668,7 +2668,7 @@ def test_screener_epilogue_points_at_field_catalog_command(
 
     assert exc_info.value.code == 0
     out = capsys.readouterr().out
-    assert "yogurt screener-instrument-fields" in out
+    assert "yoghurt screener-instrument-fields" in out
     assert "screener-predefined" in out
     assert "BOND" in out
     assert "CURRENCY" in out

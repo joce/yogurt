@@ -1,13 +1,13 @@
-"""Yogurt-specific exception hierarchy."""
+"""Yoghurt-specific exception hierarchy."""
 
 from __future__ import annotations
 
 
-class YogurtError(Exception):
-    """Base exception for all Yogurt errors."""
+class YoghurtError(Exception):
+    """Base exception for all Yoghurt errors."""
 
 
-class YahooRequestError(YogurtError):
+class YahooRequestError(YoghurtError):
     """Raised when Yahoo rejects an HTTP request."""
 
     def __init__(
@@ -28,7 +28,7 @@ class YahooRequestError(YogurtError):
         self.reason = reason
 
 
-class YahooUnavailableError(YogurtError):
+class YahooUnavailableError(YoghurtError):
     """Raised when Yahoo cannot be reached due to transport failure."""
 
     def __init__(self, context: str) -> None:

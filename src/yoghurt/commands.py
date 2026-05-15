@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from yogurt.params import ParamKind, ParamSpec
+from yoghurt.params import ParamKind, ParamSpec
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,7 +25,7 @@ class ReferenceSection:
 
 @dataclass(frozen=True, slots=True)
 class CommandSpec:
-    """Describe one Yogurt command backed by a Yahoo Finance endpoint."""
+    """Describe one Yoghurt command backed by a Yahoo Finance endpoint."""
 
     name: str
     path: str
@@ -572,7 +572,7 @@ QUOTE_COMMAND = CommandSpec(
             metavar="FIELD[,FIELD...]",
             help=(
                 "Optional comma-separated Yahoo quote fields to request. "
-                "Yogurt does not validate field names."
+                "Yoghurt does not validate field names."
             ),
         ),
         ParamSpec(
@@ -641,9 +641,9 @@ QUOTE_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt quote SMR,OKLO,LEU,VST,CEG",
+        "yoghurt quote SMR,OKLO,LEU,VST,CEG",
         (
-            "yogurt quote SMR,SERV,SYM,GEV,LASE,RR "
+            "yoghurt quote SMR,SERV,SYM,GEV,LASE,RR "
             "--fields marketCap,morningstarIndustry,logoUrl,longName,"
             "regularMarketPrice,regularMarketChange,regularMarketChangePercent,"
             "shortName,regularMarketTime,regularMarketVolume "
@@ -684,7 +684,7 @@ SPARK_COMMAND = CommandSpec(
             metavar="RANGE",
             help=(
                 "Spark range to request. Observed quote-page values: 1d and 24h. "
-                "Yogurt does not validate range values."
+                "Yoghurt does not validate range values."
             ),
         ),
         ParamSpec(
@@ -695,7 +695,7 @@ SPARK_COMMAND = CommandSpec(
             metavar="INTERVAL",
             help=(
                 "Spark interval to request. Observed quote-page value: 5m. "
-                "Yogurt does not validate interval values."
+                "Yoghurt does not validate interval values."
             ),
         ),
         ParamSpec(
@@ -706,7 +706,7 @@ SPARK_COMMAND = CommandSpec(
             metavar="INDICATOR[,INDICATOR...]",
             help=(
                 "Comma-separated Spark indicators to request. Observed value: close. "
-                "Yogurt does not validate indicator names."
+                "Yoghurt does not validate indicator names."
             ),
         ),
         ParamSpec(
@@ -741,10 +741,10 @@ SPARK_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt spark AAPL,MSFT",
-        "yogurt spark SPY,QQQ --range 1d --interval 5m",
+        "yoghurt spark AAPL,MSFT",
+        "yoghurt spark SPY,QQQ --range 1d --interval 5m",
         (
-            "yogurt spark ^GSPC,GC=F,EURUSD=X,BTC-USD --indicators close "
+            "yoghurt spark ^GSPC,GC=F,EURUSD=X,BTC-USD --indicators close "
             "--include-timestamps --include-pre-post"
         ),
     ),
@@ -824,9 +824,9 @@ OPTIONS_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt options AAPL",
-        "yogurt options AAPL --date 2017-11-17",
-        "yogurt options AAPL --date 1510876800 --formatted --straddle",
+        "yoghurt options AAPL",
+        "yoghurt options AAPL --date 2017-11-17",
+        "yoghurt options AAPL --date 1510876800 --formatted --straddle",
     ),
 )
 
@@ -886,8 +886,8 @@ QUOTE_TYPE_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt quote-type AAPL",
-        "yogurt quote-type AAPL --disable-private-company",
+        "yoghurt quote-type AAPL",
+        "yoghurt quote-type AAPL --disable-private-company",
     ),
 )
 
@@ -1010,7 +1010,7 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
             metavar="MODULE[,MODULE...]",
             help=(
                 "Comma-separated Yahoo quoteSummary modules to request. "
-                "Yogurt does not validate module names."
+                "Yoghurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -1059,8 +1059,8 @@ QUOTE_SUMMARY_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt quote-summary AAPL",
-        "yogurt quote-summary AAPL --modules price,quoteType,summaryDetail",
+        "yoghurt quote-summary AAPL",
+        "yoghurt quote-summary AAPL --modules price,quoteType,summaryDetail",
     ),
     field_reference=QUOTE_SUMMARY_MODULES,
     field_reference_title="Quote summary --modules reference",
@@ -1099,7 +1099,7 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
             metavar="FIELD[,FIELD...]",
             help=(
                 "Optional comma-separated Yahoo recommendation fields to request. "
-                "Yogurt does not validate field names."
+                "Yoghurt does not validate field names."
             ),
         ),
         ParamSpec(
@@ -1120,9 +1120,9 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt recommendations-by-symbol ^GSPC",
-        "yogurt recommendations-by-symbol ^DJI",
-        "yogurt recommendations-by-symbol ^IXIC --fields symbol,recommendedSymbols",
+        "yoghurt recommendations-by-symbol ^GSPC",
+        "yoghurt recommendations-by-symbol ^DJI",
+        "yoghurt recommendations-by-symbol ^IXIC --fields symbol,recommendedSymbols",
     ),
     notes=(
         (
@@ -1131,7 +1131,7 @@ RECOMMENDATIONS_BY_SYMBOL_COMMAND = CommandSpec(
         ),
         (
             "Observed traffic sometimes includes an empty fields= parameter; "
-            "Yogurt omits --fields by default because empty CSV values are rejected."
+            "Yoghurt omits --fields by default because empty CSV values are rejected."
         ),
     ),
 )
@@ -1159,9 +1159,9 @@ STOCK_RECOMMENDER_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt stock-recommender AAPL",
-        "yogurt stock-recommender MSFT",
-        "yogurt stock-recommender RY.TO",
+        "yoghurt stock-recommender AAPL",
+        "yoghurt stock-recommender MSFT",
+        "yoghurt stock-recommender RY.TO",
     ),
     notes=(
         (
@@ -1170,7 +1170,7 @@ STOCK_RECOMMENDER_COMMAND = CommandSpec(
         ),
         (
             "Hosted on finance.yahoo.com, not the query1 host used by most "
-            "Yogurt commands; the query1 mirror returns 500."
+            "Yoghurt commands; the query1 mirror returns 500."
         ),
     ),
 )
@@ -1204,7 +1204,7 @@ PRICE_INSIGHTS_COMMAND = CommandSpec(
             metavar="MODULE[,MODULE...]",
             help=(
                 "Optional comma-separated Yahoo price-insights modules to request. "
-                "Observed useful value: ai. Yogurt does not validate module names."
+                "Observed useful value: ai. Yoghurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -1214,7 +1214,7 @@ PRICE_INSIGHTS_COMMAND = CommandSpec(
             metavar="AI_MODULE[,AI_MODULE...]",
             help=(
                 "Optional comma-separated Yahoo AI submodules to request. "
-                "Observed values: news_summary,price_movement. Yogurt does not "
+                "Observed values: news_summary,price_movement. Yoghurt does not "
                 "validate names."
             ),
         ),
@@ -1245,9 +1245,9 @@ PRICE_INSIGHTS_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt price-insights AAPL",
-        "yogurt price-insights AAPL,MSFT --modules ai",
-        ("yogurt price-insights AAPL --ai-modules news_summary,price_movement"),
+        "yoghurt price-insights AAPL",
+        "yoghurt price-insights AAPL,MSFT --modules ai",
+        ("yoghurt price-insights AAPL --ai-modules news_summary,price_movement"),
     ),
     common_modules=("ai",),
     notes=(
@@ -1320,7 +1320,7 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             help=(
                 "Comma-separated event modules to request. "
                 "See the --modules reference below. "
-                "Yogurt does not validate module names."
+                "Yoghurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -1339,7 +1339,7 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             metavar="DATE",
             help=(
                 "Start date as Unix seconds, Unix milliseconds, YYYY-MM-DD date, "
-                "or ISO datetime. Yogurt sends milliseconds to Yahoo."
+                "or ISO datetime. Yoghurt sends milliseconds to Yahoo."
             ),
         ),
         ParamSpec(
@@ -1350,7 +1350,7 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
             metavar="DATE",
             help=(
                 "End date as Unix seconds, Unix milliseconds, YYYY-MM-DD date, "
-                "or ISO datetime. Yogurt sends milliseconds to Yahoo."
+                "or ISO datetime. Yoghurt sends milliseconds to Yahoo."
             ),
         ),
         ParamSpec(
@@ -1390,16 +1390,16 @@ CALENDAR_EVENTS_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt calendar-events AAPL",
-        "yogurt calendar-events AAPL --modules ipoEvents",
-        "yogurt calendar-events AAPL --modules secReports",
+        "yoghurt calendar-events AAPL",
+        "yoghurt calendar-events AAPL --modules ipoEvents",
+        "yoghurt calendar-events AAPL --modules secReports",
         (
-            "yogurt calendar-events AAPL --start-date 2026-05-01 "
+            "yoghurt calendar-events AAPL --start-date 2026-05-01 "
             "--end-date 2026-05-31 --modules economicEvents "
             "--include-all-economic-events"
         ),
         (
-            "yogurt calendar-events AAPL --start-date 1777593600000 "
+            "yoghurt calendar-events AAPL --start-date 1777593600000 "
             "--end-date 1777852800000 --modules earnings"
         ),
     ),
@@ -1443,7 +1443,7 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
             min_items=1,
             help=(
                 "One or more comma-separated Yahoo fundamentals timeseries "
-                "types to request. Yogurt does not validate type names."
+                "types to request. Yoghurt does not validate type names."
             ),
         ),
         ParamSpec(
@@ -1501,13 +1501,13 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt timeseries AAPL",
+        "yoghurt timeseries AAPL",
         (
-            "yogurt timeseries AAPL --period1 2025-11-03 "
+            "yoghurt timeseries AAPL --period1 2025-11-03 "
             "--period2 2026-05-03 --type quarterlyMarketCap,trailingMarketCap"
         ),
         (
-            "yogurt timeseries AAPL --period1 1762192800 "
+            "yoghurt timeseries AAPL --period1 1762192800 "
             "--period2 1777831199 --type quarterlyPeRatio,trailingPeRatio "
             "--merge --no-pad-time-series"
         ),
@@ -1521,7 +1521,7 @@ FUNDAMENTALS_TIMESERIES_COMMAND = CommandSpec(
             "or ISO datetimes."
         ),
         (
-            "When period arguments are omitted, Yogurt requests a recent "
+            "When period arguments are omitted, Yoghurt requests a recent "
             "quote-page-style window ending at the current Unix timestamp."
         ),
     ),
@@ -1603,9 +1603,9 @@ INSIGHTS_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt insights AAPL",
-        "yogurt insights AAPL,MSFT",
-        "yogurt insights AAPL --reports-count 4",
+        "yoghurt insights AAPL",
+        "yoghurt insights AAPL,MSFT",
+        "yoghurt insights AAPL --reports-count 4",
     ),
     notes=(
         (
@@ -1862,16 +1862,19 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt screener-predefined MOST_ACTIVES",
-        "yogurt screener-predefined MOST_ACTIVES --count 25 --start 25",
-        "yogurt screener-predefined MOST_ACTIVES --no-records-response",
+        "yoghurt screener-predefined MOST_ACTIVES",
+        "yoghurt screener-predefined MOST_ACTIVES --count 25 --start 25",
+        "yoghurt screener-predefined MOST_ACTIVES --no-records-response",
     ),
     reference_sections=PREDEFINED_SCREENER_SECTIONS,
     notes=(
-        "Screener IDs are Yahoo-defined and open-ended; Yogurt does not validate them.",
+        (
+            "Screener IDs are Yahoo-defined and open-ended; "
+            "Yoghurt does not validate them."
+        ),
         (
             "Observed Yahoo quote pages request MOST_ACTIVES with count=200, "
-            "start=0, and useRecordsResponse=true; Yogurt defaults formatted=false."
+            "start=0, and useRecordsResponse=true; Yoghurt defaults formatted=false."
         ),
         (
             "Yahoo's records-style response returns a fixed record field set; "
@@ -1879,7 +1882,7 @@ PREDEFINED_SCREENER_COMMAND = CommandSpec(
         ),
         (
             "Observed browser requests include empty sortField and sortType; "
-            "Yogurt sends those empty values when the options are omitted."
+            "Yoghurt sends those empty values when the options are omitted."
         ),
     ),
 )
@@ -1974,15 +1977,15 @@ CHART_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt chart AAPL",
-        "yogurt chart AAPL --period1 2026-04-30",
-        "yogurt chart AAPL --period1 1777507200 --period2 1777593600 --interval 1m",
-        "yogurt chart SPY --period1 2026-01-01 --interval 1d --events div,split",
+        "yoghurt chart AAPL",
+        "yoghurt chart AAPL --period1 2026-04-30",
+        "yoghurt chart AAPL --period1 1777507200 --period2 1777593600 --interval 1m",
+        "yoghurt chart SPY --period1 2026-01-01 --interval 1d --events div,split",
     ),
     notes=(
         "period2 must be greater than period1.",
         (
-            "When period2 is omitted, Yogurt sends the current Unix timestamp; "
+            "When period2 is omitted, Yoghurt sends the current Unix timestamp; "
             "now is not accepted as a user-provided value."
         ),
         ("Yahoo can reject overlong windows for short intervals (1m, 5m, 15m)."),
@@ -2037,8 +2040,8 @@ RATINGS_TOP_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt ratings-top AAPL",
-        "yogurt ratings-top AAPL --include-noncurrent",
+        "yoghurt ratings-top AAPL",
+        "yoghurt ratings-top AAPL --include-noncurrent",
     ),
     notes=(
         (
@@ -2094,12 +2097,12 @@ MARKET_TIME_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt market-time",
-        "yogurt market-time --formatted",
+        "yoghurt market-time",
+        "yoghurt market-time --formatted",
     ),
     notes=(
         (
-            "Observed Yahoo requests send formatted=true; Yogurt defaults to "
+            "Observed Yahoo requests send formatted=true; Yoghurt defaults to "
             "formatted=false for raw values."
         ),
     ),
@@ -2151,8 +2154,8 @@ ANALYST_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt analyst AAPL",
-        "yogurt analyst MSFT --debug-flag",
+        "yoghurt analyst AAPL",
+        "yoghurt analyst MSFT --debug-flag",
     ),
     notes=("Coverage across non-equity asset classes is unconfirmed.",),
 )
@@ -2199,7 +2202,7 @@ TRENDING_COMMAND = CommandSpec(
             min_items=1,
             help=(
                 "Comma-separated quote fields to include in the response. "
-                "Yogurt does not validate field names."
+                "Yoghurt does not validate field names."
             ),
         ),
         ParamSpec(
@@ -2229,10 +2232,10 @@ TRENDING_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt trending",
-        "yogurt trending --count 10 --quote-type EQUITY",
+        "yoghurt trending",
+        "yoghurt trending --count 10 --quote-type EQUITY",
         (
-            "yogurt trending --fields "
+            "yoghurt trending --fields "
             "symbol,shortName,regularMarketPrice,regularMarketChangePercent"
         ),
     ),
@@ -2282,8 +2285,8 @@ TIMESERIES_FIELDS_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt timeseries-fields",
-        "yogurt timeseries-fields --type sigDev",
+        "yoghurt timeseries-fields",
+        "yoghurt timeseries-fields --type sigDev",
     ),
     notes=(
         (
@@ -2314,7 +2317,7 @@ MARKET_INFO_COMMAND = CommandSpec(
             help=(
                 "Comma-separated market data modules to request. "
                 "Observed values: commodities, currencies. "
-                "Yogurt does not validate module names."
+                "Yoghurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -2335,9 +2338,9 @@ MARKET_INFO_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt market-info",
-        "yogurt market-info --modules commodities",
-        "yogurt market-info --modules commodities,currencies",
+        "yoghurt market-info",
+        "yoghurt market-info --modules commodities",
+        "yoghurt market-info --modules commodities,currencies",
     ),
     notes=(
         "Observed Yahoo chart pages always request modules=commodities,currencies.",
@@ -2364,7 +2367,7 @@ SCREENER_DISCOVER_COMMAND = CommandSpec(
             help=(
                 "Comma-separated screener discover modules to request. "
                 "Observed value: neo_investment_ideas. "
-                "Yogurt does not validate module names."
+                "Yoghurt does not validate module names."
             ),
         ),
         ParamSpec(
@@ -2400,9 +2403,9 @@ SCREENER_DISCOVER_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt screener-discover",
-        "yogurt screener-discover --count 10",
-        "yogurt screener-discover --modules neo_investment_ideas --count 5",
+        "yoghurt screener-discover",
+        "yoghurt screener-discover --count 10",
+        "yoghurt screener-discover --modules neo_investment_ideas --count 5",
     ),
     notes=(
         (
@@ -2450,9 +2453,9 @@ MARKET_SUMMARY_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt market-summary",
-        "yogurt market-summary --region CA",
-        "yogurt market-summary --region GB --lang en-GB",
+        "yoghurt market-summary",
+        "yoghurt market-summary --region CA",
+        "yoghurt market-summary --region GB --lang en-GB",
     ),
     notes=(
         "The region parameter changes which indices, pairs, and assets Yahoo returns.",
@@ -2578,11 +2581,11 @@ SCREENER_INSTRUMENT_FIELDS_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt screener-instrument-fields equity",
-        "yogurt screener-instrument-fields etf",
-        "yogurt screener-instrument-fields analyst_ratings",
+        "yoghurt screener-instrument-fields equity",
+        "yoghurt screener-instrument-fields etf",
+        "yoghurt screener-instrument-fields analyst_ratings",
         (
-            "yogurt screener-instrument-fields equity | "
+            "yoghurt screener-instrument-fields equity | "
             "jq -r '.finance.result[0].fields | keys[]'"
         ),
     ),
@@ -2667,9 +2670,9 @@ SECTOR_COMMAND = CommandSpec(
         ),
     ),
     examples=(
-        "yogurt sector technology",
-        "yogurt sector financial-services",
-        "yogurt sector consumer-cyclical --with-returns",
+        "yoghurt sector technology",
+        "yoghurt sector financial-services",
+        "yoghurt sector consumer-cyclical --with-returns",
     ),
     field_reference=_SECTOR_SLUGS,
     field_reference_title="Sector reference",

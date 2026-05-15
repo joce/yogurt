@@ -1,22 +1,49 @@
 [project]
-name = "yogurt"
+name = "yoghurt"
 version = "0.1.0"
 description = "LLM-friendly CLI for raw Yahoo Finance endpoint JSON."
 readme = "README.md"
 authors = [{ name = "Jocelyn Legault", email = "jocelynlegault@gmail.com" }]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.10, <4.0"
+keywords = [
+    "yahoo-finance",
+    "finance",
+    "cli",
+    "stock-market",
+    "screener",
+    "quotes",
+    "llm-tools",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Utilities",
+]
 dependencies = [
     "httpx>=0.28,<1.0",
     "typing-extensions>=4.13; python_version < '3.12'",
 ]
 
 [project.scripts]
-yogurt = "yogurt.cli:main"
+yoghurt = "yoghurt.cli:main"
 
 [project.urls]
-repository = "https://github.com/joce/yogurt"
-homepage = "https://github.com/joce/yogurt"
+Homepage = "https://github.com/joce/yoghurt"
+Repository = "https://github.com/joce/yoghurt"
+Issues = "https://github.com/joce/yoghurt/issues"
 
 [dependency-groups]
 tox = [
@@ -182,7 +209,7 @@ preview = true
 convention = "google"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/yogurt"]
+packages = ["src/yoghurt"]
 
 [tool.hatch.build.targets.sdist]
 include = ["src", "tests", "AGENTS.md", "LICENSE", "README.md", "pyproject.toml"]
