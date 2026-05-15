@@ -10,6 +10,7 @@ import sys
 import textwrap
 import time
 from datetime import datetime, timezone
+from importlib.resources import files
 from pathlib import Path
 from string import Formatter
 from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, cast
@@ -93,6 +94,69 @@ def _add_help_option(parser: argparse.ArgumentParser) -> None:
         action="help",
         default=argparse.SUPPRESS,
         help="Show this help message and exit.",
+    )
+
+
+_VERBOSE_HELP_DOCS: Final[dict[str, str]] = {
+    "screener": "QUERY_DSL.md",
+    "visualization": "QUERY_DSL.md",
+}
+
+
+class _VerboseHelpAction(argparse.Action):
+    """Print standard help, append the configured reference doc, then exit."""
+
+    def __init__(
+        self,
+        option_strings: list[str],
+        dest: str = argparse.SUPPRESS,
+        default: object = argparse.SUPPRESS,
+        doc_filename: str = "",
+        help: str | None = None,  # noqa: A002
+    ) -> None:
+        """Store the doc filename and register the flag as a nargs=0 switch."""
+
+        super().__init__(
+            option_strings=option_strings,
+            dest=dest,
+            default=default,
+            nargs=0,
+            help=help,
+        )
+        self._doc_filename = doc_filename
+
+    @override
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: str | None = None,
+    ) -> None:
+        """Print help, dump the doc, exit cleanly."""
+
+        parser.print_help()
+        doc_text = (files("yogurt.docs") / self._doc_filename).read_text(
+            encoding="utf-8"
+        )
+        sys.stdout.write("\n")
+        sys.stdout.write(doc_text)
+        if not doc_text.endswith("\n"):
+            sys.stdout.write("\n")
+        parser.exit()
+
+
+def _add_verbose_help_option(
+    parser: argparse.ArgumentParser, command_name: str
+) -> None:
+    doc_filename = _VERBOSE_HELP_DOCS.get(command_name)
+    if doc_filename is None:
+        return
+    parser.add_argument(
+        "--help-verbose",
+        action=_VerboseHelpAction,
+        doc_filename=doc_filename,
+        help="Show this help plus the full reference documentation and exit.",
     )
 
 
@@ -288,6 +352,7 @@ def build_parser() -> argparse.ArgumentParser:
             add_help=False,
         )
         _add_help_option(command_parser)
+        _add_verbose_help_option(command_parser, command.name)
         _set_command_parser(command_parser, command)
 
         # Slot the DSL screeners in between screener-predefined and
@@ -307,6 +372,7 @@ def build_parser() -> argparse.ArgumentParser:
                 add_help=False,
             )
             _add_help_option(visualization_parser)
+            _add_verbose_help_option(visualization_parser, "visualization")
             _add_query_command_options(visualization_parser, route="visualization")
 
             screener_parser = subparsers.add_parser(
@@ -322,6 +388,7 @@ def build_parser() -> argparse.ArgumentParser:
                 add_help=False,
             )
             _add_help_option(screener_parser)
+            _add_verbose_help_option(screener_parser, "screener")
             _add_query_command_options(screener_parser, route="screener")
 
     raw_parser = subparsers.add_parser(
@@ -364,7 +431,7 @@ Yahoo endpoint:
 Grammar: SELECT cols FROM entities [WHERE expr] [ORDER BY field] [LIMIT n]
          AGGREGATE date_hist(field, 'interval') FROM entities [WHERE expr]
                    [JOIN BY field] [FILL ident] [LIMIT n]
-See QUERY_DSL.md for the full reference.
+Run `yogurt visualization --help-verbose` for the full DSL reference.
 
 Examples:
   # Earnings calendar (sub-week, US, exclude OTC)
@@ -417,7 +484,7 @@ Yahoo endpoint:
   https://query1.finance.yahoo.com/v1/finance/screener
 
 Grammar: SELECT cols FROM quote_type [WHERE expr] [ORDER BY field] [LIMIT n]
-See QUERY_DSL.md for the full reference.
+Run `yogurt screener --help-verbose` for the full DSL reference.
 
 Examples:
   # Large-cap technology screen
