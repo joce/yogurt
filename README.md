@@ -63,7 +63,7 @@ Request specific quote fields:
 uv run yogurt quote AAPL,MSFT --fields symbol,longName,companyLogoUrl,regularMarketPrice,overnightMarketPrice
 ```
 
-See [QUOTE_FIELDS.md](QUOTE_FIELDS.md) for the full quote field reference and
+See [QUOTE_FIELDS.md](src/yogurt/docs/QUOTE_FIELDS.md) for the full quote field reference and
 best-effort meanings.
 
 Fetch selected quote summary modules:
@@ -72,7 +72,7 @@ Fetch selected quote summary modules:
 uv run yogurt quote-summary ^GSPC --modules price,summaryDetail,pageViews,financialsTemplate
 ```
 
-See [QUOTE_SUMMARY_MODULES.md](QUOTE_SUMMARY_MODULES.md) for the researched
+See [QUOTE_SUMMARY_MODULES.md](src/yogurt/docs/QUOTE_SUMMARY_MODULES.md) for the researched
 quote-summary module list and descriptions.
 
 Fetch quote-type metadata using Yahoo's path-symbol endpoint:
@@ -227,7 +227,7 @@ uv run yogurt screener-instrument-fields equity
 uv run yogurt screener-instrument-fields insider_transaction
 ```
 
-See [QUERY_DSL.md](QUERY_DSL.md) for the full DSL reference: grammar,
+See [QUERY_DSL.md](src/yogurt/docs/QUERY_DSL.md) for the full DSL reference: grammar,
 operators, entity routing, body shape, premium-locked entities, and more
 examples.
 
@@ -345,7 +345,7 @@ period arguments are omitted, Yogurt uses a recent quote-page-style window:
 `period1` defaults to three days before execution time and `period2` defaults
 to execution time.
 
-See [TIMESERIES_TYPES.md](TIMESERIES_TYPES.md) for the observed `--type`
+See [TIMESERIES_TYPES.md](src/yogurt/docs/TIMESERIES_TYPES.md) for the observed `--type`
 reference with descriptions.
 
 ## Dates and Booleans
