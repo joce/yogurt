@@ -1,6 +1,7 @@
 # Yogurt
 
 [![CI](https://github.com/joce/yogurt/actions/workflows/ci.yml/badge.svg)](https://github.com/joce/yogurt/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/joce/yogurt/graph/badge.svg)](https://codecov.io/gh/joce/yogurt)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![GitHub License](https://img.shields.io/github/license/joce/yogurt)](https://github.com/joce/yogurt/blob/main/LICENSE)
