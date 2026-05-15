@@ -6,7 +6,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![GitHub License](https://img.shields.io/github/license/joce/yoghurt)](https://github.com/joce/yoghurt/blob/main/LICENSE)
 
-Yahoo!-Originated Graphs, Updates, Returns & Tickers.
+Yahoo!-Originated Graphs, Histories, Updates, Returns & Tickers.
 
 Yoghurt brings Yahoo Finance's HTTP endpoints to the command line. It is built
 for scripts, agents, and quick terminal work that needs the JSON returned by
