@@ -16,7 +16,10 @@ from string import Formatter
 from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, cast
 from urllib.parse import quote
 
-from typing_extensions import override
+if sys.version_info >= (3, 12):
+    from typing import override
+else:
+    from typing_extensions import override
 
 from yoghurt import __version__
 from yoghurt.client import YahooClient
