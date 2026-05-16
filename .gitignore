@@ -21,6 +21,9 @@ node_modules/
 # Editors
 .vscode/
 
+# Claude Code local state
+.claude/
+
 # Local session/cache material
 yahoo-session.json
 .playwright-cli
