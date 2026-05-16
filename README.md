@@ -264,7 +264,8 @@ intrinsically tabular commands; every other command stays JSON-only. The
 chart schema is fixed (`ts`, `open`, `high`, `low`, `close`, `volume`,
 `adj_close`); screener and visualization tables are inferred from the
 response. AGGREGATE visualization queries cannot be flattened and are
-rejected — use `--format json` for those.
+rejected — use `--format json` for those. Parquet requires scalar cells,
+so `--format parquet --formatted` is rejected.
 
 ### Screener column names
 
@@ -278,14 +279,6 @@ for the mapping table.
 
 The `visualization` route preserves SELECT-clause names verbatim, so its
 Parquet schema matches what you asked for.
-
-### Breaking change: `screener --formatted` default
-
-Earlier `screener` always asked Yahoo for the wrapped
-`{raw, fmt, longFmt}` cell shape. As of this release the wire default is
-`formatted=False`, so the JSON path now returns plain scalar cells. Pass
-`--formatted` to opt back in to the wrapped struct shape. Parquet output
-requires scalar cells, so `--format parquet --formatted` is rejected.
 
 ## Commands
 
