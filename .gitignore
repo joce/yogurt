@@ -29,3 +29,6 @@ docs/MISSING_ENDPOINTS.md
 docs/plans/
 .worktrees/
 output/
+
+# Local Parquet smoke-test artifacts
+tmp/

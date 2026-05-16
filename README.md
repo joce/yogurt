@@ -237,6 +237,56 @@ Pass through a Yahoo query path directly:
 uv run yoghurt raw /v7/finance/quote --param symbols=AAPL,MSFT --param formatted=true
 ```
 
+## Parquet output
+
+`chart`, `screener`, and `visualization` can write a typed Parquet table
+instead of raw JSON. Install with the `parquet` extra to pull in `pyarrow`:
+
+```powershell
+uv sync --extra parquet
+```
+
+Then pass `--format parquet --out PATH`:
+
+```powershell
+uv run yoghurt chart AAPL --interval 1d --format parquet --out aapl_1d.parquet
+uv run yoghurt screener --query "SELECT ticker, intradaymarketcap FROM EQUITY \
+  WHERE region = 'us' AND sector = 'Technology' ORDER BY intradaymarketcap DESC LIMIT 50" \
+  --format parquet --out tech.parquet
+uv run yoghurt visualization --query "SELECT ticker, startdatetime FROM sp_earnings \
+  WHERE region = 'us' AND startdatetime BETWEEN '2026-05-09' AND '2026-05-16' LIMIT 25" \
+  --format parquet --out earnings.parquet
+```
+
+On success a single JSON descriptor line goes to stdout (the file format,
+out path, row count, byte size). Parquet writes are scoped to these three
+intrinsically tabular commands; every other command stays JSON-only. The
+chart schema is fixed (`ts`, `open`, `high`, `low`, `close`, `volume`,
+`adj_close`); screener and visualization tables are inferred from the
+response. AGGREGATE visualization queries cannot be flattened and are
+rejected — use `--format json` for those.
+
+### Screener column names
+
+For the `screener` route, Parquet column names mirror Yahoo's response
+record keys, not the names in your `SELECT` clause. Yahoo translates many
+DSL filter names (lowercase, dotted) to camelCase keys with suffixes like
+`Ltm` or `Percent`. For example, `SELECT intradaymarketcap` produces a
+Parquet column named `marketCap`, and responses often include unrequested
+columns such as `logoUrl`. See [`docs/screener-fields.md`](docs/screener-fields.md)
+for the mapping table.
+
+The `visualization` route preserves SELECT-clause names verbatim, so its
+Parquet schema matches what you asked for.
+
+### Breaking change: `screener --formatted` default
+
+Earlier `screener` always asked Yahoo for the wrapped
+`{raw, fmt, longFmt}` cell shape. As of this release the wire default is
+`formatted=False`, so the JSON path now returns plain scalar cells. Pass
+`--formatted` to opt back in to the wrapped struct shape. Parquet output
+requires scalar cells, so `--format parquet --formatted` is rejected.
+
 ## Commands
 
 Use root help to see the command list:

@@ -16,10 +16,12 @@ from string import Formatter
 from typing import TYPE_CHECKING, Any, Final, Protocol, TextIO, cast
 from urllib.parse import quote
 
-if sys.version_info >= (3, 12):
-    from typing import override
-else:
-    from typing_extensions import override
+# ``override`` lives in :mod:`typing` from 3.12 and in
+# :mod:`typing_extensions` on older interpreters. typing_extensions
+# re-exports the stdlib symbol when available, so importing from it on
+# every version yields the same runtime object without a conditional that
+# type checkers flag as having an unreachable branch.
+from typing_extensions import override
 
 from yoghurt import __version__
 from yoghurt.client import YahooClient
@@ -138,6 +140,7 @@ class _VerboseHelpAction(argparse.Action):
     ) -> None:
         """Print help, dump the doc, exit cleanly."""
 
+        del namespace, values, option_string
         parser.print_help()
         doc_text = (files("yoghurt.docs") / self._doc_filename).read_text(
             encoding="utf-8"
@@ -321,6 +324,66 @@ def _set_command_parser(parser: argparse.ArgumentParser, command: CommandSpec) -
     parser.set_defaults(command_kind="modeled", command_name=command.name)
 
 
+_PARQUET_COMMANDS: Final[frozenset[str]] = frozenset(
+    {"chart", "screener", "visualization"}
+)
+_PARQUET_COMMANDS_HELP: Final[str] = ", ".join(sorted(_PARQUET_COMMANDS))
+
+
+def _add_parquet_output_options(parser: argparse.ArgumentParser) -> None:
+    """Add ``--format`` and ``--out`` to a Parquet-capable subparser."""
+
+    parser.add_argument(
+        "--format",
+        dest="output_format",
+        choices=("json", "parquet"),
+        default="json",
+        help=(
+            "Output format. Default writes the raw Yahoo JSON body to "
+            "stdout. Parquet parses the response into a typed table written "
+            "to --out."
+        ),
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_path",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help=(
+            "Destination file for the Parquet table. Required when "
+            "--format parquet; rejected otherwise."
+        ),
+    )
+
+
+def _add_parquet_negative_guards(parser: argparse.ArgumentParser) -> None:
+    """Register hidden ``--format`` / ``--out`` placeholders on a non-parquet command.
+
+    These accept the flags so argparse does not bail with the generic
+    ``unrecognized arguments`` message; the post-parse check in
+    :func:`_enforce_parquet_arg_pairing` then emits a directed error that
+    names the commands that DO support Parquet (chart, screener,
+    visualization). Help output is suppressed so unrelated commands' help
+    pages stay clean.
+    """
+
+    parser.add_argument(
+        "--format",
+        dest="output_format",
+        default="json",
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--out",
+        dest="out_path",
+        type=Path,
+        default=None,
+        help=argparse.SUPPRESS,
+    )
+    parser.set_defaults(_parquet_unsupported=True)
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Build Yoghurt's adaptive argument parser.
 
@@ -357,6 +420,10 @@ def build_parser() -> argparse.ArgumentParser:
         _add_help_option(command_parser)
         _add_verbose_help_option(command_parser, command.name)
         _set_command_parser(command_parser, command)
+        if command.name in _PARQUET_COMMANDS:
+            _add_parquet_output_options(command_parser)
+        else:
+            _add_parquet_negative_guards(command_parser)
 
         # Slot the DSL screeners in between screener-predefined and
         # screener-discover so help output reads as a single discovery block.
@@ -377,6 +444,7 @@ def build_parser() -> argparse.ArgumentParser:
             _add_help_option(visualization_parser)
             _add_verbose_help_option(visualization_parser, "visualization")
             _add_query_command_options(visualization_parser, route="visualization")
+            _add_parquet_output_options(visualization_parser)
 
             screener_parser = subparsers.add_parser(
                 "screener",
@@ -393,6 +461,7 @@ def build_parser() -> argparse.ArgumentParser:
             _add_help_option(screener_parser)
             _add_verbose_help_option(screener_parser, "screener")
             _add_query_command_options(screener_parser, route="screener")
+            _add_parquet_output_options(screener_parser)
 
     raw_parser = subparsers.add_parser(
         "raw",
@@ -418,6 +487,7 @@ def build_parser() -> argparse.ArgumentParser:
         metavar="NAME=VALUE",
         help="Query parameter to pass through. Repeat for multiple parameters.",
     )
+    _add_parquet_negative_guards(raw_parser)
     raw_parser.add_argument(
         "--no-crumb",
         action="store_true",
@@ -557,15 +627,15 @@ def _add_query_command_options(parser: argparse.ArgumentParser, *, route: str) -
         help="Yahoo response region.",
     )
     if route == "screener":
+        # Yahoo's screener route accepts formatted=False just fine; the
+        # cleanest response (plain scalar cells) comes from formatted=False
+        # and useRecordsResponse=True. Default to that and let users opt back
+        # in to the {raw, fmt, longFmt} struct shape if they need it.
         parser.add_argument(
             "--formatted",
-            action="store_const",
-            const=True,
-            default=True,
-            help=(
-                "Request Yahoo formatted values. The screener route only "
-                "responds when this is set; Yoghurt enables it by default."
-            ),
+            action="store_true",
+            default=False,
+            help="Request Yahoo formatted values.",
         )
         parser.add_argument(
             "--no-records-response",
@@ -741,12 +811,16 @@ async def _run_async(
             command = COMMANDS_BY_NAME[namespace.command_name]
             params = _params_for_command(command, namespace)
             _validate_command_params(command, params)
+            _validate_parquet_request(namespace)
             body = await client.get(
                 _path_for_command(command, namespace),
                 params,
                 use_crumb=command.use_crumb,
                 base_url=command.base_url,
             )
+            if _wants_parquet(namespace):
+                _emit_chart_parquet(namespace, params, body, stdout)
+                return 0
         elif namespace.command_kind == "raw":
             body = await client.get(
                 namespace.path,
@@ -754,12 +828,17 @@ async def _run_async(
                 use_crumb=not namespace.no_crumb,
             )
         elif namespace.command_kind == "query":
+            _validate_parquet_request(namespace)
             request_body = _resolve_query_body(namespace)
+            wire_params = _params_for_query_command(namespace)
             body = await client.post(
                 _QUERY_ROUTE_PATHS[namespace.query_route],
-                _params_for_query_command(namespace),
+                wire_params,
                 request_body,
             )
+            if _wants_parquet(namespace):
+                _emit_tabular_parquet(namespace, body, wire_params, stdout)
+                return 0
         else:
             return 2
         stdout.write(body)
@@ -768,6 +847,206 @@ async def _run_async(
         return 0
     finally:
         await client.aclose()
+
+
+def _wants_parquet(namespace: argparse.Namespace) -> bool:
+    return getattr(namespace, "output_format", "json") == "parquet"
+
+
+def _enforce_parquet_arg_pairing(
+    parser: argparse.ArgumentParser,
+    namespace: argparse.Namespace,
+    stderr: TextIO,
+) -> None:
+    """Reject ``--format`` / ``--out`` / ``--formatted`` combos at parse time.
+
+    Failures emit an argparse-style usage error to ``stderr`` and exit 2.
+    Runtime-only conditions (AGGREGATE rejection) are handled later in
+    :func:`_validate_parquet_request`.
+    """
+
+    output_format = getattr(namespace, "output_format", "json")
+    out_path = getattr(namespace, "out_path", None)
+    unsupported = getattr(namespace, "_parquet_unsupported", False)
+    if unsupported and (output_format == "parquet" or out_path is not None):
+        _parquet_arg_error(
+            parser,
+            stderr,
+            f"--format parquet / --out are only supported for {_PARQUET_COMMANDS_HELP}",
+        )
+    if output_format == "parquet" and out_path is None:
+        _parquet_arg_error(parser, stderr, "--format parquet requires --out PATH")
+    if output_format != "parquet" and out_path is not None:
+        _parquet_arg_error(parser, stderr, "--out is only valid with --format parquet")
+    if output_format == "parquet" and getattr(namespace, "formatted", False):
+        _parquet_arg_error(
+            parser,
+            stderr,
+            "--format parquet requires scalar cells; "
+            "drop --formatted or switch to --format json",
+        )
+
+
+def _parquet_arg_error(
+    parser: argparse.ArgumentParser, stderr: TextIO, message: str
+) -> None:
+    """Emit an argparse-style usage error to ``stderr`` and exit 2.
+
+    Mirrors :meth:`argparse.ArgumentParser.error` but writes to the caller-
+    supplied stream so tests can capture the message via the same channel
+    they capture all other CLI errors.
+
+    Raises:
+        SystemExit: Always, with code 2.
+    """
+
+    parser.print_usage(stderr)
+    stderr.write(f"{parser.prog}: error: {message}\n")
+    raise SystemExit(2)
+
+
+def _validate_parquet_request(namespace: argparse.Namespace) -> None:
+    """Reject Parquet requests that fail runtime-only checks.
+
+    Parse-time pairing is handled in :func:`_enforce_parquet_arg_pairing`.
+    Here we cover AGGREGATE rejection — which requires parsing the DSL
+    ``--query`` or peeking at the ``--body-json`` payload.
+
+    Raises:
+        YoghurtError: If the user asked for Parquet against an AGGREGATE
+            request (via ``--query`` or ``--body-json``).
+    """
+
+    if not _wants_parquet(namespace):
+        return
+    if getattr(namespace, "command_kind", None) != "query":
+        return
+    query = getattr(namespace, "query", None)
+    if query is not None:
+        try:
+            statement = parse_query(query)
+        except QueryError as exc:
+            message = f"--query parse error: {exc}"
+            raise YoghurtError(message) from exc
+        if statement.kind.value == "aggregate":
+            raise YoghurtError(_AGGREGATE_PARQUET_REJECTION)
+        return
+    body_json = getattr(namespace, "body_json", None)
+    if body_json is not None and _body_json_is_aggregate(body_json):
+        raise YoghurtError(_AGGREGATE_PARQUET_REJECTION)
+
+
+_AGGREGATE_PARQUET_REJECTION: Final[str] = (
+    "--format parquet not supported for AGGREGATE queries; use --format json"
+)
+
+
+def _body_json_is_aggregate(body_json: str) -> bool:
+    """Return ``True`` if a ``--body-json`` payload describes an aggregation.
+
+    The brief flags any body whose top-level keys indicate an aggregate
+    request — Yahoo's ``/visualization`` endpoint takes the aggregation
+    instruction in a top-level ``aggregation`` key.
+
+    Returns:
+        bool: ``True`` when the JSON payload is parseable and contains a
+        top-level ``aggregation`` object.
+
+    Raises:
+        YoghurtError: If the ``@file`` form points at an unreadable path
+            or the JSON cannot be parsed. (Surfacing those errors here
+            keeps the parquet validator and the later body resolver
+            symmetric.)
+    """
+
+    raw = body_json
+    if raw.startswith("@"):
+        path = Path(raw[1:])
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError as exc:
+            message = f"--body-json file could not be read: {exc}"
+            raise YoghurtError(message) from exc
+    else:
+        text = raw
+    try:
+        loaded = json.loads(text)
+    except json.JSONDecodeError as exc:
+        message = f"--body-json is not valid JSON: {exc}"
+        raise YoghurtError(message) from exc
+    return isinstance(loaded, dict) and "aggregation" in loaded
+
+
+def _emit_chart_parquet(
+    namespace: argparse.Namespace,
+    params: dict[str, ParamValue],
+    body: str,
+    stdout: TextIO,
+) -> None:
+    """Write the chart response to Parquet and emit the descriptor line.
+
+    ``params`` is the already-coerced wire-params dict produced by
+    :func:`_params_for_command`. Reusing it (rather than re-reading the raw
+    ``namespace`` attributes) means Parquet metadata records the exact
+    epoch-second values sent to Yahoo, regardless of whether the user
+    passed an int, a ``YYYY-MM-DD`` date, or an ISO datetime.
+    """
+
+    from yoghurt.parquet_writer import write_chart_parquet  # noqa: PLC0415
+
+    out_path = namespace.out_path
+    period1 = _epoch_seconds_param(params, "period1")
+    period2 = _epoch_seconds_param(params, "period2")
+    descriptor = write_chart_parquet(
+        body,
+        out_path,
+        ticker=namespace.symbol,
+        interval=namespace.interval,
+        period1=period1,
+        period2=period2,
+    )
+    stdout.write(json.dumps(descriptor))
+    stdout.write("\n")
+
+
+def _epoch_seconds_param(params: dict[str, ParamValue], name: str) -> int:
+    """Return ``params[name]`` as an int, raising if it is not numeric.
+
+    Returns:
+        int: The integer epoch-second wire value.
+
+    Raises:
+        YoghurtError: If the value is missing or not an integer.
+    """
+
+    value = params.get(name)
+    if isinstance(value, bool) or not isinstance(value, int):
+        message = f"chart {name} must be an integer second"
+        raise YoghurtError(message)
+    return value
+
+
+def _emit_tabular_parquet(
+    namespace: argparse.Namespace,
+    body: str,
+    wire_params: dict[str, ParamValue],
+    stdout: TextIO,
+) -> None:
+    """Write a screener/visualization response to Parquet and emit the descriptor."""
+
+    from yoghurt.parquet_writer import write_tabular_parquet  # noqa: PLC0415
+
+    query = getattr(namespace, "query", None)
+    descriptor = write_tabular_parquet(
+        body,
+        namespace.out_path,
+        command=namespace.query_route,
+        route=namespace.query_route,
+        query=query,
+        wire_params=dict(wire_params),
+    )
+    stdout.write(json.dumps(descriptor))
+    stdout.write("\n")
 
 
 def main(
@@ -794,6 +1073,7 @@ def main(
     if not hasattr(namespace, "command_kind"):
         parser.print_help(error_output)
         return 2
+    _enforce_parquet_arg_pairing(parser, namespace, error_output)
 
     _configure_logging(verbose=namespace.verbose)
     active_client = client or YahooClient(

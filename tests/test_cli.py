@@ -2259,6 +2259,7 @@ def test_screener_help_shows_grammar_examples(
     assert "EQUITY" in captured.out
     assert "MUTUALFUND" in captured.out
     assert "--no-records-response" in captured.out
+    assert_formatted_default_false(captured.out)
 
 
 def test_visualization_query_translates_to_post_body() -> None:
@@ -2364,7 +2365,7 @@ def test_screener_query_uses_quote_type_for_uppercase_entity() -> None:
     assert params == {
         "lang": "en-US",
         "region": "US",
-        "formatted": True,
+        "formatted": False,
         "useRecordsResponse": True,
     }
     assert body["quoteType"] == "EQUITY"
