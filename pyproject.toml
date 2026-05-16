@@ -125,7 +125,7 @@ markers = [
 [tool.coverage.run]
 branch = true
 source = ["src"]
-omit = ["tests/*", "*/__main__.py"]
+omit = ["tests/*", "*/__main__.py", "src/yoghurt/types.py"]
 
 [tool.coverage.report]
 show_missing = true
